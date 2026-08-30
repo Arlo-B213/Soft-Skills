@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#101a30">
+<meta name="theme-color" content="#f5f6fa">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Soft Skills KPI">
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23101a30'/%3E%3Ctext x='50' y='64' font-size='54' text-anchor='middle' fill='%23c9a227' font-family='Georgia,serif'%3ESS%3C/text%3E%3C/svg%3E">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23101a30'/%3E%3Ctext x='50' y='64' font-size='54' text-anchor='middle' fill='%23c9a227' font-family='Georgia,serif'%3ESS%3C/text%3E%3C/svg%3E">
-<link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Soft%20Skills%20KPI%20Dashboard%22%2C%22short_name%22%3A%22Soft%20Skills%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23101a30%22%2C%22theme_color%22%3A%22%23101a30%22%7D">
+<link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Soft%20Skills%20KPI%20Dashboard%22%2C%22short_name%22%3A%22Soft%20Skills%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f5f6fa%22%2C%22theme_color%22%3A%22%23f5f6fa%22%7D">
 <title>Food Court Soft Skills Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -18,18 +18,18 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <style>
   :root{
-    --navy: #101a30;
-    --navy-2: #17223d;
-    --navy-3: #1f2c4d;
+    --navy: #f5f6fa;
+    --navy-2: #ffffff;
+    --navy-3: #eef0f5;
     --gold: #c9a227;
-    --gold-light: #e8d9a0;
-    --cream: #f7f3e8;
-    --ink: #232323;
-    --muted: #8b93a7;
-    --good: #3f7d5c;
-    --warn: #b8871f;
+    --gold-light: #8a6d14;
+    --cream: #1f2430;
+    --ink: #17203a;
+    --muted: #5b6472;
+    --good: #1f7a4d;
+    --warn: #8a6d14;
     --bad: #a1402f;
-    --line: rgba(201,162,39,0.25);
+    --line: rgba(15,23,42,0.10);
   }
   *{box-sizing:border-box;}
   body{
@@ -53,7 +53,7 @@
   }
   h1{
     font-family: Georgia, "Times New Roman", serif;
-    font-weight:600;font-size:30px;margin:0;color:#fff;letter-spacing:.01em;
+    font-weight:600;font-size:30px;margin:0;color:var(--cream);letter-spacing:.01em;
   }
   h1 span{color:var(--gold-light);font-style:italic;}
   .sub{color:var(--muted);font-size:13.5px;margin-top:6px;}
@@ -63,7 +63,7 @@
     padding:14px 18px; min-width:280px;
   }
   .upload-box label{
-    display:inline-block;background:var(--gold);color:var(--navy);
+    display:inline-block;background:var(--gold);color:var(--ink);
     font-weight:700;font-size:13px;padding:9px 16px;border-radius:7px;cursor:pointer;
     transition:filter .15s;
   }
@@ -76,7 +76,7 @@
   }
   .btn-secondary:hover{background:rgba(201,162,39,0.12);}
   .btn-primary{
-    background:var(--gold);color:var(--navy);border:none;font-weight:700;font-size:13.5px;
+    background:var(--gold);color:var(--ink);border:none;font-weight:700;font-size:13.5px;
     padding:10px 20px;border-radius:7px;cursor:pointer;transition:filter .15s;
   }
   .btn-primary:hover{filter:brightness(1.08);}
@@ -94,17 +94,17 @@
   .modal{
     background:var(--navy-2); border:1px solid var(--line); border-radius:14px;
     width:100%; max-width:640px; max-height:88vh; overflow-y:auto;
-    box-shadow:0 20px 60px rgba(0,0,0,0.5); animation: fadeUp .25s ease-out;
+    box-shadow:0 20px 60px rgba(15,23,42,0.22); animation: fadeUp .25s ease-out;
   }
   .modal-header{ display:flex; justify-content:space-between; align-items:center; padding:18px 22px; border-bottom:1px solid var(--line); }
-  .modal-header h3{ font-family:Georgia,serif; margin:0; color:#fff; font-size:18px; }
+  .modal-header h3{ font-family:Georgia,serif; margin:0; color:var(--cream); font-size:18px; }
   .modal-header button{ background:none; border:none; color:var(--muted); font-size:22px; cursor:pointer; line-height:1; }
   .modal-tabs{ display:flex; gap:4px; padding:14px 22px 0; flex-wrap:wrap; }
   .modal-tabs button{
     background:transparent; border:1px solid var(--line); color:var(--muted);
     padding:7px 13px; border-radius:7px; font-size:12.5px; cursor:pointer; font-weight:600;
   }
-  .modal-tabs button.active{ background:var(--gold); color:var(--navy); border-color:var(--gold); }
+  .modal-tabs button.active{ background:var(--gold); color:var(--ink); border-color:var(--gold); }
   .modal-body{ padding:18px 22px; }
   .modal-actions{ padding:16px 22px 22px; display:flex; justify-content:flex-end; gap:10px; }
   .field-row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
@@ -122,7 +122,7 @@
     position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
     background:var(--navy-3); border:1px solid var(--gold); color:var(--gold-light);
     padding:11px 20px; border-radius:8px; font-size:13.5px; z-index:200;
-    box-shadow:0 8px 24px rgba(0,0,0,0.4); animation: fadeUp .25s ease-out;
+    box-shadow:0 8px 24px rgba(15,23,42,0.16); animation: fadeUp .25s ease-out;
   }
 
   .alert-row{
@@ -132,7 +132,7 @@
   .alert-row.up{ background:rgba(63,166,111,0.12); border:1px solid rgba(63,166,111,0.35); }
   .alert-row.down{ background:rgba(196,84,63,0.12); border:1px solid rgba(196,84,63,0.35); }
   .alert-icon{ font-size:17px; line-height:1.4; }
-  .alert-row .name{ font-weight:700; color:#fff; }
+  .alert-row .name{ font-weight:700; color:var(--cream); }
   .alert-row .reason{ color:var(--muted); font-size:12.5px; }
   .alert-row button{
     margin-left:auto; background:transparent; border:1px solid var(--line); color:var(--muted);
@@ -162,7 +162,7 @@
   .grid-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:26px;}
   .card{
     background:linear-gradient(155deg, var(--navy-2), var(--navy-3));border:1px solid var(--line);border-radius:12px;padding:18px 20px;
-    box-shadow:0 4px 14px rgba(0,0,0,0.18);
+    box-shadow:0 2px 10px rgba(15,23,42,0.07);
   }
   .card .label{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:8px;}
   .card .value{font-family:Georgia,serif;font-size:30px;color:var(--gold-light);font-weight:600;}
@@ -171,10 +171,10 @@
   .panel{
     background:var(--navy-2);border:1px solid var(--line);border-radius:12px;
     padding:22px 24px;margin-bottom:22px;
-    box-shadow:0 6px 18px rgba(0,0,0,0.16);
+    box-shadow:0 2px 12px rgba(15,23,42,0.06);
   }
   .panel h2{
-    font-family:Georgia,serif;font-size:17px;margin:0 0 16px;color:#fff;font-weight:600;
+    font-family:Georgia,serif;font-size:17px;margin:0 0 16px;color:var(--cream);font-weight:600;
   }
   .panel h2 small{display:block;font-family:inherit;font-size:12px;color:var(--muted);font-weight:400;margin-top:4px;letter-spacing:0;}
   .two-col{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
@@ -183,9 +183,9 @@
   /* ---- Mobile optimizations ---- */
   .fab{
     display:none; position:fixed; right:18px; bottom:18px; z-index:90;
-    width:58px; height:58px; border-radius:50%; background:var(--gold); color:var(--navy);
+    width:58px; height:58px; border-radius:50%; background:var(--gold); color:var(--ink);
     border:none; font-size:28px; font-weight:700; align-items:center; justify-content:center;
-    box-shadow:0 8px 24px rgba(0,0,0,0.45); cursor:pointer;
+    box-shadow:0 6px 18px rgba(15,23,42,0.25); cursor:pointer;
   }
   @media(max-width:680px){
     body{ font-size:15px; }
@@ -202,6 +202,7 @@
     .card .value{ font-size:24px; }
     .panel{ padding:16px 16px; margin-bottom:16px; }
     canvas{ max-height:220px; }
+    #chartFocusAreas, #chartEngagement{ max-height:380px; }
     table{ font-size:12.5px; }
     th, td{ padding:7px 6px; }
     select, input, textarea{ font-size:16px !important; } /* prevents iOS auto-zoom on focus */
@@ -222,12 +223,12 @@
     text-align:left;color:var(--gold-light);font-size:11px;text-transform:uppercase;
     letter-spacing:.08em;padding:8px 10px;border-bottom:1px solid var(--line);
   }
-  td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,0.06);}
-  tr:hover td{background:rgba(255,255,255,0.02);}
+  td{padding:9px 10px;border-bottom:1px solid rgba(15,23,42,0.08);}
+  tr:hover td{background:rgba(15,23,42,0.03);}
   .pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:12px;font-weight:700;}
-  .pill.good{background:rgba(63,125,92,.25);color:#7fd8a8;}
-  .pill.warn{background:rgba(184,135,31,.22);color:var(--gold-light);}
-  .pill.bad{background:rgba(161,64,47,.22);color:#e29284;}
+  .pill.good{background:rgba(31,122,77,.14);color:#1f7a4d;}
+  .pill.warn{background:rgba(184,135,31,.16);color:var(--gold-light);}
+  .pill.bad{background:rgba(161,64,47,.14);color:#a1402f;}
 
   select{
     background:var(--navy-3);color:var(--cream);border:1px solid var(--line);
@@ -244,10 +245,11 @@
   }
   .note-item.negative{border-left-color:var(--bad);}
   .note-item .meta{color:var(--gold-light);font-weight:600;font-size:12px;margin-bottom:3px;}
-  .note-item.negative .meta{color:#e29284;}
+  .note-item.negative .meta{color:#a1402f;}
   .note-item .text{color:var(--cream);opacity:.9;}
 
   canvas{max-height:280px;}
+  #chartFocusAreas, #chartEngagement{ max-height:340px; }
   footer{text-align:center;color:var(--muted);font-size:11.5px;margin-top:30px;}
 </style>
 </head>
@@ -256,7 +258,7 @@
 
   <header class="top">
     <div>
-      <div class="brand-eyebrow">Pechanga Resort Casino &middot; Food Court Operations</div>
+      <div class="brand-eyebrow">Operations</div>
       <h1>Soft Skills <span>KPI Dashboard</span></h1>
       <div class="sub">Tracking the 10 Essential Soft Skills across cashiers and management</div>
     </div>
@@ -316,7 +318,18 @@ const MANAGER_SKILLS = ["Coaching & Feedback","Accountability","Decision-Making 
 const ALL_MGR_SKILLS = SOFT_SKILLS.concat(MANAGER_SKILLS);
 
 const SHIFTS = ["Morning","Day","Swing","Late Swing","Graveyard"];
-const OUTLETS = ["Pronto","Agave","American Classics","Pechanga Fried Chicken","Cafe Cocoa's","Little Wok","Portable Smart Bar"];
+const OUTLET_ABBR = {
+  "Pronto":"PR", "Agave":"AG", "American Classics":"AC", "Pechanga Fried Chicken":"PFC",
+  "Cafe Cocoa's":"CC", "Little Wok":"LW", "Portable Smart Bar":"PSB"
+};
+const OUTLETS = Object.values(OUTLET_ABBR);
+function normalizeOutlet(raw){
+  if(!raw) return raw;
+  return OUTLET_ABBR[raw] || raw;
+}
+function outletOptions(){
+  return Object.entries(OUTLET_ABBR).map(([full,abbr]) => `<option value="${abbr}">${abbr} — ${full}</option>`).join('');
+}
 const NEGATIVE_AREAS = ["Guest Engagement","Communication Clarity","Attention to Detail","Positive Attitude","Non-Negotiable Missed (Opener)","Non-Negotiable Missed (Closer)","Order Accuracy","Other"];
 const COACHING_TRIGGERS = ["Low Spot-Check Score","Guest Complaint","Routine Check-In","Recognition / Positive"];
 
@@ -325,7 +338,7 @@ const ROSTER_CASHIERS = [["Bella Abarientos","Morning"],["Julie Santiago","Morni
 const ROSTER_MANAGERS = [["Ana Sanchez","Asst. Manager"],["Salve Villez","Asst. Manager"],["Maria Tomas","Asst. Manager"],["Joharra Ruidera","Asst. Manager"],["Jeannifer Spier","Asst. Manager"],["Leo Donato","Asst. Manager"],["Samantha Gamboa","Asst. Manager"],["Elizabeth Guevarra","Lead"],["Gregory Conn","Lead"],["Sergio Andres","Lead"],["Jessica Carreon","Lead"],["Walden Wesley Palacio","Lead"],["Savy Vann","Lead"]];
 
 Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
-Chart.defaults.color = '#8b93a7';
+Chart.defaults.color = '#5b6472';
 Chart.defaults.plugins.tooltip.backgroundColor = '#1f2c4d';
 Chart.defaults.plugins.tooltip.titleColor = '#e8d9a0';
 Chart.defaults.plugins.tooltip.titleFont = { weight: '700', size: 12 };
@@ -502,7 +515,7 @@ function parseWorkbook(wb){
     if(String(notes).startsWith('[SAMPLE]')) continue;
     cashierRows.push({
       date: excelDateToJS(r[0]),
-      shift: r[1], outlet: r[2], name: r[3], badge: r[4],
+      shift: r[1], outlet: normalizeOutlet(r[2]), name: r[3], badge: r[4],
       scores: { "Guest Engagement": r[5], "Communication Clarity": r[6], "Attention to Detail": r[7], "Positive Attitude": r[8] },
       opener: r[9], closer: r[10], observedBy: r[11], notes: notes
     });
@@ -545,7 +558,7 @@ function parseWorkbook(wb){
     const desc = r[8] || '';
     if(String(desc).startsWith('[SAMPLE]')) continue;
     negativeRows.push({
-      date: excelDateToJS(r[0]), name: r[1], badge: r[2], outlet: r[3], shift: r[4],
+      date: excelDateToJS(r[0]), name: r[1], badge: r[2], outlet: normalizeOutlet(r[3]), shift: r[4],
       area: r[5], severity: r[6], complaint: r[7], description: desc, loggedBy: r[9]
     });
   }
@@ -785,8 +798,16 @@ function renderCashiers(){
 
   charts.focusAreas = new Chart(document.getElementById('chartFocusAreas'), {
     type:'bar',
-    data:{ labels: areaLabels, datasets:[{ data: areaValues, backgroundColor: areaLabels.map((_,i)=> i===0 ? 'rgba(196,84,63,0.85)' : 'rgba(201,162,39,0.85)'), borderRadius:6, maxBarThickness:46 }]},
-    options: baseBarOpts(Math.max(...areaValues,1), true, true)
+    indexAxis:'y',
+    data:{ labels: areaLabels, datasets:[{ data: areaValues, backgroundColor: areaLabels.map((_,i)=> i===0 ? 'rgba(196,84,63,0.85)' : 'rgba(201,162,39,0.85)'), borderRadius:6, maxBarThickness:26 }]},
+    options:{
+      responsive:true, maintainAspectRatio:true,
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:(ctx)=>` ${ctx.parsed.x}` } } },
+      scales:{
+        x:{ beginAtZero:true, grid:{color:'rgba(15,23,42,0.07)', drawBorder:false}, ticks:{color:'#5b6472', precision:0}, border:{display:false} },
+        y:{ grid:{display:false}, ticks:{color:'#5b6472', font:{size:11.5}}, border:{display:false} }
+      }
+    }
   });
 
   charts.skill = new Chart(document.getElementById('chartSkill'), {
@@ -802,14 +823,14 @@ function renderCashiers(){
   charts.outlet = new Chart(document.getElementById('chartOutlet'), {
     type:'bar',
     data:{labels:outletSet, datasets:[{data:byOutlet, backgroundColor: byOutlet.map(v=>scoreColor(v,3,0.85)), borderRadius:6, maxBarThickness:46}]},
-    options: baseBarOpts(3, true)
+    options: baseBarOpts(3)
   });
   charts.trend = new Chart(document.getElementById('chartTrend'), {
     type:'line',
     data:{labels:weekKeys.map(k=>fmtDate(new Date(k))), datasets:[{
-      data:weekAvgs, borderColor:'#e8d9a0', borderWidth:2.5,
+      data:weekAvgs, borderColor:'#8a6d14', borderWidth:2.5,
       backgroundColor:(ctx)=>vGradient(ctx,'rgba(232,217,160,0.35)','rgba(232,217,160,0.02)'),
-      fill:true, tension:.35, pointRadius:4, pointBackgroundColor:'#e8d9a0', pointBorderColor:'#101a30', pointBorderWidth:1.5, pointHoverRadius:6
+      fill:true, tension:.35, pointRadius:4, pointBackgroundColor:'#8a6d14', pointBorderColor:'#101a30', pointBorderWidth:1.5, pointHoverRadius:6
     }]},
     options: baseBarOpts(3)
   });
@@ -828,19 +849,19 @@ function renderCashierDetail(name, byCashier){
   charts.cashierTrend = new Chart(document.getElementById('chartCashierTrend'), {
     type:'line',
     data:{ labels: obs.map(o=>fmtDate(o.date)), datasets:[{
-      data: obs.map(cashierObsAvg), borderColor:'#e8d9a0', borderWidth:2.5,
+      data: obs.map(cashierObsAvg), borderColor:'#8a6d14', borderWidth:2.5,
       backgroundColor:(ctx)=>vGradient(ctx,'rgba(232,217,160,0.35)','rgba(232,217,160,0.02)'),
       fill:true, tension:.35, pointRadius:5, pointBackgroundColor: obs.map(o=>scoreColor(cashierObsAvg(o),3,1)),
       pointBorderColor:'#101a30', pointBorderWidth:1.5, pointHoverRadius:7
     }]},
-    options:{ ...baseBarOpts(3), plugins:{legend:{display:false}, tooltip: baseBarOpts(3).plugins.tooltip, title:{display:true, text:'Score Over Time', font:{family:'Georgia, serif', size:13, weight:'600'}, color:'#e8d9a0', padding:{bottom:14}}} }
+    options:{ ...baseBarOpts(3), plugins:{legend:{display:false}, tooltip: baseBarOpts(3).plugins.tooltip, title:{display:true, text:'Score Over Time', font:{family:'Georgia, serif', size:13, weight:'600'}, color:'#8a6d14', padding:{bottom:14}}} }
   });
 
   const skillAvgs = CASHIER_SKILLS.map(sk=>avg(obs.map(o=>o.scores[sk])));
   charts.cashierSkills = new Chart(document.getElementById('chartCashierSkills'), {
     type:'bar',
     data:{ labels: CASHIER_SKILLS, datasets:[{ data: skillAvgs, backgroundColor: skillAvgs.map(v=>scoreColor(v,3,0.85)), borderRadius:6, maxBarThickness:56 }]},
-    options:{ ...baseBarOpts(3), plugins:{legend:{display:false}, tooltip: baseBarOpts(3).plugins.tooltip, title:{display:true, text:'Skill Breakdown (All-Time Avg)', font:{family:'Georgia, serif', size:13, weight:'600'}, color:'#e8d9a0', padding:{bottom:14}}} }
+    options:{ ...baseBarOpts(3), plugins:{legend:{display:false}, tooltip: baseBarOpts(3).plugins.tooltip, title:{display:true, text:'Skill Breakdown (All-Time Avg)', font:{family:'Georgia, serif', size:13, weight:'600'}, color:'#8a6d14', padding:{bottom:14}}} }
   });
 
   const openerPct = obs.length ? obs.filter(o=>o.opener==='Y').length/obs.length*100 : 0;
@@ -873,8 +894,8 @@ function baseBarOpts(max, rotateX, isCount){
       } } }
     },
     scales:{
-      y:{ beginAtZero:true, max: isCount?undefined:max, grid:{color:'rgba(255,255,255,0.05)', drawBorder:false}, ticks:{color:'#8b93a7', precision: isCount?0:undefined}, border:{display:false} },
-      x:{ grid:{display:false}, ticks:{color:'#8b93a7', maxRotation: rotateX?40:0, minRotation: rotateX?40:0}, border:{display:false} }
+      y:{ beginAtZero:true, max: isCount?undefined:max, grid:{color:'rgba(15,23,42,0.07)', drawBorder:false}, ticks:{color:'#5b6472', precision: isCount?0:undefined}, border:{display:false} },
+      x:{ grid:{display:false}, ticks:{color:'#5b6472', maxRotation: rotateX?40:0, minRotation: rotateX?40:0}, border:{display:false} }
     }
   };
 }
@@ -995,6 +1016,7 @@ function renderManagement(){
   destroyChart('engagement');
   charts.engagement = new Chart(document.getElementById('chartEngagement'), {
     type:'bar',
+    indexAxis:'y',
     data:{
       labels: engagementSorted.map(e=>e.name),
       datasets:[
@@ -1005,10 +1027,10 @@ function renderManagement(){
     },
     options:{
       responsive:true, maintainAspectRatio:true,
-      plugins:{ legend:{display:true, position:'bottom', labels:{color:'#8b93a7', boxWidth:12, font:{size:11.5}}}, tooltip:{} },
+      plugins:{ legend:{display:true, position:'bottom', labels:{color:'#5b6472', boxWidth:12, font:{size:11.5}}}, tooltip:{} },
       scales:{
-        x:{ stacked:true, grid:{display:false}, ticks:{color:'#8b93a7', maxRotation:40, minRotation:40} },
-        y:{ stacked:true, beginAtZero:true, grid:{color:'rgba(255,255,255,0.05)'}, ticks:{color:'#8b93a7', precision:0} }
+        x:{ stacked:true, beginAtZero:true, grid:{color:'rgba(15,23,42,0.07)', drawBorder:false}, ticks:{color:'#5b6472', precision:0}, border:{display:false} },
+        y:{ stacked:true, grid:{display:false}, ticks:{color:'#5b6472', font:{size:11.5}}, border:{display:false} }
       }
     }
   });
@@ -1029,7 +1051,7 @@ function renderManagerDetail(name){
   charts.mgrSkills = new Chart(document.getElementById('chartManagerSkills'), {
     type:'bar',
     data:{ labels: ALL_MGR_SKILLS, datasets:[{ data: ALL_MGR_SKILLS.map(sk=>latest?latest.scores[sk]:null), backgroundColor: ALL_MGR_SKILLS.map(sk=>scoreColor(latest?latest.scores[sk]:null,5,0.85)), borderRadius:6, maxBarThickness:40 }]},
-    options:{ ...baseBarOpts(5,true), indexAxis:'x', plugins:{legend:{display:false}, tooltip: baseBarOpts(5).plugins.tooltip, title:{display:true, text:'Latest Scores by Skill', font:{family:'Georgia, serif', size:13, weight:'600'}, color:'#e8d9a0', padding:{bottom:14}}} }
+    options:{ ...baseBarOpts(5,true), indexAxis:'x', plugins:{legend:{display:false}, tooltip: baseBarOpts(5).plugins.tooltip, title:{display:true, text:'Latest Scores by Skill', font:{family:'Georgia, serif', size:13, weight:'600'}, color:'#8a6d14', padding:{bottom:14}}} }
   });
 
   const monthLabels = rows.map(r=>fmtMonth(r.month));
@@ -1037,12 +1059,12 @@ function renderManagerDetail(name){
   charts.mgrTrend = new Chart(document.getElementById('chartManagerTrend'), {
     type:'line',
     data:{ labels: monthLabels, datasets:[{
-      data: overallSeries, borderColor:'#7fa88c', borderWidth:2.5,
+      data: overallSeries, borderColor:'#1f7a4d', borderWidth:2.5,
       backgroundColor:(ctx)=>vGradient(ctx,'rgba(127,168,140,0.35)','rgba(127,168,140,0.02)'),
       fill:true, tension:.35, pointRadius:5, pointBackgroundColor: overallSeries.map(v=>scoreColor(v,5,1)),
       pointBorderColor:'#101a30', pointBorderWidth:1.5, pointHoverRadius:7
     }]},
-    options:{ ...baseBarOpts(5), plugins:{legend:{display:false}, tooltip: baseBarOpts(5).plugins.tooltip, title:{display:true, text:'Overall Average Over Time', font:{family:'Georgia, serif', size:13, weight:'600'}, color:'#e8d9a0', padding:{bottom:14}}} }
+    options:{ ...baseBarOpts(5), plugins:{legend:{display:false}, tooltip: baseBarOpts(5).plugins.tooltip, title:{display:true, text:'Overall Average Over Time', font:{family:'Georgia, serif', size:13, weight:'600'}, color:'#8a6d14', padding:{bottom:14}}} }
   });
 
   const notesEl = document.getElementById('managerNotes');
@@ -1122,7 +1144,7 @@ function fieldsFor(type){
       </div>
       <div class="field-row">
         <div class="field"><label>Shift</label><select id="f_shift">${opts(SHIFTS)}</select></div>
-        <div class="field"><label>Outlet</label><select id="f_outlet">${opts(OUTLETS)}</select></div>
+        <div class="field"><label>Outlet</label><select id="f_outlet">${outletOptions()}</select></div>
       </div>
       <div class="score-grid">
         ${CASHIER_SKILLS.map((sk,i)=>`<div class="field"><label title="${sk}">${sk}</label><select id="f_score_${i}"><option value="1">1 — Needs Improvement</option><option value="2" selected>2 — Meets Expectation</option><option value="3">3 — Exceeds Expectation</option></select></div>`).join('')}
@@ -1145,7 +1167,7 @@ function fieldsFor(type){
         <div class="field"><label>Cashier</label><select id="f_name">${opts(ROSTER_CASHIERS, true)}</select></div>
       </div>
       <div class="field-row">
-        <div class="field"><label>Outlet</label><select id="f_outlet">${opts(OUTLETS)}</select></div>
+        <div class="field"><label>Outlet</label><select id="f_outlet">${outletOptions()}</select></div>
         <div class="field"><label>Shift</label><select id="f_shift">${opts(SHIFTS)}</select></div>
       </div>
       <div class="field-row">
