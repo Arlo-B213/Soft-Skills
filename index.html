@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Soft Skills Dashboard</title>
+<title>Food Court Soft Skills Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
@@ -122,7 +122,9 @@
   .note-item{
     border-left:2px solid var(--gold);padding:8px 0 8px 14px;margin-bottom:10px;font-size:13.5px;
   }
+  .note-item.negative{border-left-color:var(--bad);}
   .note-item .meta{color:var(--gold-light);font-weight:600;font-size:12px;margin-bottom:3px;}
+  .note-item.negative .meta{color:#e29284;}
   .note-item .text{color:var(--cream);opacity:.9;}
 
   canvas{max-height:280px;}
@@ -169,6 +171,8 @@ const ALL_MGR_SKILLS = SOFT_SKILLS.concat(MANAGER_SKILLS);
 
 let cashierRows = [];
 let managerRows = [];
+let coachingRows = [];
+let negativeRows = [];
 let charts = {};
 
 function excelDateToJS(v){
@@ -238,6 +242,33 @@ function parseWorkbook(wb){
       notes: notes, reviewedBy: r[19]
     });
   }
+
+  const clog2 = sheetRows(wb, 'Coaching Log');
+  coachingRows = [];
+  for(let i=5;i<clog2.length;i++){
+    const r = clog2[i];
+    if(!r || !r[1]) continue;
+    const notes = r[7] || '';
+    if(String(notes).startsWith('[SAMPLE]')) continue;
+    coachingRows.push({
+      date: excelDateToJS(r[0]), name: r[1], badge: r[2], trigger: r[3],
+      action: r[4], followUpDate: excelDateToJS(r[5]), status: r[6],
+      notes: notes, loggedBy: r[8]
+    });
+  }
+
+  const nlog = sheetRows(wb, 'Negative Interactions');
+  negativeRows = [];
+  for(let i=5;i<nlog.length;i++){
+    const r = nlog[i];
+    if(!r || !r[1]) continue;
+    const desc = r[8] || '';
+    if(String(desc).startsWith('[SAMPLE]')) continue;
+    negativeRows.push({
+      date: excelDateToJS(r[0]), name: r[1], badge: r[2], outlet: r[3], shift: r[4],
+      area: r[5], severity: r[6], complaint: r[7], description: desc, loggedBy: r[9]
+    });
+  }
 }
 
 function scoreClass(v, max){
@@ -263,12 +294,38 @@ function renderAll(){
   renderManagement();
 }
 
+function cashierObsAvg(r){ return avg(Object.values(r.scores)); }
+
+function computeCashierRollups(){
+  const byCashier = {};
+  cashierRows.forEach(r=>{
+    if(!byCashier[r.name]) byCashier[r.name] = {obs:[], shift:r.shift};
+    byCashier[r.name].obs.push(r);
+  });
+  Object.values(byCashier).forEach(d=>d.obs.sort((a,b)=>(a.date||0)-(b.date||0)));
+  return byCashier;
+}
+
+function openCoachingFor(name){
+  return coachingRows.filter(c=>c.name===name && c.status==='Pending').length;
+}
+
 function renderCashiers(){
   const el = document.getElementById('cashiersTab');
   const total = cashierRows.length;
   const overall = avg(cashierRows.flatMap(r=>Object.values(r.scores)));
   const openerPct = total ? cashierRows.filter(r=>r.opener==='Y').length/total*100 : 0;
   const closerPct = total ? cashierRows.filter(r=>r.closer==='Y').length/total*100 : 0;
+  const pendingCoaching = coachingRows.filter(c=>c.status==='Pending').length;
+  const overdueCoaching = coachingRows.filter(c=>c.status==='Pending' && c.followUpDate && c.followUpDate < new Date()).length;
+  const totalNegative = negativeRows.length;
+  const complaintPct = totalNegative ? negativeRows.filter(n=>n.complaint==='Y').length/totalNegative*100 : 0;
+
+  const areaCounts = {};
+  negativeRows.forEach(n=>{ if(n.area){ areaCounts[n.area] = (areaCounts[n.area]||0)+1; } });
+  const areaLabels = Object.keys(areaCounts).sort((a,b)=>areaCounts[b]-areaCounts[a]);
+  const areaValues = areaLabels.map(a=>areaCounts[a]);
+  const topArea = areaLabels[0];
 
   const bySkill = CASHIER_SKILLS.map(sk => avg(cashierRows.map(r=>r.scores[sk])));
 
@@ -278,15 +335,28 @@ function renderCashiers(){
   const outletSet = [...new Set(cashierRows.map(r=>r.outlet).filter(Boolean))];
   const byOutlet = outletSet.map(o => avg(cashierRows.filter(r=>r.outlet===o).flatMap(r=>Object.values(r.scores))));
 
-  // per-cashier rollup for flagged list
-  const byCashier = {};
-  cashierRows.forEach(r=>{
-    if(!byCashier[r.name]) byCashier[r.name] = {scores:[], count:0, shift:r.shift};
-    byCashier[r.name].scores.push(...Object.values(r.scores).filter(v=>typeof v==='number'));
-    byCashier[r.name].count++;
-  });
-  const flagged = Object.entries(byCashier).map(([name,d])=>({name, avg: avg(d.scores), count:d.count, shift:d.shift}))
-    .filter(x=>x.avg!==null).sort((a,b)=>a.avg-b.avg);
+  const byCashier = computeCashierRollups();
+  const cashierNames = Object.keys(byCashier).sort();
+
+  // flagged (lowest overall average)
+  const flagged = cashierNames.map(name=>{
+    const d = byCashier[name];
+    const scores = d.obs.flatMap(o=>Object.values(o.scores).filter(v=>typeof v==='number'));
+    return { name, avg: avg(scores), count: d.obs.length, shift: d.shift };
+  }).filter(x=>x.avg!==null).sort((a,b)=>a.avg-b.avg);
+
+  // improvement: split each cashier's observations into earlier half vs recent half (min 4 obs)
+  const improvement = cashierNames.map(name=>{
+    const obs = byCashier[name].obs;
+    if(obs.length < 4) return null;
+    const mid = Math.floor(obs.length/2);
+    const earlier = avg(obs.slice(0,mid).map(cashierObsAvg));
+    const recent = avg(obs.slice(mid).map(cashierObsAvg));
+    if(earlier===null || recent===null) return null;
+    return { name, earlier, recent, delta: recent-earlier, count: obs.length, shift: byCashier[name].shift };
+  }).filter(Boolean);
+  const mostImproved = [...improvement].sort((a,b)=>b.delta-a.delta).filter(x=>x.delta>0).slice(0,6);
+  const declining = [...improvement].sort((a,b)=>a.delta-b.delta).filter(x=>x.delta<0).slice(0,6);
 
   // weekly trend
   const byWeek = {};
@@ -301,12 +371,24 @@ function renderCashiers(){
   const weekKeys = Object.keys(byWeek).sort();
   const weekAvgs = weekKeys.map(k=>avg(byWeek[k]));
 
+  function deltaPill(d){
+    const arrow = d>0 ? '&#9650;' : (d<0 ? '&#9660;' : '&mdash;');
+    const cls = d>0 ? 'good' : (d<0 ? 'bad' : 'warn');
+    return `<span class="pill ${cls}">${arrow} ${Math.abs(d).toFixed(2)}</span>`;
+  }
+
   el.innerHTML = `
     <div class="grid-cards">
       <div class="card"><div class="label">Total Spot-Checks</div><div class="value">${total}</div></div>
       <div class="card"><div class="label">Overall Avg Score</div><div class="value">${overall?overall.toFixed(2):'—'}<small> /3</small></div></div>
-      <div class="card"><div class="label">Opener Used</div><div class="value">${openerPct.toFixed(0)}<small>%</small></div></div>
-      <div class="card"><div class="label">Closer Used</div><div class="value">${closerPct.toFixed(0)}<small>%</small></div></div>
+      <div class="card"><div class="label">Opener / Closer Used</div><div class="value">${openerPct.toFixed(0)}<small>% / </small>${closerPct.toFixed(0)}<small>%</small></div></div>
+      <div class="card"><div class="label">Open Coaching Follow-Ups</div><div class="value">${pendingCoaching}${overdueCoaching?` <small style="color:#e29284;">(${overdueCoaching} overdue)</small>`:''}</div></div>
+      <div class="card"><div class="label">Negative Interactions Logged</div><div class="value">${totalNegative}<small> (${complaintPct.toFixed(0)}% w/ complaint)</small></div></div>
+    </div>
+
+    <div class="panel">
+      <h2>Coaching Focus Areas<small>Negative interactions by skill area &mdash; where to focus training next${topArea?`, currently led by <b style="color:var(--gold-light);">${topArea}</b>`:''}</small></h2>
+      <canvas id="chartFocusAreas"></canvas>
     </div>
 
     <div class="two-col">
@@ -318,19 +400,67 @@ function renderCashiers(){
       <div class="panel"><h2>Weekly Trend<small>Team average over time</small></h2><canvas id="chartTrend"></canvas></div>
     </div>
 
+    <div class="two-col">
+      <div class="panel">
+        <h2>Most Improved<small>Earlier vs. recent spot-checks &mdash; needs at least 4 observations</small></h2>
+        <table>
+          <thead><tr><th>Cashier</th><th>Change</th><th># Obs</th></tr></thead>
+          <tbody>${mostImproved.map(f=>`<tr><td>${f.name}</td><td>${deltaPill(f.delta)}</td><td>${f.count}</td></tr>`).join('') || '<tr><td colspan="3">Not enough repeat data yet.</td></tr>'}</tbody>
+        </table>
+      </div>
+      <div class="panel">
+        <h2>Trending Down<small>Worth a closer look or a coaching note</small></h2>
+        <table>
+          <thead><tr><th>Cashier</th><th>Change</th><th># Obs</th></tr></thead>
+          <tbody>${declining.map(f=>`<tr><td>${f.name}</td><td>${deltaPill(f.delta)}</td><td>${f.count}</td></tr>`).join('') || '<tr><td colspan="3">Not enough repeat data yet.</td></tr>'}</tbody>
+        </table>
+      </div>
+    </div>
+
     <div class="panel">
       <h2>Cashiers Needing Attention<small>Sorted lowest average first &mdash; a low count means the average isn't reliable yet</small></h2>
       <table>
-        <thead><tr><th>Cashier</th><th>Shift</th><th>Avg Score</th><th># Observations</th></tr></thead>
+        <thead><tr><th>Cashier</th><th>Shift</th><th>Avg Score</th><th># Observations</th><th>Open Coaching Item</th></tr></thead>
         <tbody>
-          ${flagged.slice(0,10).map(f=>`<tr><td>${f.name}</td><td>${f.shift||''}</td><td><span class="pill ${scoreClass(f.avg,3)}">${f.avg.toFixed(2)}</span></td><td>${f.count}</td></tr>`).join('') || '<tr><td colspan="4">No data yet.</td></tr>'}
+          ${flagged.slice(0,10).map(f=>`<tr><td>${f.name}</td><td>${f.shift||''}</td><td><span class="pill ${scoreClass(f.avg,3)}">${f.avg.toFixed(2)}</span></td><td>${f.count}</td><td>${openCoachingFor(f.name) ? `<span class="pill warn">${openCoachingFor(f.name)} pending</span>` : '—'}</td></tr>`).join('') || '<tr><td colspan="5">No data yet.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <h2>Individual Cashier Trend<small>Pick a cashier to see their full history, notes, and coaching log</small></h2>
+      <select id="cashierSelect">${cashierNames.map(n=>`<option value="${n}">${n}</option>`).join('')}</select>
+      <div class="two-col" style="margin-top:18px;">
+        <div><canvas id="chartCashierTrend"></canvas></div>
+        <div><canvas id="chartCashierSkills"></canvas></div>
+      </div>
+      <div id="cashierDetailMeta" style="margin-top:14px;font-size:13px;color:var(--muted);"></div>
+      <div class="notes-list" id="cashierNotes"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Coaching Log<small>All logged follow-ups, most recent first</small></h2>
+      <table>
+        <thead><tr><th>Date</th><th>Cashier</th><th>Trigger</th><th>Action</th><th>Follow-Up</th><th>Status</th><th>Logged By</th></tr></thead>
+        <tbody>
+          ${coachingRows.slice().sort((a,b)=>(b.date||0)-(a.date||0)).map(c=>{
+            const overdue = c.status==='Pending' && c.followUpDate && c.followUpDate < new Date();
+            const statusPill = c.status==='Completed' ? 'good' : (overdue ? 'bad' : 'warn');
+            return `<tr><td>${fmtDate(c.date)}</td><td>${c.name}</td><td>${c.trigger||''}</td><td>${c.action||''}</td><td>${fmtDate(c.followUpDate)}</td><td><span class="pill ${statusPill}">${overdue?'Overdue':c.status||''}</span></td><td>${c.loggedBy||''}</td></tr>`;
+          }).join('') || '<tr><td colspan="7">No coaching entries logged yet.</td></tr>'}
         </tbody>
       </table>
     </div>
   `;
 
-  destroyChart('skill'); destroyChart('shift'); destroyChart('outlet'); destroyChart('trend');
+  destroyChart('skill'); destroyChart('shift'); destroyChart('outlet'); destroyChart('trend'); destroyChart('focusAreas');
   const goldish = ['#c9a227','#d9b84a','#e8d9a0','#8b6f14'];
+
+  charts.focusAreas = new Chart(document.getElementById('chartFocusAreas'), {
+    type:'bar',
+    data:{ labels: areaLabels, datasets:[{ data: areaValues, backgroundColor: areaLabels.map((_,i)=> i===0 ? '#a1402f' : '#c9a227') }]},
+    options:{ ...baseBarOpts(Math.max(...areaValues,1), true), scales:{ y:{beginAtZero:true, ticks:{color:'#8b93a7', precision:0}, grid:{color:'rgba(255,255,255,0.06)'}}, x:{grid:{display:false}, ticks:{color:'#8b93a7', maxRotation:30, minRotation:30}} } }
+  });
 
   charts.skill = new Chart(document.getElementById('chartSkill'), {
     type:'bar',
@@ -352,6 +482,47 @@ function renderCashiers(){
     data:{labels:weekKeys.map(k=>fmtDate(new Date(k))), datasets:[{data:weekAvgs, borderColor:'#e8d9a0', backgroundColor:'rgba(232,217,160,0.15)', fill:true, tension:.3}]},
     options: baseBarOpts(3)
   });
+
+  const csel = document.getElementById('cashierSelect');
+  if(cashierNames.length){
+    csel.addEventListener('change', ()=>renderCashierDetail(csel.value, byCashier));
+    renderCashierDetail(cashierNames[0], byCashier);
+  }
+}
+
+function renderCashierDetail(name, byCashier){
+  const obs = byCashier[name].obs;
+  destroyChart('cashierTrend'); destroyChart('cashierSkills');
+
+  charts.cashierTrend = new Chart(document.getElementById('chartCashierTrend'), {
+    type:'line',
+    data:{ labels: obs.map(o=>fmtDate(o.date)), datasets:[{ data: obs.map(cashierObsAvg), borderColor:'#e8d9a0', backgroundColor:'rgba(232,217,160,0.15)', fill:true, tension:.3, pointRadius:4 }]},
+    options:{ ...baseBarOpts(3), plugins:{legend:{display:false}, title:{display:true, text:'Score Over Time', color:'#e8d9a0', font:{size:12}}} }
+  });
+
+  const skillAvgs = CASHIER_SKILLS.map(sk=>avg(obs.map(o=>o.scores[sk])));
+  charts.cashierSkills = new Chart(document.getElementById('chartCashierSkills'), {
+    type:'bar',
+    data:{ labels: CASHIER_SKILLS, datasets:[{ data: skillAvgs, backgroundColor:'#7fa88c' }]},
+    options:{ ...baseBarOpts(3), plugins:{legend:{display:false}, title:{display:true, text:'Skill Breakdown (All-Time Avg)', color:'#e8d9a0', font:{size:12}}} }
+  });
+
+  const openerPct = obs.length ? obs.filter(o=>o.opener==='Y').length/obs.length*100 : 0;
+  const closerPct = obs.length ? obs.filter(o=>o.closer==='Y').length/obs.length*100 : 0;
+  document.getElementById('cashierDetailMeta').innerHTML =
+    `${obs.length} spot-check${obs.length===1?'':'s'} on record &middot; Opener used ${openerPct.toFixed(0)}% &middot; Closer used ${closerPct.toFixed(0)}%`;
+
+  const notesEl = document.getElementById('cashierNotes');
+  const items = [];
+  obs.slice().reverse().forEach(o=>{ if(o.notes) items.push({date:o.date, who:o.observedBy, text:o.notes, type:'Spot-check'}); });
+  coachingRows.filter(c=>c.name===name).forEach(c=>{ items.push({date:c.date, who:c.loggedBy, text:`${c.trigger||'Coaching'}: ${c.action||''}${c.notes?' — '+c.notes:''}`, type:'Coaching'}); });
+  negativeRows.filter(n=>n.name===name).forEach(n=>{ items.push({date:n.date, who:n.loggedBy, text:`${n.area||'Incident'} (${n.severity||''}${n.complaint==='Y'?', guest complaint':''}): ${n.description||''}`, type:'Negative interaction'}); });
+  items.sort((a,b)=>(b.date||0)-(a.date||0));
+  notesEl.innerHTML = items.length ? items.map(n=>`
+    <div class="note-item${n.type==='Negative interaction'?' negative':''}">
+      <div class="meta">${fmtDate(n.date)} &middot; ${n.type} &middot; ${n.who||'—'}</div>
+      <div class="text">${n.text}</div>
+    </div>`).join('') : '<div style="color:var(--muted);font-size:13px;">No notes recorded yet.</div>';
 }
 
 function baseBarOpts(max, rotateX){
