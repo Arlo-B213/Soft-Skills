@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Food Court Soft Skills Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --navy: #101a30;
+    --navy-2: #17223d;
+    --navy-3: #1f2c4d;
+    --gold: #c9a227;
+    --gold-light: #e8d9a0;
+    --cream: #f7f3e8;
+    --ink: #232323;
+    --muted: #8b93a7;
+    --good: #3f7d5c;
+    --warn: #b8871f;
+    --bad: #a1402f;
+    --line: rgba(201,162,39,0.25);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background: var(--navy);
+    color: var(--cream);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    min-height:100vh;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 24px 60px;}
+
+  header.top{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    gap:20px;flex-wrap:wrap;
+    border-bottom:1px solid var(--line);
+    padding-bottom:20px;margin-bottom:26px;
+  }
+  .brand-eyebrow{
+    letter-spacing:.22em;text-transform:uppercase;font-size:11px;color:var(--gold);
+    margin-bottom:6px;font-weight:600;
+  }
+  h1{
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight:600;font-size:30px;margin:0;color:#fff;letter-spacing:.01em;
+  }
+  h1 span{color:var(--gold-light);font-style:italic;}
+  .sub{color:var(--muted);font-size:13.5px;margin-top:6px;}
+
+  .upload-box{
+    background: var(--navy-2); border:1px solid var(--line); border-radius:10px;
+    padding:14px 18px; min-width:280px;
+  }
+  .upload-box label{
+    display:inline-block;background:var(--gold);color:var(--navy);
+    font-weight:700;font-size:13px;padding:9px 16px;border-radius:7px;cursor:pointer;
+    transition:filter .15s;
+  }
+  .upload-box label:hover{filter:brightness(1.08);}
+  .upload-box input[type=file]{display:none;}
+  .upload-status{font-size:12px;color:var(--muted);margin-top:9px;}
+  .upload-status.ok{color:var(--gold-light);}
+
+  nav.tabs{display:flex;gap:6px;margin-bottom:24px;}
+  nav.tabs button{
+    background:transparent;border:1px solid var(--line);color:var(--muted);
+    padding:10px 20px;border-radius:8px 8px 0 0;font-size:14px;cursor:pointer;
+    font-weight:600;letter-spacing:.02em;
+  }
+  nav.tabs button.active{
+    background:var(--navy-3);color:var(--gold-light);border-color:var(--gold);
+    border-bottom-color:var(--navy-3);
+  }
+
+  .empty{
+    text-align:center;padding:80px 20px;color:var(--muted);
+  }
+  .empty .icon{font-size:40px;margin-bottom:14px;color:var(--gold);}
+  .empty b{color:var(--cream);}
+
+  .grid-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:26px;}
+  .card{
+    background:var(--navy-2);border:1px solid var(--line);border-radius:12px;padding:18px 20px;
+  }
+  .card .label{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:8px;}
+  .card .value{font-family:Georgia,serif;font-size:30px;color:var(--gold-light);font-weight:600;}
+  .card .value small{font-size:14px;color:var(--muted);font-weight:400;}
+
+  .panel{
+    background:var(--navy-2);border:1px solid var(--line);border-radius:12px;
+    padding:22px 24px;margin-bottom:22px;
+  }
+  .panel h2{
+    font-family:Georgia,serif;font-size:17px;margin:0 0 16px;color:#fff;font-weight:600;
+  }
+  .panel h2 small{display:block;font-family:inherit;font-size:12px;color:var(--muted);font-weight:400;margin-top:4px;letter-spacing:0;}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
+  @media(max-width:820px){.two-col{grid-template-columns:1fr;} .upload-box{width:100%;}}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  th{
+    text-align:left;color:var(--gold-light);font-size:11px;text-transform:uppercase;
+    letter-spacing:.08em;padding:8px 10px;border-bottom:1px solid var(--line);
+  }
+  td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,0.06);}
+  tr:hover td{background:rgba(255,255,255,0.02);}
+  .pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:12px;font-weight:700;}
+  .pill.good{background:rgba(63,125,92,.25);color:#7fd8a8;}
+  .pill.warn{background:rgba(184,135,31,.22);color:var(--gold-light);}
+  .pill.bad{background:rgba(161,64,47,.22);color:#e29284;}
+
+  select{
+    background:var(--navy-3);color:var(--cream);border:1px solid var(--line);
+    padding:8px 12px;border-radius:7px;font-size:13.5px;
+  }
+
+  .heat-table td.score{text-align:center;font-weight:700;border-radius:4px;}
+  .legend-row{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:10px;}
+  .legend-swatch{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:middle;}
+
+  .notes-list{margin-top:14px;}
+  .note-item{
+    border-left:2px solid var(--gold);padding:8px 0 8px 14px;margin-bottom:10px;font-size:13.5px;
+  }
+  .note-item .meta{color:var(--gold-light);font-weight:600;font-size:12px;margin-bottom:3px;}
+  .note-item .text{color:var(--cream);opacity:.9;}
+
+  canvas{max-height:280px;}
+  footer{text-align:center;color:var(--muted);font-size:11.5px;margin-top:30px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <div class="brand-eyebrow">Pechanga Resort Casino &middot; Food Court Operations</div>
+      <h1>Soft Skills <span>KPI Dashboard</span></h1>
+      <div class="sub">Tracking the 10 Essential Soft Skills across cashiers and management</div>
+    </div>
+    <div class="upload-box">
+      <label for="fileInput">Upload Workbook</label>
+      <input type="file" id="fileInput" accept=".xlsx">
+      <div class="upload-status" id="uploadStatus">No file loaded yet — upload Soft_Skills_KPI_Tracker.xlsx</div>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="active" data-tab="cashiers">Cashiers</button>
+    <button data-tab="management">Management</button>
+  </nav>
+
+  <div id="emptyState" class="empty">
+    <div class="icon">&#9679;</div>
+    <div><b>No data loaded.</b><br>Upload your <b>Soft_Skills_KPI_Tracker.xlsx</b> file above to see the dashboard.<br>Each time you update the workbook, re-upload it here — no export step needed.</div>
+  </div>
+
+  <div id="cashiersTab" style="display:none;"></div>
+  <div id="managementTab" style="display:none;"></div>
+
+  <footer>Re-upload the workbook any time it's updated to refresh these views.</footer>
+</div>
+
+<script>
+const CASHIER_SKILLS = ["Guest Engagement","Communication Clarity","Attention to Detail","Positive Attitude"];
+const SOFT_SKILLS = ["Guest Engagement & Hospitality Mindset","Communication Clarity","Adaptability","Teamwork & Collaboration","Conflict Resolution","Time Management","Attention to Detail","Positive Attitude & Resilience","Active Listening","Professionalism & Appearance"];
+const MANAGER_SKILLS = ["Coaching & Feedback","Accountability","Decision-Making Under Pressure","Delegation","Leading by Example"];
+const ALL_MGR_SKILLS = SOFT_SKILLS.concat(MANAGER_SKILLS);
+
+let cashierRows = [];
+let managerRows = [];
+let charts = {};
+
+function excelDateToJS(v){
+  if (v instanceof Date) return v;
+  if (typeof v === 'number') return new Date(Math.round((v - 25569) * 86400 * 1000));
+  if (typeof v === 'string'){ const d = new Date(v); if(!isNaN(d)) return d; }
+  return null;
+}
+function fmtMonth(d){ if(!d) return ''; return d.toLocaleDateString('en-US',{month:'short',year:'numeric'}); }
+function fmtDate(d){ if(!d) return ''; return d.toLocaleDateString('en-US',{month:'short',day:'numeric'}); }
+function avg(arr){ const v = arr.filter(x=>typeof x==='number'); return v.length ? v.reduce((a,b)=>a+b,0)/v.length : null; }
+
+document.getElementById('fileInput').addEventListener('change', function(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(evt){
+    try{
+      const data = new Uint8Array(evt.target.result);
+      const wb = XLSX.read(data, {type:'array', cellDates:true});
+      parseWorkbook(wb);
+      document.getElementById('uploadStatus').textContent = 'Loaded: ' + file.name + ' — ' + new Date().toLocaleTimeString();
+      document.getElementById('uploadStatus').classList.add('ok');
+      document.getElementById('emptyState').style.display = 'none';
+      renderAll();
+    }catch(err){
+      document.getElementById('uploadStatus').textContent = 'Could not read that file: ' + err.message;
+      document.getElementById('uploadStatus').classList.remove('ok');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+});
+
+function sheetRows(wb, name){
+  const ws = wb.Sheets[name];
+  if(!ws) return [];
+  return XLSX.utils.sheet_to_json(ws, {header:1, defval:null, raw:true});
+}
+
+function parseWorkbook(wb){
+  const clog = sheetRows(wb, 'Cashier Log');
+  cashierRows = [];
+  for(let i=5;i<clog.length;i++){
+    const r = clog[i];
+    if(!r || !r[3]) continue;
+    const notes = r[12] || '';
+    if(String(notes).startsWith('[SAMPLE]')) continue;
+    cashierRows.push({
+      date: excelDateToJS(r[0]),
+      shift: r[1], outlet: r[2], name: r[3], badge: r[4],
+      scores: { "Guest Engagement": r[5], "Communication Clarity": r[6], "Attention to Detail": r[7], "Positive Attitude": r[8] },
+      opener: r[9], closer: r[10], observedBy: r[11], notes: notes
+    });
+  }
+
+  const mlog = sheetRows(wb, 'Manager Scorecard');
+  managerRows = [];
+  for(let i=5;i<mlog.length;i++){
+    const r = mlog[i];
+    if(!r || !r[1]) continue;
+    const notes = r[18] || '';
+    if(String(notes).startsWith('[SAMPLE]')) continue;
+    const scores = {};
+    ALL_MGR_SKILLS.forEach((sk,idx)=>{ scores[sk] = r[3+idx]; });
+    managerRows.push({
+      month: excelDateToJS(r[0]), name: r[1], role: r[2], scores,
+      notes: notes, reviewedBy: r[19]
+    });
+  }
+}
+
+function scoreClass(v, max){
+  if(v===null||v===undefined) return '';
+  const pct = v/max;
+  if(pct >= 0.8) return 'good';
+  if(pct >= 0.6) return 'warn';
+  return 'bad';
+}
+function heatColor(v, max){
+  if(v===null||v===undefined) return 'transparent';
+  const pct = v/max;
+  if(pct >= 0.85) return 'rgba(63,125,92,0.55)';
+  if(pct >= 0.7) return 'rgba(63,125,92,0.3)';
+  if(pct >= 0.55) return 'rgba(184,135,31,0.35)';
+  return 'rgba(161,64,47,0.4)';
+}
+
+function destroyChart(id){ if(charts[id]){ charts[id].destroy(); delete charts[id]; } }
+
+function renderAll(){
+  renderCashiers();
+  renderManagement();
+}
+
+function renderCashiers(){
+  const el = document.getElementById('cashiersTab');
+  const total = cashierRows.length;
+  const overall = avg(cashierRows.flatMap(r=>Object.values(r.scores)));
+  const openerPct = total ? cashierRows.filter(r=>r.opener==='Y').length/total*100 : 0;
+  const closerPct = total ? cashierRows.filter(r=>r.closer==='Y').length/total*100 : 0;
+
+  const bySkill = CASHIER_SKILLS.map(sk => avg(cashierRows.map(r=>r.scores[sk])));
+
+  const shifts = ["Morning","Day","Swing","Late Swing","Graveyard"];
+  const byShift = shifts.map(s => avg(cashierRows.filter(r=>r.shift===s).flatMap(r=>Object.values(r.scores))));
+
+  const outletSet = [...new Set(cashierRows.map(r=>r.outlet).filter(Boolean))];
+  const byOutlet = outletSet.map(o => avg(cashierRows.filter(r=>r.outlet===o).flatMap(r=>Object.values(r.scores))));
+
+  // per-cashier rollup for flagged list
+  const byCashier = {};
+  cashierRows.forEach(r=>{
+    if(!byCashier[r.name]) byCashier[r.name] = {scores:[], count:0, shift:r.shift};
+    byCashier[r.name].scores.push(...Object.values(r.scores).filter(v=>typeof v==='number'));
+    byCashier[r.name].count++;
+  });
+  const flagged = Object.entries(byCashier).map(([name,d])=>({name, avg: avg(d.scores), count:d.count, shift:d.shift}))
+    .filter(x=>x.avg!==null).sort((a,b)=>a.avg-b.avg);
+
+  // weekly trend
+  const byWeek = {};
+  cashierRows.forEach(r=>{
+    if(!r.date) return;
+    const d = new Date(r.date);
+    const monday = new Date(d); monday.setDate(d.getDate() - ((d.getDay()+6)%7));
+    const key = monday.toISOString().slice(0,10);
+    if(!byWeek[key]) byWeek[key] = [];
+    byWeek[key].push(...Object.values(r.scores).filter(v=>typeof v==='number'));
+  });
+  const weekKeys = Object.keys(byWeek).sort();
+  const weekAvgs = weekKeys.map(k=>avg(byWeek[k]));
+
+  el.innerHTML = `
+    <div class="grid-cards">
+      <div class="card"><div class="label">Total Spot-Checks</div><div class="value">${total}</div></div>
+      <div class="card"><div class="label">Overall Avg Score</div><div class="value">${overall?overall.toFixed(2):'—'}<small> /3</small></div></div>
+      <div class="card"><div class="label">Opener Used</div><div class="value">${openerPct.toFixed(0)}<small>%</small></div></div>
+      <div class="card"><div class="label">Closer Used</div><div class="value">${closerPct.toFixed(0)}<small>%</small></div></div>
+    </div>
+
+    <div class="two-col">
+      <div class="panel"><h2>Average Score by Skill<small>1&ndash;3 scale, across all spot-checks</small></h2><canvas id="chartSkill"></canvas></div>
+      <div class="panel"><h2>Average Score by Shift<small>All 4 core skills combined</small></h2><canvas id="chartShift"></canvas></div>
+    </div>
+    <div class="two-col">
+      <div class="panel"><h2>Average Score by Outlet</h2><canvas id="chartOutlet"></canvas></div>
+      <div class="panel"><h2>Weekly Trend<small>Team average over time</small></h2><canvas id="chartTrend"></canvas></div>
+    </div>
+
+    <div class="panel">
+      <h2>Cashiers Needing Attention<small>Sorted lowest average first &mdash; a low count means the average isn't reliable yet</small></h2>
+      <table>
+        <thead><tr><th>Cashier</th><th>Shift</th><th>Avg Score</th><th># Observations</th></tr></thead>
+        <tbody>
+          ${flagged.slice(0,10).map(f=>`<tr><td>${f.name}</td><td>${f.shift||''}</td><td><span class="pill ${scoreClass(f.avg,3)}">${f.avg.toFixed(2)}</span></td><td>${f.count}</td></tr>`).join('') || '<tr><td colspan="4">No data yet.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  destroyChart('skill'); destroyChart('shift'); destroyChart('outlet'); destroyChart('trend');
+  const goldish = ['#c9a227','#d9b84a','#e8d9a0','#8b6f14'];
+
+  charts.skill = new Chart(document.getElementById('chartSkill'), {
+    type:'bar',
+    data:{labels:CASHIER_SKILLS, datasets:[{data:bySkill, backgroundColor:goldish}]},
+    options: baseBarOpts(3)
+  });
+  charts.shift = new Chart(document.getElementById('chartShift'), {
+    type:'bar',
+    data:{labels:shifts, datasets:[{data:byShift, backgroundColor:'#c9a227'}]},
+    options: baseBarOpts(3)
+  });
+  charts.outlet = new Chart(document.getElementById('chartOutlet'), {
+    type:'bar',
+    data:{labels:outletSet, datasets:[{data:byOutlet, backgroundColor:'#7fa88c'}]},
+    options: baseBarOpts(3, true)
+  });
+  charts.trend = new Chart(document.getElementById('chartTrend'), {
+    type:'line',
+    data:{labels:weekKeys.map(k=>fmtDate(new Date(k))), datasets:[{data:weekAvgs, borderColor:'#e8d9a0', backgroundColor:'rgba(232,217,160,0.15)', fill:true, tension:.3}]},
+    options: baseBarOpts(3)
+  });
+}
+
+function baseBarOpts(max, rotateX){
+  return {
+    responsive:true,
+    plugins:{legend:{display:false}},
+    scales:{
+      y:{ beginAtZero:true, max:max, grid:{color:'rgba(255,255,255,0.06)'}, ticks:{color:'#8b93a7'} },
+      x:{ grid:{display:false}, ticks:{color:'#8b93a7', maxRotation: rotateX?40:0, minRotation: rotateX?40:0} }
+    }
+  };
+}
+
+function renderManagement(){
+  const el = document.getElementById('managementTab');
+  const names = [...new Set(managerRows.map(r=>r.name))];
+
+  function latestFor(name){
+    const rows = managerRows.filter(r=>r.name===name).sort((a,b)=>(a.month||0)-(b.month||0));
+    return rows.length ? rows[rows.length-1] : null;
+  }
+
+  const rowsHTML = names.map(name=>{
+    const latest = latestFor(name);
+    if(!latest) return '';
+    const cells = ALL_MGR_SKILLS.map(sk=>{
+      const v = latest.scores[sk];
+      return `<td class="score" style="background:${heatColor(v,5)}">${v??'—'}</td>`;
+    }).join('');
+    const overall = avg(Object.values(latest.scores));
+    return `<tr><td><b>${name}</b><br><span style="color:var(--muted);font-size:11.5px;">${latest.role||''}</span></td>${cells}<td class="score"><span class="pill ${scoreClass(overall,5)}">${overall?overall.toFixed(1):'—'}</span></td><td style="color:var(--muted);font-size:12px;">${fmtMonth(latest.month)}</td></tr>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="panel">
+      <h2>Management Scorecard &mdash; Most Recent Month<small>10 Essential Soft Skills + 5 Critical Manager Skills, scored 1&ndash;5</small></h2>
+      <div style="overflow-x:auto;">
+      <table class="heat-table">
+        <thead><tr><th>Manager</th>${ALL_MGR_SKILLS.map(s=>`<th>${s}</th>`).join('')}<th>Overall</th><th>Reviewed</th></tr></thead>
+        <tbody>${rowsHTML || '<tr><td colspan="17">No data yet.</td></tr>'}</tbody>
+      </table>
+      </div>
+      <div class="legend-row">
+        <span><span class="legend-swatch" style="background:rgba(63,125,92,0.55)"></span>Strong (4.25&ndash;5)</span>
+        <span><span class="legend-swatch" style="background:rgba(63,125,92,0.3)"></span>Solid (3.5&ndash;4.24)</span>
+        <span><span class="legend-swatch" style="background:rgba(184,135,31,0.35)"></span>Developing (2.75&ndash;3.49)</span>
+        <span><span class="legend-swatch" style="background:rgba(161,64,47,0.4)"></span>Needs Focus (below 2.75)</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Individual Trend<small>Pick a manager to see their history month over month</small></h2>
+      <select id="managerSelect">${names.map(n=>`<option value="${n}">${n}</option>`).join('')}</select>
+      <div class="two-col" style="margin-top:18px;">
+        <div><canvas id="chartManagerSkills"></canvas></div>
+        <div><canvas id="chartManagerTrend"></canvas></div>
+      </div>
+      <div class="notes-list" id="managerNotes"></div>
+    </div>
+  `;
+
+  const sel = document.getElementById('managerSelect');
+  if(names.length){
+    sel.addEventListener('change', ()=>renderManagerDetail(sel.value));
+    renderManagerDetail(names[0]);
+  }
+}
+
+function renderManagerDetail(name){
+  const rows = managerRows.filter(r=>r.name===name).sort((a,b)=>(a.month||0)-(b.month||0));
+  const latest = rows[rows.length-1];
+
+  destroyChart('mgrSkills'); destroyChart('mgrTrend');
+
+  charts.mgrSkills = new Chart(document.getElementById('chartManagerSkills'), {
+    type:'bar',
+    data:{ labels: ALL_MGR_SKILLS, datasets:[{ data: ALL_MGR_SKILLS.map(sk=>latest?latest.scores[sk]:null), backgroundColor:'#c9a227' }]},
+    options:{ ...baseBarOpts(5,true), indexAxis:'x', plugins:{legend:{display:false}, title:{display:true, text:'Latest Scores by Skill', color:'#e8d9a0', font:{size:12}}} }
+  });
+
+  const monthLabels = rows.map(r=>fmtMonth(r.month));
+  const overallSeries = rows.map(r=>avg(Object.values(r.scores)));
+  charts.mgrTrend = new Chart(document.getElementById('chartManagerTrend'), {
+    type:'line',
+    data:{ labels: monthLabels, datasets:[{ data: overallSeries, borderColor:'#7fa88c', backgroundColor:'rgba(127,168,140,0.15)', fill:true, tension:.3 }]},
+    options:{ ...baseBarOpts(5), plugins:{legend:{display:false}, title:{display:true, text:'Overall Average Over Time', color:'#e8d9a0', font:{size:12}}} }
+  });
+
+  const notesEl = document.getElementById('managerNotes');
+  const withNotes = rows.filter(r=>r.notes).reverse();
+  notesEl.innerHTML = withNotes.length ? withNotes.map(r=>`
+    <div class="note-item">
+      <div class="meta">${fmtMonth(r.month)} &middot; reviewed by ${r.reviewedBy||'—'}</div>
+      <div class="text">${r.notes}</div>
+    </div>`).join('') : '<div style="color:var(--muted);font-size:13px;">No notes recorded yet.</div>';
+}
+
+document.querySelectorAll('nav.tabs button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('cashiersTab').style.display = btn.dataset.tab==='cashiers' ? 'block':'none';
+    document.getElementById('managementTab').style.display = btn.dataset.tab==='management' ? 'block':'none';
+  });
+});
+</script>
+</body>
+</html>
