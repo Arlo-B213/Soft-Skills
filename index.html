@@ -7,11 +7,11 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Soft Skills KPI">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23101a30'/%3E%3Ctext x='50' y='64' font-size='54' text-anchor='middle' fill='%23c9a227' font-family='Georgia,serif'%3ESS%3C/text%3E%3C/svg%3E">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23101a30'/%3E%3Ctext x='50' y='64' font-size='54' text-anchor='middle' fill='%23c9a227' font-family='Georgia,serif'%3ESS%3C/text%3E%3C/svg%3E">
-<link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Soft%20Skills%20KPI%20Dashboard%22%2C%22short_name%22%3A%22Soft%20Skills%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f5f6fa%22%2C%22theme_color%22%3A%22%23f5f6fa%22%7D">
-<title>Food Court Soft Skills Dashboard</title>
+<meta name="apple-mobile-web-app-title" content="Guest Tracker">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23101a30'/%3E%3Ctext x='50' y='64' font-size='46' text-anchor='middle' fill='%23c9a227' font-family='Georgia,serif'%3EGT%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23101a30'/%3E%3Ctext x='50' y='64' font-size='46' text-anchor='middle' fill='%23c9a227' font-family='Georgia,serif'%3EGT%3C/text%3E%3C/svg%3E">
+<link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Guest%20Feedback%20Tracker%22%2C%22short_name%22%3A%22Guest%20Tracker%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f5f6fa%22%2C%22theme_color%22%3A%22%23f5f6fa%22%7D">
+<title>Guest Feedback Tracker</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
@@ -86,7 +86,7 @@
   .panel, .card{ animation: fadeUp .35s ease-out; }
 
   .modal-overlay{
-    display:none; position:fixed; inset:0; background:rgba(5,9,20,0.72);
+    display:none; position:fixed; inset:0; background:rgba(5,9,20,0.55);
     z-index:100; align-items:center; justify-content:center; padding:20px;
     backdrop-filter:blur(2px);
   }
@@ -99,12 +99,6 @@
   .modal-header{ display:flex; justify-content:space-between; align-items:center; padding:18px 22px; border-bottom:1px solid var(--line); }
   .modal-header h3{ font-family:Georgia,serif; margin:0; color:var(--cream); font-size:18px; }
   .modal-header button{ background:none; border:none; color:var(--muted); font-size:22px; cursor:pointer; line-height:1; }
-  .modal-tabs{ display:flex; gap:4px; padding:14px 22px 0; flex-wrap:wrap; }
-  .modal-tabs button{
-    background:transparent; border:1px solid var(--line); color:var(--muted);
-    padding:7px 13px; border-radius:7px; font-size:12.5px; cursor:pointer; font-weight:600;
-  }
-  .modal-tabs button.active{ background:var(--gold); color:var(--ink); border-color:var(--gold); }
   .modal-body{ padding:18px 22px; }
   .modal-actions{ padding:16px 22px 22px; display:flex; justify-content:flex-end; gap:10px; }
   .field-row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
@@ -115,12 +109,16 @@
     background:var(--navy-3); border:1px solid var(--line); color:var(--cream);
     padding:8px 10px; border-radius:6px; font-size:13.5px; font-family:inherit;
   }
-  .field textarea{ resize:vertical; min-height:56px; }
-  .score-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:10px; margin-bottom:14px; }
-  .score-grid .field label{ font-size:11px; white-space:normal; }
+  .field textarea{ resize:vertical; min-height:70px; }
+  .check-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:10px; margin-bottom:14px; }
+  .check-item{
+    display:flex; align-items:center; gap:8px; background:var(--navy-3); border:1px solid var(--line);
+    border-radius:7px; padding:10px 12px; font-size:13px; cursor:pointer;
+  }
+  .check-item input{ width:17px; height:17px; accent-color:var(--gold); }
   .toast{
     position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
-    background:var(--navy-3); border:1px solid var(--gold); color:var(--gold-light);
+    background:var(--navy-2); border:1px solid var(--gold); color:var(--gold-light);
     padding:11px 20px; border-radius:8px; font-size:13.5px; z-index:200;
     box-shadow:0 8px 24px rgba(15,23,42,0.16); animation: fadeUp .25s ease-out;
   }
@@ -129,8 +127,8 @@
     display:flex; align-items:flex-start; gap:12px; padding:12px 14px; border-radius:9px;
     margin-bottom:8px; font-size:13.5px;
   }
-  .alert-row.up{ background:rgba(63,166,111,0.12); border:1px solid rgba(63,166,111,0.35); }
-  .alert-row.down{ background:rgba(196,84,63,0.12); border:1px solid rgba(196,84,63,0.35); }
+  .alert-row.up{ background:rgba(31,122,77,0.10); border:1px solid rgba(31,122,77,0.30); }
+  .alert-row.down{ background:rgba(161,64,47,0.10); border:1px solid rgba(161,64,47,0.30); }
   .alert-icon{ font-size:17px; line-height:1.4; }
   .alert-row .name{ font-weight:700; color:var(--cream); }
   .alert-row .reason{ color:var(--muted); font-size:12.5px; }
@@ -149,13 +147,11 @@
     font-weight:600;letter-spacing:.02em;
   }
   nav.tabs button.active{
-    background:var(--navy-3);color:var(--gold-light);border-color:var(--gold);
-    border-bottom-color:var(--navy-3);
+    background:var(--navy-2);color:var(--gold-light);border-color:var(--gold);
+    border-bottom-color:var(--navy-2);
   }
 
-  .empty{
-    text-align:center;padding:80px 20px;color:var(--muted);
-  }
+  .empty{ text-align:center;padding:80px 20px;color:var(--muted); }
   .empty .icon{font-size:40px;margin-bottom:14px;color:var(--gold);}
   .empty b{color:var(--cream);}
 
@@ -180,7 +176,39 @@
   .two-col{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
   @media(max-width:820px){.two-col{grid-template-columns:1fr;} .upload-box{width:100%;}}
 
-  /* ---- Mobile optimizations ---- */
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  th{
+    text-align:left;color:var(--gold-light);font-size:11px;text-transform:uppercase;
+    letter-spacing:.08em;padding:8px 10px;border-bottom:1px solid var(--line);
+  }
+  td{padding:9px 10px;border-bottom:1px solid rgba(15,23,42,0.08);}
+  tr:hover td{background:rgba(15,23,42,0.03);}
+  .pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:12px;font-weight:700;}
+  .pill.good{background:rgba(31,122,77,.14);color:#1f7a4d;}
+  .pill.warn{background:rgba(184,135,31,.16);color:var(--gold-light);}
+  .pill.bad{background:rgba(161,64,47,.14);color:#a1402f;}
+
+  select{
+    background:var(--navy-3);color:var(--cream);border:1px solid var(--line);
+    padding:8px 12px;border-radius:7px;font-size:13.5px;
+  }
+
+  .legend-row{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:10px;}
+  .legend-swatch{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:middle;}
+
+  .notes-list{margin-top:14px;}
+  .note-item{
+    border-left:2px solid var(--gold);padding:8px 0 8px 14px;margin-bottom:10px;font-size:13.5px;
+  }
+  .note-item.negative{border-left-color:var(--bad);}
+  .note-item .meta{color:var(--gold-light);font-weight:600;font-size:12px;margin-bottom:3px;}
+  .note-item.negative .meta{color:#a1402f;}
+  .note-item .text{color:var(--cream);opacity:.9;}
+
+  canvas{max-height:280px;}
+  #chartCategoryFocus, #chartModActivity{ max-height:340px; }
+  footer{text-align:center;color:var(--muted);font-size:11.5px;margin-top:30px;}
+
   .fab{
     display:none; position:fixed; right:18px; bottom:18px; z-index:90;
     width:58px; height:58px; border-radius:50%; background:var(--gold); color:var(--ink);
@@ -202,55 +230,20 @@
     .card .value{ font-size:24px; }
     .panel{ padding:16px 16px; margin-bottom:16px; }
     canvas{ max-height:220px; }
-    #chartFocusAreas, #chartEngagement{ max-height:380px; }
+    #chartCategoryFocus, #chartModActivity{ max-height:380px; }
     table{ font-size:12.5px; }
     th, td{ padding:7px 6px; }
-    select, input, textarea{ font-size:16px !important; } /* prevents iOS auto-zoom on focus */
+    select, input, textarea{ font-size:16px !important; }
     .fab{ display:flex; }
-    .upload-box #openEntryModalBtn{ display:none; } /* FAB replaces header button on mobile */
+    .upload-box #openEntryModalBtn{ display:none; }
     .modal-overlay{ padding:0; align-items:flex-end; }
     .modal{ max-width:100%; width:100%; max-height:92vh; border-radius:16px 16px 0 0; }
     .field-row{ grid-template-columns:1fr; }
-    .score-grid{ grid-template-columns:1fr 1fr; }
+    .check-grid{ grid-template-columns:1fr 1fr; }
     .modal-actions{ position:sticky; bottom:0; background:var(--navy-2); border-top:1px solid var(--line); }
     .alert-row{ flex-wrap:wrap; }
     .alert-row button{ margin-left:0; width:100%; margin-top:6px; }
-    .two-col > .panel:first-child{ margin-bottom:0; }
   }
-
-  table{width:100%;border-collapse:collapse;font-size:13.5px;}
-  th{
-    text-align:left;color:var(--gold-light);font-size:11px;text-transform:uppercase;
-    letter-spacing:.08em;padding:8px 10px;border-bottom:1px solid var(--line);
-  }
-  td{padding:9px 10px;border-bottom:1px solid rgba(15,23,42,0.08);}
-  tr:hover td{background:rgba(15,23,42,0.03);}
-  .pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:12px;font-weight:700;}
-  .pill.good{background:rgba(31,122,77,.14);color:#1f7a4d;}
-  .pill.warn{background:rgba(184,135,31,.16);color:var(--gold-light);}
-  .pill.bad{background:rgba(161,64,47,.14);color:#a1402f;}
-
-  select{
-    background:var(--navy-3);color:var(--cream);border:1px solid var(--line);
-    padding:8px 12px;border-radius:7px;font-size:13.5px;
-  }
-
-  .heat-table td.score{text-align:center;font-weight:700;border-radius:4px;}
-  .legend-row{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:10px;}
-  .legend-swatch{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:middle;}
-
-  .notes-list{margin-top:14px;}
-  .note-item{
-    border-left:2px solid var(--gold);padding:8px 0 8px 14px;margin-bottom:10px;font-size:13.5px;
-  }
-  .note-item.negative{border-left-color:var(--bad);}
-  .note-item .meta{color:var(--gold-light);font-weight:600;font-size:12px;margin-bottom:3px;}
-  .note-item.negative .meta{color:#a1402f;}
-  .note-item .text{color:var(--cream);opacity:.9;}
-
-  canvas{max-height:280px;}
-  #chartFocusAreas, #chartEngagement{ max-height:340px; }
-  footer{text-align:center;color:var(--muted);font-size:11.5px;margin-top:30px;}
 </style>
 </head>
 <body>
@@ -259,8 +252,8 @@
   <header class="top">
     <div>
       <div class="brand-eyebrow">Operations</div>
-      <h1>Soft Skills <span>KPI Dashboard</span></h1>
-      <div class="sub">Tracking the 10 Essential Soft Skills across cashiers and management</div>
+      <h1>Guest Feedback <span>Tracker</span></h1>
+      <div class="sub">Compliments and issues logged for pool &amp; bar service, by team member</div>
     </div>
     <div class="upload-box">
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -268,23 +261,17 @@
         <button id="openEntryModalBtn" class="btn-secondary">+ Log Entry</button>
       </div>
       <input type="file" id="fileInput" accept=".xlsx">
-      <div class="upload-status" id="uploadStatus">No file loaded yet — upload Soft_Skills_KPI_Tracker.xlsx</div>
+      <div class="upload-status" id="uploadStatus">No file loaded yet — upload Guest_Tracker.xlsx</div>
       <div class="upload-status" id="syncStatus">Cloud sync: not configured</div>
     </div>
   </header>
 
-  <nav class="tabs">
-    <button class="active" data-tab="cashiers">Cashiers</button>
-    <button data-tab="management">Management</button>
-  </nav>
-
   <div id="emptyState" class="empty">
     <div class="icon">&#9679;</div>
-    <div><b>No data loaded.</b><br>Upload your <b>Soft_Skills_KPI_Tracker.xlsx</b> file above to see the dashboard.<br>Each time you update the workbook, re-upload it here — no export step needed.</div>
+    <div><b>No data loaded.</b><br>Upload your <b>Guest_Tracker.xlsx</b> file above to see the dashboard.<br>Each time you update the workbook, re-upload it here — no export step needed.</div>
   </div>
 
-  <div id="cashiersTab" style="display:none;"></div>
-  <div id="managementTab" style="display:none;"></div>
+  <div id="mainTab" style="display:none;"></div>
 
   <button class="fab" id="fabEntryBtn" aria-label="Log entry">+</button>
 
@@ -294,14 +281,8 @@
 <div id="entryModal" class="modal-overlay">
   <div class="modal">
     <div class="modal-header">
-      <h3>Log an Entry</h3>
+      <h3>Log Guest Feedback</h3>
       <button id="closeModalBtn">&times;</button>
-    </div>
-    <div class="modal-tabs" id="modalTabs">
-      <button data-type="spotcheck" class="active">Cashier Spot-Check</button>
-      <button data-type="negative">Negative Interaction</button>
-      <button data-type="coaching">Coaching Note</button>
-      <button data-type="manager">Manager Score</button>
     </div>
     <div class="modal-body" id="modalBody"></div>
     <div class="modal-actions">
@@ -312,30 +293,10 @@
 </div>
 
 <script>
-const CASHIER_SKILLS = ["Guest Engagement","Communication Clarity","Attention to Detail","Positive Attitude"];
-const SOFT_SKILLS = ["Guest Engagement & Hospitality Mindset","Communication Clarity","Adaptability","Teamwork & Collaboration","Conflict Resolution","Time Management","Attention to Detail","Positive Attitude & Resilience","Active Listening","Professionalism & Appearance"];
-const MANAGER_SKILLS = ["Coaching & Feedback","Accountability","Decision-Making Under Pressure","Delegation","Leading by Example"];
-const ALL_MGR_SKILLS = SOFT_SKILLS.concat(MANAGER_SKILLS);
-
-const SHIFTS = ["Morning","Day","Swing","Late Swing","Graveyard"];
-const OUTLET_ABBR = {
-  "Pronto":"PR", "Agave":"AG", "American Classics":"AC", "Pechanga Fried Chicken":"PFC",
-  "Cafe Cocoa's":"CC", "Little Wok":"LW", "Portable Smart Bar":"PSB"
-};
-const OUTLETS = Object.values(OUTLET_ABBR);
-function normalizeOutlet(raw){
-  if(!raw) return raw;
-  return OUTLET_ABBR[raw] || raw;
-}
-function outletOptions(){
-  return Object.entries(OUTLET_ABBR).map(([full,abbr]) => `<option value="${abbr}">${abbr} — ${full}</option>`).join('');
-}
-const NEGATIVE_AREAS = ["Guest Engagement","Communication Clarity","Attention to Detail","Positive Attitude","Non-Negotiable Missed (Opener)","Non-Negotiable Missed (Closer)","Order Accuracy","Other"];
-const COACHING_TRIGGERS = ["Low Spot-Check Score","Guest Complaint","Routine Check-In","Recognition / Positive"];
-
-const ROSTER_CASHIERS = [["Bella Abarientos","Morning"],["Julie Santiago","Morning"],["Sandra Rothenay","Morning"],["Gloria Paras","Morning"],["Ross Principe","Morning"],["Lucia Lapuz","Morning"],["Bernie Ferrer","Day"],["Tess Santos","Day"],["Mark Seifert Jr.","Day"],["Delilah Villez","Day"],["Bernardo Villez","Day"],["Lynette Garcia","Day"],["Teresa Zamora","Day"],["Andrianova Diaz","Day"],["Aiza Umba","Day"],["Anne Lori Solis","Day"],["Dominique Daphness","Day"],["Dawn Olvido","Day"],["Cathyrine Gomez","Day"],["Michael Herbach","Day"],["Myra Teano","Day"],["Rosaura Rendon","Day"],["Jordan Mcclain","Day"],["Isaac Garcia","Swing"],["Victoria Smith","Swing"],["Velda Stewart","Swing"],["Selena Molina","Swing"],["Hung Le","Swing"],["James Carrillo","Swing"],["Martha Duarte","Swing"],["Estefania Caballero-Cabrera","Swing"],["Troy Mcarty","Swing"],["Nathan Carmenatty","Swing"],["Daniel Pynes","Swing"],["Dylan Starkey","Swing"],["Jason Main","Swing"],["Maria Raquel Colima","Swing"],["Brent Tinoco","Swing"],["Arturo Gonzalez","Swing"],["Nataliya Vigil","Swing"],["Alina Tahirre","Late Swing"],["Taynara Fernandez","Late Swing"],["Ethan Seymour","Late Swing"],["Guillermo Flores","Graveyard"],["Leticia Castillo","Graveyard"],["Angelica Velazquez","Graveyard"],["Alayna Rourke","Graveyard"],["Ashley Ramirez","Graveyard"]];
-
-const ROSTER_MANAGERS = [["Ana Sanchez","Asst. Manager"],["Salve Villez","Asst. Manager"],["Maria Tomas","Asst. Manager"],["Joharra Ruidera","Asst. Manager"],["Jeannifer Spier","Asst. Manager"],["Leo Donato","Asst. Manager"],["Samantha Gamboa","Asst. Manager"],["Elizabeth Guevarra","Lead"],["Gregory Conn","Lead"],["Sergio Andres","Lead"],["Jessica Carreon","Lead"],["Walden Wesley Palacio","Lead"],["Savy Vann","Lead"]];
+const CATEGORIES = ["Compliment / Great Service","Food Issue","Drink Issue","Long Wait","Poor Service"];
+const CATEGORY_KEYS = ["compliment","food","drink","wait","poor"];
+const TEAM_MEMBERS = ["Laila","Paige","Leilani","Nick","Kellie","Jordan","Lennox","Lindsey","Priscilla","Briana","Keilani","Kayley","Mark","Jason","JC","Nicole","Skyler","Ashley","Armando","Myrna","David","Jessica","Philip","Rayanne","Alex","COVE (General)","ASM/Supervisor"];
+const MODS = ["TYLER","NICHOL","JOHN","GREG","GABBY"];
 
 Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
 Chart.defaults.color = '#5b6472';
@@ -352,13 +313,13 @@ Chart.defaults.plugins.tooltip.displayColors = false;
 Chart.defaults.animation.duration = 650;
 Chart.defaults.animation.easing = 'easeOutQuart';
 
-function scoreColor(v, max, alpha){
-  alpha = alpha===undefined ? 1 : alpha;
-  if(v===null||v===undefined) return `rgba(139,147,167,${alpha})`;
-  const pct = v/max;
-  if(pct >= 0.8) return `rgba(63,166,111,${alpha})`;
-  if(pct >= 0.6) return `rgba(201,162,39,${alpha})`;
-  return `rgba(196,84,63,${alpha})`;
+function catColor(key, alpha){
+  alpha = alpha===undefined ? 0.85 : alpha;
+  if(key==='compliment') return `rgba(31,122,77,${alpha})`;
+  if(key==='poor') return `rgba(196,84,63,${alpha})`;
+  if(key==='wait') return `rgba(184,135,31,${alpha})`;
+  if(key==='food' || key==='drink') return `rgba(180,120,40,${alpha})`;
+  return `rgba(139,147,167,${alpha})`;
 }
 function vGradient(ctx, hex1, hex2){
   const {chartArea} = ctx.chart;
@@ -369,16 +330,11 @@ function vGradient(ctx, hex1, hex2){
   return g;
 }
 
-let cashierRows = [];
-let managerRows = [];
-let coachingRows = [];
-let negativeRows = [];
+let feedbackRows = [];
 let charts = {};
-let lastByCashier = {};
+let lastByServer = {};
 
 // ---------- Cloud sync (Firebase) ----------
-// Paste your Firebase project config below (from Firebase Console > Project Settings > Your apps).
-// Leave apiKey as "" to run in local-only mode (upload works, but nothing is shared with the team).
 const firebaseConfig = {
   apiKey: "AIzaSyCs6_YRPZsGDkb4hUFU4uVvfwyN9gPKUDg",
   authDomain: "soft-skills-f6ae0.firebaseapp.com",
@@ -390,7 +346,7 @@ const firebaseConfig = {
 
 let db = null;
 let cloudEnabled = false;
-const DOC_PATH = { collection: "kpi_dashboard", doc: "latest" };
+const DOC_PATH = { collection: "guest_tracker", doc: "latest" };
 
 function setSyncStatus(text, ok){
   const el = document.getElementById('syncStatus');
@@ -401,23 +357,22 @@ function setSyncStatus(text, ok){
 function initCloud(){
   if(!firebaseConfig.apiKey){ setSyncStatus('not configured (upload-only mode)', false); return; }
   try{
-    firebase.initializeApp(firebaseConfig);
-    db = firebase.firestore();
+    const appName = 'guestTrackerApp';
+    const app = firebase.apps && firebase.apps.find(a=>a.name===appName) ? firebase.app(appName) : firebase.initializeApp(firebaseConfig, appName);
+    db = app.firestore();
     cloudEnabled = true;
     setSyncStatus('connecting…', false);
     db.collection(DOC_PATH.collection).doc(DOC_PATH.doc)
       .onSnapshot(snap => {
         if(snap.exists){
           const data = snap.data();
-          cashierRows = reviveDates(data.cashierRows || []);
-          managerRows = reviveDates(data.managerRows || []);
-          coachingRows = reviveDates(data.coachingRows || []);
-          negativeRows = reviveDates(data.negativeRows || []);
+          feedbackRows = reviveDates(data.feedbackRows || []);
           const when = data.updatedAt && data.updatedAt.toDate ? data.updatedAt.toDate() : null;
           const who = data.updatedBy || 'someone';
           setSyncStatus(`live — last updated by ${who}${when ? ' at ' + when.toLocaleString() : ''}`, true);
           document.getElementById('emptyState').style.display = 'none';
-          renderAll();
+          document.getElementById('mainTab').style.display = 'block';
+          renderMain();
         } else {
           setSyncStatus('live — no data uploaded yet', true);
         }
@@ -442,10 +397,10 @@ function reviveDates(val){
 }
 
 function getUploaderName(forceAsk){
-  let name = localStorage.getItem('kpi_uploader_name') || '';
+  let name = localStorage.getItem('guest_uploader_name') || '';
   if(forceAsk || !name){
     name = prompt('Your name (shown as who logged this update):', name) || name || 'Unknown';
-    localStorage.setItem('kpi_uploader_name', name);
+    localStorage.setItem('guest_uploader_name', name);
   }
   return name;
 }
@@ -456,7 +411,7 @@ async function saveToCloud(){
   setSyncStatus('saving…', false);
   try{
     await db.collection(DOC_PATH.collection).doc(DOC_PATH.doc).set({
-      cashierRows, managerRows, coachingRows, negativeRows,
+      feedbackRows,
       updatedBy: name,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
@@ -471,7 +426,6 @@ function excelDateToJS(v){
   if (typeof v === 'string'){ const d = new Date(v); if(!isNaN(d)) return d; }
   return null;
 }
-function fmtMonth(d){ if(!d) return ''; return d.toLocaleDateString('en-US',{month:'short',year:'numeric'}); }
 function fmtDate(d){ if(!d) return ''; return d.toLocaleDateString('en-US',{month:'short',day:'numeric'}); }
 function avg(arr){ const v = arr.filter(x=>typeof x==='number'); return v.length ? v.reduce((a,b)=>a+b,0)/v.length : null; }
 
@@ -487,7 +441,8 @@ document.getElementById('fileInput').addEventListener('change', function(e){
       document.getElementById('uploadStatus').textContent = 'Loaded: ' + file.name + ' — ' + new Date().toLocaleTimeString();
       document.getElementById('uploadStatus').classList.add('ok');
       document.getElementById('emptyState').style.display = 'none';
-      renderAll();
+      document.getElementById('mainTab').style.display = 'block';
+      renderMain();
       if(cloudEnabled) saveToCloud();
     }catch(err){
       document.getElementById('uploadStatus').textContent = 'Could not read that file: ' + err.message;
@@ -506,720 +461,336 @@ function sheetRows(wb, name){
 }
 
 function parseWorkbook(wb){
-  const clog = sheetRows(wb, 'Cashier Log');
-  cashierRows = [];
-  for(let i=5;i<clog.length;i++){
-    const r = clog[i];
-    if(!r || !r[3]) continue;
-    const notes = r[12] || '';
-    if(String(notes).startsWith('[SAMPLE]')) continue;
-    cashierRows.push({
-      date: excelDateToJS(r[0]),
-      shift: r[1], outlet: normalizeOutlet(r[2]), name: r[3], badge: r[4],
-      scores: { "Guest Engagement": r[5], "Communication Clarity": r[6], "Attention to Detail": r[7], "Positive Attitude": r[8] },
-      opener: r[9], closer: r[10], observedBy: r[11], notes: notes
-    });
-  }
-
-  const mlog = sheetRows(wb, 'Manager Scorecard');
-  managerRows = [];
-  for(let i=5;i<mlog.length;i++){
-    const r = mlog[i];
+  const rows = sheetRows(wb, 'Feedback Log');
+  feedbackRows = [];
+  for(let i=5;i<rows.length;i++){
+    const r = rows[i];
     if(!r || !r[1]) continue;
-    const notes = r[18] || '';
-    if(String(notes).startsWith('[SAMPLE]')) continue;
-    const scores = {};
-    ALL_MGR_SKILLS.forEach((sk,idx)=>{ scores[sk] = r[3+idx]; });
-    managerRows.push({
-      month: excelDateToJS(r[0]), name: r[1], role: r[2], scores,
-      notes: notes, reviewedBy: r[19]
+    const detail = r[7] || '';
+    if(String(detail).startsWith('[SAMPLE]')) continue;
+    feedbackRows.push({
+      date: excelDateToJS(r[0]), name: r[1],
+      compliment: r[2]==='Yes', food: r[3]==='Yes', drink: r[4]==='Yes', wait: r[5]==='Yes', poor: r[6]==='Yes',
+      detail: detail, mod: r[8]
     });
   }
-
-  const clog2 = sheetRows(wb, 'Coaching Log');
-  coachingRows = [];
-  for(let i=5;i<clog2.length;i++){
-    const r = clog2[i];
-    if(!r || !r[1]) continue;
-    const notes = r[7] || '';
-    if(String(notes).startsWith('[SAMPLE]')) continue;
-    coachingRows.push({
-      date: excelDateToJS(r[0]), name: r[1], badge: r[2], trigger: r[3],
-      action: r[4], followUpDate: excelDateToJS(r[5]), status: r[6],
-      notes: notes, loggedBy: r[8]
-    });
-  }
-
-  const nlog = sheetRows(wb, 'Negative Interactions');
-  negativeRows = [];
-  for(let i=5;i<nlog.length;i++){
-    const r = nlog[i];
-    if(!r || !r[1]) continue;
-    const desc = r[8] || '';
-    if(String(desc).startsWith('[SAMPLE]')) continue;
-    negativeRows.push({
-      date: excelDateToJS(r[0]), name: r[1], badge: r[2], outlet: normalizeOutlet(r[3]), shift: r[4],
-      area: r[5], severity: r[6], complaint: r[7], description: desc, loggedBy: r[9]
-    });
-  }
-}
-
-function scoreClass(v, max){
-  if(v===null||v===undefined) return '';
-  const pct = v/max;
-  if(pct >= 0.8) return 'good';
-  if(pct >= 0.6) return 'warn';
-  return 'bad';
-}
-function heatColor(v, max){
-  if(v===null||v===undefined) return 'transparent';
-  const pct = v/max;
-  if(pct >= 0.85) return 'rgba(63,125,92,0.55)';
-  if(pct >= 0.7) return 'rgba(63,125,92,0.3)';
-  if(pct >= 0.55) return 'rgba(184,135,31,0.35)';
-  return 'rgba(161,64,47,0.4)';
 }
 
 function destroyChart(id){ if(charts[id]){ charts[id].destroy(); delete charts[id]; } }
 
-function renderAll(){
-  renderCashiers();
-  renderManagement();
-}
-
-function cashierObsAvg(r){ return avg(Object.values(r.scores)); }
-
-function computeCashierRollups(){
-  const byCashier = {};
-  cashierRows.forEach(r=>{
-    if(!byCashier[r.name]) byCashier[r.name] = {obs:[], shift:r.shift};
-    byCashier[r.name].obs.push(r);
+function computeByServer(){
+  const by = {};
+  feedbackRows.forEach(r=>{
+    if(!by[r.name]) by[r.name] = { rows:[], compliment:0, food:0, drink:0, wait:0, poor:0 };
+    by[r.name].rows.push(r);
+    CATEGORY_KEYS.forEach(k=>{ if(r[k]) by[r.name][k]++; });
   });
-  Object.values(byCashier).forEach(d=>d.obs.sort((a,b)=>(a.date||0)-(b.date||0)));
-  return byCashier;
+  Object.values(by).forEach(d=>d.rows.sort((a,b)=>(a.date||0)-(b.date||0)));
+  return by;
 }
 
-function openCoachingFor(name){
-  return coachingRows.filter(c=>c.name===name && c.status==='Pending').length;
-}
+function renderMain(){
+  const el = document.getElementById('mainTab');
+  const total = feedbackRows.length;
+  const counts = {};
+  CATEGORY_KEYS.forEach(k=>{ counts[k] = feedbackRows.filter(r=>r[k]).length; });
+  const totalIssues = counts.food + counts.drink + counts.wait + counts.poor;
+  const complimentRate = total ? (counts.compliment/total*100) : 0;
 
-function renderCashiers(){
-  const el = document.getElementById('cashiersTab');
-  const total = cashierRows.length;
-  const overall = avg(cashierRows.flatMap(r=>Object.values(r.scores)));
-  const openerPct = total ? cashierRows.filter(r=>r.opener==='Y').length/total*100 : 0;
-  const closerPct = total ? cashierRows.filter(r=>r.closer==='Y').length/total*100 : 0;
-  const pendingCoaching = coachingRows.filter(c=>c.status==='Pending').length;
-  const overdueCoaching = coachingRows.filter(c=>c.status==='Pending' && c.followUpDate && c.followUpDate < new Date()).length;
-  const totalNegative = negativeRows.length;
-  const complaintPct = totalNegative ? negativeRows.filter(n=>n.complaint==='Y').length/totalNegative*100 : 0;
+  const byServer = computeByServer();
+  lastByServer = byServer;
+  const serverNames = Object.keys(byServer).sort();
 
-  const areaCounts = {};
-  negativeRows.forEach(n=>{ if(n.area){ areaCounts[n.area] = (areaCounts[n.area]||0)+1; } });
-  const areaLabels = Object.keys(areaCounts).sort((a,b)=>areaCounts[b]-areaCounts[a]);
-  const areaValues = areaLabels.map(a=>areaCounts[a]);
-  const topArea = areaLabels[0];
+  const leaderboard = serverNames.map(name=>{
+    const d = byServer[name];
+    const totalMentions = CATEGORY_KEYS.reduce((a,k)=>a+d[k],0);
+    const issues = d.food+d.drink+d.wait+d.poor;
+    const ratio = totalMentions ? d.compliment/totalMentions : null;
+    return { name, compliment:d.compliment, issues, totalMentions, ratio, rows:d.rows };
+  }).filter(x=>x.totalMentions>0);
 
-  const bySkill = CASHIER_SKILLS.map(sk => avg(cashierRows.map(r=>r.scores[sk])));
-
-  const shifts = ["Morning","Day","Swing","Late Swing","Graveyard"];
-  const byShift = shifts.map(s => avg(cashierRows.filter(r=>r.shift===s).flatMap(r=>Object.values(r.scores))));
-
-  const outletSet = [...new Set(cashierRows.map(r=>r.outlet).filter(Boolean))];
-  const byOutlet = outletSet.map(o => avg(cashierRows.filter(r=>r.outlet===o).flatMap(r=>Object.values(r.scores))));
-
-  const byCashier = computeCashierRollups();
-  lastByCashier = byCashier;
-  const cashierNames = Object.keys(byCashier).sort();
-
-  // flagged (lowest overall average)
-  const flagged = cashierNames.map(name=>{
-    const d = byCashier[name];
-    const scores = d.obs.flatMap(o=>Object.values(o.scores).filter(v=>typeof v==='number'));
-    return { name, avg: avg(scores), count: d.obs.length, shift: d.shift };
-  }).filter(x=>x.avg!==null).sort((a,b)=>a.avg-b.avg);
-
-  // improvement: split each cashier's observations into earlier half vs recent half (min 4 obs)
-  const improvement = cashierNames.map(name=>{
-    const obs = byCashier[name].obs;
-    if(obs.length < 4) return null;
-    const mid = Math.floor(obs.length/2);
-    const earlier = avg(obs.slice(0,mid).map(cashierObsAvg));
-    const recent = avg(obs.slice(mid).map(cashierObsAvg));
-    if(earlier===null || recent===null) return null;
-    return { name, earlier, recent, delta: recent-earlier, count: obs.length, shift: byCashier[name].shift };
-  }).filter(Boolean);
-  const mostImproved = [...improvement].sort((a,b)=>b.delta-a.delta).filter(x=>x.delta>0).slice(0,6);
-  const declining = [...improvement].sort((a,b)=>a.delta-b.delta).filter(x=>x.delta<0).slice(0,6);
-
-  // ---- Alerts: Above & Beyond / Needs Coaching ----
-  const negByCashier = {};
-  negativeRows.forEach(n=>{ negByCashier[n.name] = (negByCashier[n.name]||0)+1; });
-  const overdueByCashier = new Set(coachingRows.filter(c=>c.status==='Pending' && c.followUpDate && c.followUpDate < new Date()).map(c=>c.name));
-  const improvementByName = {}; improvement.forEach(i=>improvementByName[i.name]=i);
-  const flaggedByName = {}; flagged.forEach(f=>flaggedByName[f.name]=f);
+  const topCompliments = [...leaderboard].sort((a,b)=>b.compliment-a.compliment).filter(x=>x.compliment>0).slice(0,8);
+  const mostIssues = [...leaderboard].sort((a,b)=>b.issues-a.issues).filter(x=>x.issues>0).slice(0,8);
 
   const upAlerts = [], downAlerts = [];
-  cashierNames.forEach(name=>{
-    const f = flaggedByName[name];
-    const imp = improvementByName[name];
-    const obs = byCashier[name].obs;
+  leaderboard.forEach(x=>{
     const upReasons = [], downReasons = [];
-
-    if(f && f.count>=4 && f.avg>=2.7) upReasons.push(`Overall average ${f.avg.toFixed(2)}/3 across ${f.count} checks`);
-    if(imp && imp.delta>=0.75) upReasons.push(`Improved ${imp.delta.toFixed(2)} pts recently`);
-    if(obs.length>=3 && obs.every(o=>o.opener==='Y' && o.closer==='Y')) upReasons.push(`100% opener/closer compliance across ${obs.length} checks`);
-
-    if(f && f.count>=3 && f.avg<=1.7) downReasons.push(`Overall average ${f.avg.toFixed(2)}/3 across ${f.count} checks`);
-    if((negByCashier[name]||0)>=2) downReasons.push(`${negByCashier[name]} negative interactions logged`);
-    if(overdueByCashier.has(name)) downReasons.push('Overdue coaching follow-up');
-
-    if(upReasons.length) upAlerts.push({name, reasons:upReasons});
-    if(downReasons.length) downAlerts.push({name, reasons:downReasons});
+    if(x.compliment>=3) upReasons.push(`${x.compliment} compliments logged`);
+    if(x.totalMentions>=3 && x.ratio!==null && x.ratio>=0.85) upReasons.push(`${Math.round(x.ratio*100)}% of mentions are compliments`);
+    if(x.issues>=3) downReasons.push(`${x.issues} issues logged`);
+    if(x.rows.filter(r=>r.poor).length>=2) downReasons.push(`${x.rows.filter(r=>r.poor).length} Poor Service mentions`);
+    if(upReasons.length) upAlerts.push({name:x.name, reasons:upReasons});
+    if(downReasons.length) downAlerts.push({name:x.name, reasons:downReasons});
   });
 
-  // weekly trend
+  const areaLabels = CATEGORIES;
+  const areaValues = CATEGORY_KEYS.map(k=>counts[k]);
+
+  const modCounts = MODS.map(m=>({ mod:m, count: feedbackRows.filter(r=>r.mod===m).length }));
+  const now = new Date();
+  const modLast = MODS.map(m=>{
+    const rows = feedbackRows.filter(r=>r.mod===m && r.date);
+    const last = rows.length ? new Date(Math.max(...rows.map(r=>+r.date))) : null;
+    return { mod:m, last, daysSince: last ? Math.floor((now-last)/86400000) : null };
+  });
+
   const byWeek = {};
-  cashierRows.forEach(r=>{
+  feedbackRows.forEach(r=>{
     if(!r.date) return;
     const d = new Date(r.date);
     const monday = new Date(d); monday.setDate(d.getDate() - ((d.getDay()+6)%7));
     const key = monday.toISOString().slice(0,10);
-    if(!byWeek[key]) byWeek[key] = [];
-    byWeek[key].push(...Object.values(r.scores).filter(v=>typeof v==='number'));
+    if(!byWeek[key]) byWeek[key] = {compliment:0, issue:0};
+    if(r.compliment) byWeek[key].compliment++;
+    if(r.food||r.drink||r.wait||r.poor) byWeek[key].issue++;
   });
   const weekKeys = Object.keys(byWeek).sort();
-  const weekAvgs = weekKeys.map(k=>avg(byWeek[k]));
-
-  function deltaPill(d){
-    const arrow = d>0 ? '&#9650;' : (d<0 ? '&#9660;' : '&mdash;');
-    const cls = d>0 ? 'good' : (d<0 ? 'bad' : 'warn');
-    return `<span class="pill ${cls}">${arrow} ${Math.abs(d).toFixed(2)}</span>`;
-  }
 
   el.innerHTML = `
     <div class="grid-cards">
-      <div class="card"><div class="label">Total Spot-Checks</div><div class="value">${total}</div></div>
-      <div class="card"><div class="label">Overall Avg Score</div><div class="value">${overall?overall.toFixed(2):'—'}<small> /3</small></div></div>
-      <div class="card"><div class="label">Opener / Closer Used</div><div class="value">${openerPct.toFixed(0)}<small>% / </small>${closerPct.toFixed(0)}<small>%</small></div></div>
-      <div class="card"><div class="label">Open Coaching Follow-Ups</div><div class="value">${pendingCoaching}${overdueCoaching?` <small style="color:#e29284;">(${overdueCoaching} overdue)</small>`:''}</div></div>
-      <div class="card"><div class="label">Negative Interactions Logged</div><div class="value">${totalNegative}<small> (${complaintPct.toFixed(0)}% w/ complaint)</small></div></div>
+      <div class="card"><div class="label">Total Entries</div><div class="value">${total}</div></div>
+      <div class="card"><div class="label">Compliments</div><div class="value">${counts.compliment}<small> (${complimentRate.toFixed(0)}%)</small></div></div>
+      <div class="card"><div class="label">Total Issues</div><div class="value">${totalIssues}</div></div>
+      <div class="card"><div class="label">Poor Service Mentions</div><div class="value">${counts.poor}</div></div>
     </div>
 
     <div class="two-col">
       <div class="panel">
-        <h2>&#127942; Above &amp; Beyond<small>Automatically flagged from recent performance</small></h2>
+        <h2>&#127942; Above &amp; Beyond<small>Team members earning repeat compliments</small></h2>
         ${upAlerts.length ? upAlerts.map(a=>`
           <div class="alert-row up">
             <div class="alert-icon">&#11088;</div>
             <div><div class="name">${a.name}</div><div class="reason">${a.reasons.join(' &middot; ')}</div></div>
-            <button onclick="openCashierDetailFromAlert('${a.name.replace(/'/g,"\\'")}')">View</button>
+            <button onclick="openServerDetailFromAlert('${a.name.replace(/'/g,"\\'")}')">View</button>
           </div>`).join('') : '<div style="color:var(--muted);font-size:13px;">No standout performers flagged yet.</div>'}
       </div>
       <div class="panel">
-        <h2>&#9888;&#65039; Needs Coaching<small>Automatically flagged from recent performance</small></h2>
+        <h2>&#9888;&#65039; Needs Coaching<small>Repeated issues worth a conversation</small></h2>
         ${downAlerts.length ? downAlerts.map(a=>`
           <div class="alert-row down">
             <div class="alert-icon">&#128276;</div>
             <div><div class="name">${a.name}</div><div class="reason">${a.reasons.join(' &middot; ')}</div></div>
-            <button onclick="openCashierDetailFromAlert('${a.name.replace(/'/g,"\\'")}')">View</button>
-          </div>`).join('') : '<div style="color:var(--muted);font-size:13px;">No one currently flagged for coaching.</div>'}
-      </div>
-    </div>
-
-    <div class="panel">
-      <h2>Coaching Focus Areas<small>Negative interactions by skill area &mdash; where to focus training next${topArea?`, currently led by <b style="color:var(--gold-light);">${topArea}</b>`:''}</small></h2>
-      <canvas id="chartFocusAreas"></canvas>
-    </div>
-
-    <div class="two-col">
-      <div class="panel"><h2>Average Score by Skill<small>1&ndash;3 scale, across all spot-checks</small></h2><canvas id="chartSkill"></canvas></div>
-      <div class="panel"><h2>Average Score by Shift<small>All 4 core skills combined</small></h2><canvas id="chartShift"></canvas></div>
-    </div>
-    <div class="two-col">
-      <div class="panel"><h2>Average Score by Outlet</h2><canvas id="chartOutlet"></canvas></div>
-      <div class="panel"><h2>Weekly Trend<small>Team average over time</small></h2><canvas id="chartTrend"></canvas></div>
-    </div>
-
-    <div class="two-col">
-      <div class="panel">
-        <h2>Most Improved<small>Earlier vs. recent spot-checks &mdash; needs at least 4 observations</small></h2>
-        <table>
-          <thead><tr><th>Cashier</th><th>Change</th><th># Obs</th></tr></thead>
-          <tbody>${mostImproved.map(f=>`<tr><td>${f.name}</td><td>${deltaPill(f.delta)}</td><td>${f.count}</td></tr>`).join('') || '<tr><td colspan="3">Not enough repeat data yet.</td></tr>'}</tbody>
-        </table>
-      </div>
-      <div class="panel">
-        <h2>Trending Down<small>Worth a closer look or a coaching note</small></h2>
-        <table>
-          <thead><tr><th>Cashier</th><th>Change</th><th># Obs</th></tr></thead>
-          <tbody>${declining.map(f=>`<tr><td>${f.name}</td><td>${deltaPill(f.delta)}</td><td>${f.count}</td></tr>`).join('') || '<tr><td colspan="3">Not enough repeat data yet.</td></tr>'}</tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="panel">
-      <h2>Cashiers Needing Attention<small>Sorted lowest average first &mdash; a low count means the average isn't reliable yet</small></h2>
-      <table>
-        <thead><tr><th>Cashier</th><th>Shift</th><th>Avg Score</th><th># Observations</th><th>Open Coaching Item</th></tr></thead>
-        <tbody>
-          ${flagged.slice(0,10).map(f=>`<tr><td>${f.name}</td><td>${f.shift||''}</td><td><span class="pill ${scoreClass(f.avg,3)}">${f.avg.toFixed(2)}</span></td><td>${f.count}</td><td>${openCoachingFor(f.name) ? `<span class="pill warn">${openCoachingFor(f.name)} pending</span>` : '—'}</td></tr>`).join('') || '<tr><td colspan="5">No data yet.</td></tr>'}
-        </tbody>
-      </table>
-    </div>
-
-    <div class="panel">
-      <h2>Individual Cashier Trend<small>Pick a cashier to see their full history, notes, and coaching log</small></h2>
-      <select id="cashierSelect">${cashierNames.map(n=>`<option value="${n}">${n}</option>`).join('')}</select>
-      <div class="two-col" style="margin-top:18px;">
-        <div><canvas id="chartCashierTrend"></canvas></div>
-        <div><canvas id="chartCashierSkills"></canvas></div>
-      </div>
-      <div id="cashierDetailMeta" style="margin-top:14px;font-size:13px;color:var(--muted);"></div>
-      <div class="notes-list" id="cashierNotes"></div>
-    </div>
-
-    <div class="panel">
-      <h2>Coaching Log<small>All logged follow-ups, most recent first</small></h2>
-      <table>
-        <thead><tr><th>Date</th><th>Cashier</th><th>Trigger</th><th>Action</th><th>Follow-Up</th><th>Status</th><th>Logged By</th></tr></thead>
-        <tbody>
-          ${coachingRows.slice().sort((a,b)=>(b.date||0)-(a.date||0)).map(c=>{
-            const overdue = c.status==='Pending' && c.followUpDate && c.followUpDate < new Date();
-            const statusPill = c.status==='Completed' ? 'good' : (overdue ? 'bad' : 'warn');
-            return `<tr><td>${fmtDate(c.date)}</td><td>${c.name}</td><td>${c.trigger||''}</td><td>${c.action||''}</td><td>${fmtDate(c.followUpDate)}</td><td><span class="pill ${statusPill}">${overdue?'Overdue':c.status||''}</span></td><td>${c.loggedBy||''}</td></tr>`;
-          }).join('') || '<tr><td colspan="7">No coaching entries logged yet.</td></tr>'}
-        </tbody>
-      </table>
-    </div>
-  `;
-
-  destroyChart('skill'); destroyChart('shift'); destroyChart('outlet'); destroyChart('trend'); destroyChart('focusAreas');
-
-  charts.focusAreas = new Chart(document.getElementById('chartFocusAreas'), {
-    type:'bar',
-    indexAxis:'y',
-    data:{ labels: areaLabels, datasets:[{ data: areaValues, backgroundColor: areaLabels.map((_,i)=> i===0 ? 'rgba(196,84,63,0.85)' : 'rgba(201,162,39,0.85)'), borderRadius:6, maxBarThickness:26 }]},
-    options:{
-      responsive:true, maintainAspectRatio:true,
-      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:(ctx)=>` ${ctx.parsed.x}` } } },
-      scales:{
-        x:{ beginAtZero:true, grid:{color:'rgba(15,23,42,0.07)', drawBorder:false}, ticks:{color:'#5b6472', precision:0}, border:{display:false} },
-        y:{ grid:{display:false}, ticks:{color:'#5b6472', font:{size:11.5}}, border:{display:false} }
-      }
-    }
-  });
-
-  charts.skill = new Chart(document.getElementById('chartSkill'), {
-    type:'bar',
-    data:{labels:CASHIER_SKILLS, datasets:[{data:bySkill, backgroundColor: bySkill.map(v=>scoreColor(v,3,0.85)), borderRadius:6, maxBarThickness:56}]},
-    options: baseBarOpts(3)
-  });
-  charts.shift = new Chart(document.getElementById('chartShift'), {
-    type:'bar',
-    data:{labels:shifts, datasets:[{data:byShift, backgroundColor: byShift.map(v=>scoreColor(v,3,0.85)), borderRadius:6, maxBarThickness:56}]},
-    options: baseBarOpts(3)
-  });
-  charts.outlet = new Chart(document.getElementById('chartOutlet'), {
-    type:'bar',
-    data:{labels:outletSet, datasets:[{data:byOutlet, backgroundColor: byOutlet.map(v=>scoreColor(v,3,0.85)), borderRadius:6, maxBarThickness:46}]},
-    options: baseBarOpts(3)
-  });
-  charts.trend = new Chart(document.getElementById('chartTrend'), {
-    type:'line',
-    data:{labels:weekKeys.map(k=>fmtDate(new Date(k))), datasets:[{
-      data:weekAvgs, borderColor:'#8a6d14', borderWidth:2.5,
-      backgroundColor:(ctx)=>vGradient(ctx,'rgba(232,217,160,0.35)','rgba(232,217,160,0.02)'),
-      fill:true, tension:.35, pointRadius:4, pointBackgroundColor:'#8a6d14', pointBorderColor:'#101a30', pointBorderWidth:1.5, pointHoverRadius:6
-    }]},
-    options: baseBarOpts(3)
-  });
-
-  const csel = document.getElementById('cashierSelect');
-  if(cashierNames.length){
-    csel.addEventListener('change', ()=>renderCashierDetail(csel.value, byCashier));
-    renderCashierDetail(cashierNames[0], byCashier);
-  }
-}
-
-function renderCashierDetail(name, byCashier){
-  const obs = byCashier[name].obs;
-  destroyChart('cashierTrend'); destroyChart('cashierSkills');
-
-  charts.cashierTrend = new Chart(document.getElementById('chartCashierTrend'), {
-    type:'line',
-    data:{ labels: obs.map(o=>fmtDate(o.date)), datasets:[{
-      data: obs.map(cashierObsAvg), borderColor:'#8a6d14', borderWidth:2.5,
-      backgroundColor:(ctx)=>vGradient(ctx,'rgba(232,217,160,0.35)','rgba(232,217,160,0.02)'),
-      fill:true, tension:.35, pointRadius:5, pointBackgroundColor: obs.map(o=>scoreColor(cashierObsAvg(o),3,1)),
-      pointBorderColor:'#101a30', pointBorderWidth:1.5, pointHoverRadius:7
-    }]},
-    options:{ ...baseBarOpts(3), plugins:{legend:{display:false}, tooltip: baseBarOpts(3).plugins.tooltip, title:{display:true, text:'Score Over Time', font:{family:'Georgia, serif', size:13, weight:'600'}, color:'#8a6d14', padding:{bottom:14}}} }
-  });
-
-  const skillAvgs = CASHIER_SKILLS.map(sk=>avg(obs.map(o=>o.scores[sk])));
-  charts.cashierSkills = new Chart(document.getElementById('chartCashierSkills'), {
-    type:'bar',
-    data:{ labels: CASHIER_SKILLS, datasets:[{ data: skillAvgs, backgroundColor: skillAvgs.map(v=>scoreColor(v,3,0.85)), borderRadius:6, maxBarThickness:56 }]},
-    options:{ ...baseBarOpts(3), plugins:{legend:{display:false}, tooltip: baseBarOpts(3).plugins.tooltip, title:{display:true, text:'Skill Breakdown (All-Time Avg)', font:{family:'Georgia, serif', size:13, weight:'600'}, color:'#8a6d14', padding:{bottom:14}}} }
-  });
-
-  const openerPct = obs.length ? obs.filter(o=>o.opener==='Y').length/obs.length*100 : 0;
-  const closerPct = obs.length ? obs.filter(o=>o.closer==='Y').length/obs.length*100 : 0;
-  document.getElementById('cashierDetailMeta').innerHTML =
-    `${obs.length} spot-check${obs.length===1?'':'s'} on record &middot; Opener used ${openerPct.toFixed(0)}% &middot; Closer used ${closerPct.toFixed(0)}%`;
-
-  const notesEl = document.getElementById('cashierNotes');
-  const items = [];
-  obs.slice().reverse().forEach(o=>{ if(o.notes) items.push({date:o.date, who:o.observedBy, text:o.notes, type:'Spot-check'}); });
-  coachingRows.filter(c=>c.name===name).forEach(c=>{ items.push({date:c.date, who:c.loggedBy, text:`${c.trigger||'Coaching'}: ${c.action||''}${c.notes?' — '+c.notes:''}`, type:'Coaching'}); });
-  negativeRows.filter(n=>n.name===name).forEach(n=>{ items.push({date:n.date, who:n.loggedBy, text:`${n.area||'Incident'} (${n.severity||''}${n.complaint==='Y'?', guest complaint':''}): ${n.description||''}`, type:'Negative interaction'}); });
-  items.sort((a,b)=>(b.date||0)-(a.date||0));
-  notesEl.innerHTML = items.length ? items.map(n=>`
-    <div class="note-item${n.type==='Negative interaction'?' negative':''}">
-      <div class="meta">${fmtDate(n.date)} &middot; ${n.type} &middot; ${n.who||'—'}</div>
-      <div class="text">${n.text}</div>
-    </div>`).join('') : '<div style="color:var(--muted);font-size:13px;">No notes recorded yet.</div>';
-}
-
-function baseBarOpts(max, rotateX, isCount){
-  return {
-    responsive:true,
-    maintainAspectRatio:true,
-    plugins:{
-      legend:{display:false},
-      tooltip:{ callbacks:{ label: (ctx) => {
-        const v = ctx.parsed.y ?? ctx.parsed.x;
-        return isCount ? ` ${v}` : ` ${v ?? '—'} / ${max}`;
-      } } }
-    },
-    scales:{
-      y:{ beginAtZero:true, max: isCount?undefined:max, grid:{color:'rgba(15,23,42,0.07)', drawBorder:false}, ticks:{color:'#5b6472', precision: isCount?0:undefined}, border:{display:false} },
-      x:{ grid:{display:false}, ticks:{color:'#5b6472', maxRotation: rotateX?40:0, minRotation: rotateX?40:0}, border:{display:false} }
-    }
-  };
-}
-
-function renderManagement(){
-  const el = document.getElementById('managementTab');
-  const names = [...new Set(managerRows.map(r=>r.name))];
-
-  function latestFor(name){
-    const rows = managerRows.filter(r=>r.name===name).sort((a,b)=>(a.month||0)-(b.month||0));
-    return rows.length ? rows[rows.length-1] : null;
-  }
-
-  const mgrUp = [], mgrDown = [];
-  names.forEach(name=>{
-    const latest = latestFor(name);
-    if(!latest) return;
-    const overall = avg(Object.values(latest.scores));
-    if(overall===null) return;
-    if(overall>=4.25) mgrUp.push({name, reasons:[`Latest overall average ${overall.toFixed(1)}/5`]});
-    if(overall<=2.75) mgrDown.push({name, reasons:[`Latest overall average ${overall.toFixed(1)}/5`]});
-  });
-
-  // ---- Engagement: how much each manager/lead is actually logging ----
-  const now = new Date();
-  const engagement = ROSTER_MANAGERS.map(([name, role])=>{
-    const spot = cashierRows.filter(r=>r.observedBy===name);
-    const coach = coachingRows.filter(c=>c.loggedBy===name);
-    const neg = negativeRows.filter(n=>n.loggedBy===name);
-    const allDates = [...spot.map(r=>r.date), ...coach.map(r=>r.date), ...neg.map(r=>r.date)].filter(Boolean);
-    const lastActivity = allDates.length ? new Date(Math.max(...allDates.map(d=>+d))) : null;
-    const daysSince = lastActivity ? Math.floor((now - lastActivity)/86400000) : null;
-    return { name, role, spot: spot.length, coach: coach.length, neg: neg.length, total: spot.length+coach.length+neg.length, lastActivity, daysSince };
-  });
-  const totalEntries = engagement.reduce((a,e)=>a+e.total,0);
-  const mostActive = engagement.slice().sort((a,b)=>b.total-a.total)[0];
-  const lowEngagement = engagement.filter(e => e.daysSince===null || e.daysSince>14);
-  const engagementSorted = engagement.slice().sort((a,b)=>b.total-a.total);
-
-  const rowsHTML = names.map(name=>{
-    const latest = latestFor(name);
-    if(!latest) return '';
-    const cells = ALL_MGR_SKILLS.map(sk=>{
-      const v = latest.scores[sk];
-      return `<td class="score" style="background:${heatColor(v,5)}">${v??'—'}</td>`;
-    }).join('');
-    const overall = avg(Object.values(latest.scores));
-    return `<tr><td><b>${name}</b><br><span style="color:var(--muted);font-size:11.5px;">${latest.role||''}</span></td>${cells}<td class="score"><span class="pill ${scoreClass(overall,5)}">${overall?overall.toFixed(1):'—'}</span></td><td style="color:var(--muted);font-size:12px;">${fmtMonth(latest.month)}</td></tr>`;
-  }).join('');
-
-  el.innerHTML = `
-    <div class="two-col">
-      <div class="panel">
-        <h2>&#127942; Above &amp; Beyond<small>Strong performers this review cycle</small></h2>
-        ${mgrUp.length ? mgrUp.map(a=>`
-          <div class="alert-row up">
-            <div class="alert-icon">&#11088;</div>
-            <div><div class="name">${a.name}</div><div class="reason">${a.reasons.join(' &middot; ')}</div></div>
-            <button onclick="openManagerDetailFromAlert('${a.name.replace(/'/g,"\\'")}')">View</button>
-          </div>`).join('') : '<div style="color:var(--muted);font-size:13px;">No standout scores flagged yet.</div>'}
-      </div>
-      <div class="panel">
-        <h2>&#9888;&#65039; Needs Support<small>Worth a closer coaching conversation</small></h2>
-        ${mgrDown.length ? mgrDown.map(a=>`
-          <div class="alert-row down">
-            <div class="alert-icon">&#128276;</div>
-            <div><div class="name">${a.name}</div><div class="reason">${a.reasons.join(' &middot; ')}</div></div>
-            <button onclick="openManagerDetailFromAlert('${a.name.replace(/'/g,"\\'")}')">View</button>
+            <button onclick="openServerDetailFromAlert('${a.name.replace(/'/g,"\\'")}')">View</button>
           </div>`).join('') : '<div style="color:var(--muted);font-size:13px;">No one currently flagged.</div>'}
       </div>
     </div>
 
     <div class="panel">
-      <h2>Team Engagement<small>How much each manager/lead is actually logging &mdash; spot-checks, coaching notes, and negative interactions they've submitted</small></h2>
-      <div class="grid-cards" style="margin-bottom:20px;">
-        <div class="card"><div class="label">Total Entries Logged</div><div class="value">${totalEntries}</div></div>
-        <div class="card"><div class="label">Most Active</div><div class="value" style="font-size:19px;">${mostActive && mostActive.total>0 ? mostActive.name : '—'}${mostActive && mostActive.total>0 ? `<small> (${mostActive.total})</small>`:''}</div></div>
-        <div class="card"><div class="label">Quiet 14+ Days</div><div class="value">${lowEngagement.length}<small> of ${engagement.length}</small></div></div>
+      <h2>Feedback by Category<small>Every logged comment, broken down</small></h2>
+      <canvas id="chartCategoryFocus"></canvas>
+    </div>
+
+    <div class="two-col">
+      <div class="panel">
+        <h2>Most Compliments<small>Top team members by compliment count</small></h2>
+        <canvas id="chartTopCompliments"></canvas>
       </div>
-      <canvas id="chartEngagement"></canvas>
+      <div class="panel">
+        <h2>Most Issues Flagged<small>Worth a closer look</small></h2>
+        <canvas id="chartMostIssues"></canvas>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Weekly Trend<small>Compliments vs. issues logged over time</small></h2>
+      <canvas id="chartTrend"></canvas>
+    </div>
+
+    <div class="panel">
+      <h2>Individual Team Member History<small>Pick someone to see every comment logged about them</small></h2>
+      <select id="serverSelect">${serverNames.map(n=>`<option value="${n}">${n}</option>`).join('')}</select>
+      <div class="two-col" style="margin-top:18px;">
+        <div><canvas id="chartServerBreakdown"></canvas></div>
+      </div>
+      <div id="serverDetailMeta" style="margin-top:14px;font-size:13px;color:var(--muted);"></div>
+      <div class="notes-list" id="serverNotes"></div>
+    </div>
+
+    <div class="panel">
+      <h2>MOD Activity<small>How much each manager on duty is logging</small></h2>
+      <canvas id="chartModActivity"></canvas>
       <div style="overflow-x:auto;margin-top:18px;">
       <table>
-        <thead><tr><th>Manager</th><th>Role</th><th>Spot-Checks</th><th>Coaching Notes</th><th>Negative Interactions</th><th>Total</th><th>Last Activity</th></tr></thead>
+        <thead><tr><th>MOD</th><th>Entries Logged</th><th>Last Activity</th></tr></thead>
         <tbody>
-          ${engagementSorted.map(e=>`<tr><td>${e.name}</td><td>${e.role}</td><td>${e.spot}</td><td>${e.coach}</td><td>${e.neg}</td><td><b>${e.total}</b></td><td>${e.lastActivity ? fmtDate(e.lastActivity) + (e.daysSince>14?` <span class="pill bad">${e.daysSince}d ago</span>`:'') : '<span class="pill bad">Never</span>'}</td></tr>`).join('')}
+          ${modLast.map(m=>{
+            const c = modCounts.find(x=>x.mod===m.mod).count;
+            return `<tr><td>${m.mod}</td><td>${c}</td><td>${m.last ? fmtDate(m.last) + (m.daysSince>14?` <span class="pill bad">${m.daysSince}d ago</span>`:'') : '<span class="pill bad">Never</span>'}</td></tr>`;
+          }).join('')}
         </tbody>
       </table>
       </div>
     </div>
 
     <div class="panel">
-      <h2>Management Scorecard &mdash; Most Recent Month<small>10 Essential Soft Skills + 5 Critical Manager Skills, scored 1&ndash;5</small></h2>
+      <h2>All Feedback<small>Every logged comment, most recent first</small></h2>
       <div style="overflow-x:auto;">
-      <table class="heat-table">
-        <thead><tr><th>Manager</th>${ALL_MGR_SKILLS.map(s=>`<th>${s}</th>`).join('')}<th>Overall</th><th>Reviewed</th></tr></thead>
-        <tbody>${rowsHTML || '<tr><td colspan="17">No data yet.</td></tr>'}</tbody>
+      <table>
+        <thead><tr><th>Date</th><th>Team Member</th><th>Category</th><th>Detail</th><th>MOD</th></tr></thead>
+        <tbody>
+          ${feedbackRows.slice().sort((a,b)=>(b.date||0)-(a.date||0)).slice(0,60).map(r=>{
+            const cats = CATEGORY_KEYS.filter(k=>r[k]).map(k=>CATEGORIES[CATEGORY_KEYS.indexOf(k)]);
+            const pillClass = r.compliment ? 'good' : (r.poor ? 'bad' : 'warn');
+            return `<tr><td>${fmtDate(r.date)}</td><td>${r.name}</td><td>${cats.map(c=>`<span class="pill ${pillClass}">${c}</span>`).join(' ')}</td><td style="max-width:320px;">${r.detail}</td><td>${r.mod||''}</td></tr>`;
+          }).join('') || '<tr><td colspan="5">No data yet.</td></tr>'}
+        </tbody>
       </table>
       </div>
-      <div class="legend-row">
-        <span><span class="legend-swatch" style="background:rgba(63,125,92,0.55)"></span>Strong (4.25&ndash;5)</span>
-        <span><span class="legend-swatch" style="background:rgba(63,125,92,0.3)"></span>Solid (3.5&ndash;4.24)</span>
-        <span><span class="legend-swatch" style="background:rgba(184,135,31,0.35)"></span>Developing (2.75&ndash;3.49)</span>
-        <span><span class="legend-swatch" style="background:rgba(161,64,47,0.4)"></span>Needs Focus (below 2.75)</span>
-      </div>
-    </div>
-
-    <div class="panel">
-      <h2>Individual Trend<small>Pick a manager to see their history month over month</small></h2>
-      <select id="managerSelect">${names.map(n=>`<option value="${n}">${n}</option>`).join('')}</select>
-      <div class="two-col" style="margin-top:18px;">
-        <div><canvas id="chartManagerSkills"></canvas></div>
-        <div><canvas id="chartManagerTrend"></canvas></div>
-      </div>
-      <div class="notes-list" id="managerNotes"></div>
     </div>
   `;
 
-  destroyChart('engagement');
-  charts.engagement = new Chart(document.getElementById('chartEngagement'), {
-    type:'bar',
-    indexAxis:'y',
-    data:{
-      labels: engagementSorted.map(e=>e.name),
-      datasets:[
-        { label:'Spot-Checks', data: engagementSorted.map(e=>e.spot), backgroundColor:'rgba(201,162,39,0.85)', borderRadius:4 },
-        { label:'Coaching Notes', data: engagementSorted.map(e=>e.coach), backgroundColor:'rgba(127,168,140,0.85)', borderRadius:4 },
-        { label:'Negative Interactions', data: engagementSorted.map(e=>e.neg), backgroundColor:'rgba(196,84,63,0.85)', borderRadius:4 }
-      ]
-    },
+  destroyChart('categoryFocus'); destroyChart('topCompliments'); destroyChart('mostIssues'); destroyChart('trend'); destroyChart('modActivity');
+
+  charts.categoryFocus = new Chart(document.getElementById('chartCategoryFocus'), {
+    type:'bar', indexAxis:'y',
+    data:{ labels: areaLabels, datasets:[{ data: areaValues, backgroundColor: CATEGORY_KEYS.map(k=>catColor(k)), borderRadius:6, maxBarThickness:34 }]},
     options:{
       responsive:true, maintainAspectRatio:true,
-      plugins:{ legend:{display:true, position:'bottom', labels:{color:'#5b6472', boxWidth:12, font:{size:11.5}}}, tooltip:{} },
+      plugins:{ legend:{display:false} },
       scales:{
-        x:{ stacked:true, beginAtZero:true, grid:{color:'rgba(15,23,42,0.07)', drawBorder:false}, ticks:{color:'#5b6472', precision:0}, border:{display:false} },
-        y:{ stacked:true, grid:{display:false}, ticks:{color:'#5b6472', font:{size:11.5}}, border:{display:false} }
+        x:{ beginAtZero:true, grid:{color:'rgba(15,23,42,0.07)', drawBorder:false}, ticks:{color:'#5b6472', precision:0}, border:{display:false} },
+        y:{ grid:{display:false}, ticks:{color:'#5b6472'}, border:{display:false} }
       }
     }
   });
 
-  const sel = document.getElementById('managerSelect');
-  if(names.length){
-    sel.addEventListener('change', ()=>renderManagerDetail(sel.value));
-    renderManagerDetail(names[0]);
+  charts.topCompliments = new Chart(document.getElementById('chartTopCompliments'), {
+    type:'bar', indexAxis:'y',
+    data:{ labels: topCompliments.map(x=>x.name), datasets:[{ data: topCompliments.map(x=>x.compliment), backgroundColor: catColor('compliment'), borderRadius:6, maxBarThickness:24 }]},
+    options:{
+      responsive:true, maintainAspectRatio:true,
+      plugins:{ legend:{display:false} },
+      scales:{
+        x:{ beginAtZero:true, grid:{color:'rgba(15,23,42,0.07)', drawBorder:false}, ticks:{color:'#5b6472', precision:0}, border:{display:false} },
+        y:{ grid:{display:false}, ticks:{color:'#5b6472'}, border:{display:false} }
+      }
+    }
+  });
+
+  charts.mostIssues = new Chart(document.getElementById('chartMostIssues'), {
+    type:'bar', indexAxis:'y',
+    data:{ labels: mostIssues.map(x=>x.name), datasets:[{ data: mostIssues.map(x=>x.issues), backgroundColor: catColor('poor'), borderRadius:6, maxBarThickness:24 }]},
+    options:{
+      responsive:true, maintainAspectRatio:true,
+      plugins:{ legend:{display:false} },
+      scales:{
+        x:{ beginAtZero:true, grid:{color:'rgba(15,23,42,0.07)', drawBorder:false}, ticks:{color:'#5b6472', precision:0}, border:{display:false} },
+        y:{ grid:{display:false}, ticks:{color:'#5b6472'}, border:{display:false} }
+      }
+    }
+  });
+
+  charts.trend = new Chart(document.getElementById('chartTrend'), {
+    type:'line',
+    data:{
+      labels: weekKeys.map(k=>fmtDate(new Date(k))),
+      datasets:[
+        { label:'Compliments', data: weekKeys.map(k=>byWeek[k].compliment), borderColor:'#1f7a4d', backgroundColor:(ctx)=>vGradient(ctx,'rgba(31,122,77,0.25)','rgba(31,122,77,0.02)'), fill:true, tension:.35, pointRadius:4, pointBackgroundColor:'#1f7a4d' },
+        { label:'Issues', data: weekKeys.map(k=>byWeek[k].issue), borderColor:'#a1402f', backgroundColor:(ctx)=>vGradient(ctx,'rgba(161,64,47,0.25)','rgba(161,64,47,0.02)'), fill:true, tension:.35, pointRadius:4, pointBackgroundColor:'#a1402f' }
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:true,
+      plugins:{ legend:{display:true, position:'bottom', labels:{color:'#5b6472', boxWidth:12, font:{size:11.5}}} },
+      scales:{
+        y:{ beginAtZero:true, grid:{color:'rgba(15,23,42,0.07)', drawBorder:false}, ticks:{color:'#5b6472', precision:0}, border:{display:false} },
+        x:{ grid:{display:false}, ticks:{color:'#5b6472'}, border:{display:false} }
+      }
+    }
+  });
+
+  charts.modActivity = new Chart(document.getElementById('chartModActivity'), {
+    type:'bar', indexAxis:'y',
+    data:{ labels: modCounts.map(m=>m.mod), datasets:[{ data: modCounts.map(m=>m.count), backgroundColor:'rgba(201,162,39,0.85)', borderRadius:6, maxBarThickness:30 }]},
+    options:{
+      responsive:true, maintainAspectRatio:true,
+      plugins:{ legend:{display:false} },
+      scales:{
+        x:{ beginAtZero:true, grid:{color:'rgba(15,23,42,0.07)', drawBorder:false}, ticks:{color:'#5b6472', precision:0}, border:{display:false} },
+        y:{ grid:{display:false}, ticks:{color:'#5b6472'}, border:{display:false} }
+      }
+    }
+  });
+
+  const sel = document.getElementById('serverSelect');
+  if(serverNames.length){
+    sel.addEventListener('change', ()=>renderServerDetail(sel.value, byServer));
+    renderServerDetail(serverNames[0], byServer);
   }
 }
 
-function renderManagerDetail(name){
-  const rows = managerRows.filter(r=>r.name===name).sort((a,b)=>(a.month||0)-(b.month||0));
-  const latest = rows[rows.length-1];
+function renderServerDetail(name, byServer){
+  const d = byServer[name];
+  const rows = d.rows;
+  destroyChart('serverBreakdown');
 
-  destroyChart('mgrSkills'); destroyChart('mgrTrend');
-
-  charts.mgrSkills = new Chart(document.getElementById('chartManagerSkills'), {
+  const breakdownData = CATEGORY_KEYS.map(k=>d[k]);
+  charts.serverBreakdown = new Chart(document.getElementById('chartServerBreakdown'), {
     type:'bar',
-    data:{ labels: ALL_MGR_SKILLS, datasets:[{ data: ALL_MGR_SKILLS.map(sk=>latest?latest.scores[sk]:null), backgroundColor: ALL_MGR_SKILLS.map(sk=>scoreColor(latest?latest.scores[sk]:null,5,0.85)), borderRadius:6, maxBarThickness:40 }]},
-    options:{ ...baseBarOpts(5,true), indexAxis:'x', plugins:{legend:{display:false}, tooltip: baseBarOpts(5).plugins.tooltip, title:{display:true, text:'Latest Scores by Skill', font:{family:'Georgia, serif', size:13, weight:'600'}, color:'#8a6d14', padding:{bottom:14}}} }
+    data:{ labels: CATEGORIES, datasets:[{ data: breakdownData, backgroundColor: CATEGORY_KEYS.map(k=>catColor(k)), borderRadius:6, maxBarThickness:50 }]},
+    options:{
+      responsive:true, maintainAspectRatio:true,
+      plugins:{ legend:{display:false}, title:{display:true, text:'Mentions by Category', font:{family:'Georgia, serif', size:13, weight:'600'}, color:'#8a6d14', padding:{bottom:14}} },
+      scales:{
+        y:{ beginAtZero:true, grid:{color:'rgba(15,23,42,0.07)', drawBorder:false}, ticks:{color:'#5b6472', precision:0}, border:{display:false} },
+        x:{ grid:{display:false}, ticks:{color:'#5b6472', maxRotation:30, minRotation:30}, border:{display:false} }
+      }
+    }
   });
 
-  const monthLabels = rows.map(r=>fmtMonth(r.month));
-  const overallSeries = rows.map(r=>avg(Object.values(r.scores)));
-  charts.mgrTrend = new Chart(document.getElementById('chartManagerTrend'), {
-    type:'line',
-    data:{ labels: monthLabels, datasets:[{
-      data: overallSeries, borderColor:'#1f7a4d', borderWidth:2.5,
-      backgroundColor:(ctx)=>vGradient(ctx,'rgba(127,168,140,0.35)','rgba(127,168,140,0.02)'),
-      fill:true, tension:.35, pointRadius:5, pointBackgroundColor: overallSeries.map(v=>scoreColor(v,5,1)),
-      pointBorderColor:'#101a30', pointBorderWidth:1.5, pointHoverRadius:7
-    }]},
-    options:{ ...baseBarOpts(5), plugins:{legend:{display:false}, tooltip: baseBarOpts(5).plugins.tooltip, title:{display:true, text:'Overall Average Over Time', font:{family:'Georgia, serif', size:13, weight:'600'}, color:'#8a6d14', padding:{bottom:14}}} }
-  });
+  document.getElementById('serverDetailMeta').innerHTML = `${rows.length} comment${rows.length===1?'':'s'} on record`;
 
-  const notesEl = document.getElementById('managerNotes');
-  const withNotes = rows.filter(r=>r.notes).reverse();
-  notesEl.innerHTML = withNotes.length ? withNotes.map(r=>`
-    <div class="note-item">
-      <div class="meta">${fmtMonth(r.month)} &middot; reviewed by ${r.reviewedBy||'—'}</div>
-      <div class="text">${r.notes}</div>
-    </div>`).join('') : '<div style="color:var(--muted);font-size:13px;">No notes recorded yet.</div>';
+  const notesEl = document.getElementById('serverNotes');
+  const items = rows.slice().reverse();
+  notesEl.innerHTML = items.length ? items.map(r=>{
+    const cats = CATEGORY_KEYS.filter(k=>r[k]).map(k=>CATEGORIES[CATEGORY_KEYS.indexOf(k)]);
+    const isNeg = r.poor || r.food || r.drink || r.wait;
+    return `<div class="note-item${isNeg?' negative':''}">
+      <div class="meta">${fmtDate(r.date)} &middot; ${cats.join(', ')} &middot; logged by ${r.mod||'—'}</div>
+      <div class="text">${r.detail}</div>
+    </div>`;
+  }).join('') : '<div style="color:var(--muted);font-size:13px;">No comments recorded yet.</div>';
 }
 
-document.querySelectorAll('nav.tabs button').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('cashiersTab').style.display = btn.dataset.tab==='cashiers' ? 'block':'none';
-    document.getElementById('managementTab').style.display = btn.dataset.tab==='management' ? 'block':'none';
-  });
-});
+function openServerDetailFromAlert(name){
+  const sel = document.getElementById('serverSelect');
+  if(!sel) return;
+  sel.value = name;
+  renderServerDetail(name, lastByServer);
+  sel.scrollIntoView({behavior:'smooth', block:'center'});
+}
 
 // ---------- Quick Entry modal ----------
-let modalType = 'spotcheck';
-
-function openModal(prefillType, prefillName){
+function openModal(){
   document.getElementById('entryModal').classList.add('open');
-  if(prefillType) setModalType(prefillType); else setModalType('spotcheck');
-  if(prefillName){
-    setTimeout(()=>{ const el = document.getElementById('f_name'); if(el) el.value = prefillName; }, 0);
-  }
+  document.getElementById('modalBody').innerHTML = fieldsForEntry();
 }
 function closeModal(){ document.getElementById('entryModal').classList.remove('open'); }
 
-function openCashierDetailFromAlert(name){
-  const sel = document.getElementById('cashierSelect');
-  if(!sel) return;
-  sel.value = name;
-  renderCashierDetail(name, lastByCashier);
-  sel.scrollIntoView({behavior:'smooth', block:'center'});
-}
-
-function openManagerDetailFromAlert(name){
-  const sel = document.getElementById('managerSelect');
-  if(!sel) return;
-  sel.value = name;
-  renderManagerDetail(name);
-  sel.scrollIntoView({behavior:'smooth', block:'center'});
-}
-
-document.getElementById('openEntryModalBtn').addEventListener('click', ()=>openModal());
-document.getElementById('fabEntryBtn').addEventListener('click', ()=>openModal());
+document.getElementById('openEntryModalBtn').addEventListener('click', openModal);
+document.getElementById('fabEntryBtn').addEventListener('click', openModal);
 document.getElementById('closeModalBtn').addEventListener('click', closeModal);
 document.getElementById('cancelEntryBtn').addEventListener('click', closeModal);
 document.getElementById('entryModal').addEventListener('click', (e)=>{ if(e.target.id==='entryModal') closeModal(); });
 
-document.querySelectorAll('#modalTabs button').forEach(btn=>{
-  btn.addEventListener('click', ()=>setModalType(btn.dataset.type));
-});
-
-function setModalType(type){
-  modalType = type;
-  document.querySelectorAll('#modalTabs button').forEach(b=>b.classList.toggle('active', b.dataset.type===type));
-  document.getElementById('modalBody').innerHTML = fieldsFor(type);
-}
-
 function todayStr(){ return new Date().toISOString().slice(0,10); }
+function opts(list){ return list.map(x=>`<option value="${x}">${x}</option>`).join(''); }
 
-function opts(list, withValue){
-  return list.map(x => withValue ? `<option value="${x[0]}">${x[0]}</option>` : `<option value="${x}">${x}</option>`).join('');
-}
-
-function fieldsFor(type){
-  if(type==='spotcheck'){
-    return `
-      <div class="field-row">
-        <div class="field"><label>Date</label><input type="date" id="f_date" value="${todayStr()}"></div>
-        <div class="field"><label>Cashier</label><select id="f_name">${opts(ROSTER_CASHIERS, true)}</select></div>
-      </div>
-      <div class="field-row">
-        <div class="field"><label>Shift</label><select id="f_shift">${opts(SHIFTS)}</select></div>
-        <div class="field"><label>Outlet</label><select id="f_outlet">${outletOptions()}</select></div>
-      </div>
-      <div class="score-grid">
-        ${CASHIER_SKILLS.map((sk,i)=>`<div class="field"><label title="${sk}">${sk}</label><select id="f_score_${i}"><option value="1">1 — Needs Improvement</option><option value="2" selected>2 — Meets Expectation</option><option value="3">3 — Exceeds Expectation</option></select></div>`).join('')}
-      </div>
-      <div class="field-row">
-        <div class="field"><label>Opener Used</label><select id="f_opener"><option value="Y">Yes</option><option value="N">No</option></select></div>
-        <div class="field"><label>Closer Used</label><select id="f_closer"><option value="Y">Yes</option><option value="N">No</option></select></div>
-      </div>
-      <div class="field-row full">
-        <div class="field"><label>Notes</label><textarea id="f_notes" placeholder="What happened, what stood out..."></textarea></div>
-      </div>
-      <div class="field-row">
-        <div class="field"><label>Observed By</label><select id="f_observer">${opts(ROSTER_MANAGERS, true)}</select></div>
-      </div>`;
-  }
-  if(type==='negative'){
-    return `
-      <div class="field-row">
-        <div class="field"><label>Date</label><input type="date" id="f_date" value="${todayStr()}"></div>
-        <div class="field"><label>Cashier</label><select id="f_name">${opts(ROSTER_CASHIERS, true)}</select></div>
-      </div>
-      <div class="field-row">
-        <div class="field"><label>Outlet</label><select id="f_outlet">${outletOptions()}</select></div>
-        <div class="field"><label>Shift</label><select id="f_shift">${opts(SHIFTS)}</select></div>
-      </div>
-      <div class="field-row">
-        <div class="field"><label>Skill Area</label><select id="f_area">${opts(NEGATIVE_AREAS)}</select></div>
-        <div class="field"><label>Severity</label><select id="f_severity"><option>Minor</option><option>Moderate</option><option>Major</option></select></div>
-      </div>
-      <div class="field-row">
-        <div class="field"><label>Guest Complaint Filed</label><select id="f_complaint"><option value="N">No</option><option value="Y">Yes</option></select></div>
-        <div class="field"><label>Logged By</label><select id="f_logger">${opts(ROSTER_MANAGERS, true)}</select></div>
-      </div>
-      <div class="field-row full">
-        <div class="field"><label>Description</label><textarea id="f_desc" placeholder="What went wrong, specifically..."></textarea></div>
-      </div>`;
-  }
-  if(type==='coaching'){
-    return `
-      <div class="field-row">
-        <div class="field"><label>Date</label><input type="date" id="f_date" value="${todayStr()}"></div>
-        <div class="field"><label>Cashier</label><select id="f_name">${opts(ROSTER_CASHIERS, true)}</select></div>
-      </div>
-      <div class="field-row">
-        <div class="field"><label>Trigger</label><select id="f_trigger">${opts(COACHING_TRIGGERS)}</select></div>
-        <div class="field"><label>Follow-Up Date</label><input type="date" id="f_followup"></div>
-      </div>
-      <div class="field-row">
-        <div class="field"><label>Status</label><select id="f_status"><option>Pending</option><option>Completed</option><option>N/A</option></select></div>
-        <div class="field"><label>Logged By</label><select id="f_logger">${opts(ROSTER_MANAGERS, true)}</select></div>
-      </div>
-      <div class="field-row full">
-        <div class="field"><label>Action Taken</label><input type="text" id="f_action" placeholder="e.g. Reviewed closing-line examples together"></div>
-      </div>
-      <div class="field-row full">
-        <div class="field"><label>Notes</label><textarea id="f_notes"></textarea></div>
-      </div>`;
-  }
-  if(type==='manager'){
-    return `
-      <div class="field-row">
-        <div class="field"><label>Month</label><input type="date" id="f_date" value="${todayStr()}"></div>
-        <div class="field"><label>Manager</label><select id="f_name">${opts(ROSTER_MANAGERS, true)}</select></div>
-      </div>
-      <div class="score-grid">
-        ${ALL_MGR_SKILLS.map((sk,i)=>`<div class="field"><label title="${sk}">${sk}</label><select id="f_mscore_${i}"><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option></select></div>`).join('')}
-      </div>
-      <div class="field-row full">
-        <div class="field"><label>Notes / Examples</label><textarea id="f_notes"></textarea></div>
-      </div>
-      <div class="field-row">
-        <div class="field"><label>Reviewed By</label><input type="text" id="f_reviewer" value="Armando"></div>
-      </div>`;
-  }
-  return '';
+function fieldsForEntry(){
+  return `
+    <div class="field-row">
+      <div class="field"><label>Date</label><input type="date" id="f_date" value="${todayStr()}"></div>
+      <div class="field"><label>Team Member</label><select id="f_name">${opts(TEAM_MEMBERS)}</select></div>
+    </div>
+    <div class="check-grid">
+      ${CATEGORIES.map((c,i)=>`<label class="check-item"><input type="checkbox" id="f_cat_${i}"> ${c}</label>`).join('')}
+    </div>
+    <div class="field-row full">
+      <div class="field"><label>Detail</label><textarea id="f_detail" placeholder="Paste or type the guest's comment..."></textarea></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>MOD</label><select id="f_mod">${opts(MODS)}</select></div>
+    </div>`;
 }
 
 function toast(msg){
@@ -1231,45 +802,20 @@ function toast(msg){
 }
 
 document.getElementById('submitEntryBtn').addEventListener('click', async ()=>{
-  const dateVal = document.getElementById('f_date') ? new Date(document.getElementById('f_date').value) : new Date();
-  const nameVal = document.getElementById('f_name') ? document.getElementById('f_name').value : '';
-  if(!nameVal){ toast('Please select a name.'); return; }
+  const dateVal = new Date(document.getElementById('f_date').value);
+  const nameVal = document.getElementById('f_name').value;
+  const checks = CATEGORIES.map((_,i)=>document.getElementById('f_cat_'+i).checked);
+  if(!checks.some(Boolean)){ toast('Check at least one category.'); return; }
 
-  if(modalType==='spotcheck'){
-    const scores = {};
-    CASHIER_SKILLS.forEach((sk,i)=>{ scores[sk] = parseInt(document.getElementById('f_score_'+i).value,10); });
-    cashierRows.push({
-      date: dateVal, shift: document.getElementById('f_shift').value, outlet: document.getElementById('f_outlet').value,
-      name: nameVal, badge: (ROSTER_CASHIERS.find(c=>c[0]===nameVal)||[])[1] || '',
-      scores, opener: document.getElementById('f_opener').value, closer: document.getElementById('f_closer').value,
-      observedBy: document.getElementById('f_observer').value, notes: document.getElementById('f_notes').value
-    });
-  } else if(modalType==='negative'){
-    negativeRows.push({
-      date: dateVal, name: nameVal, outlet: document.getElementById('f_outlet').value, shift: document.getElementById('f_shift').value,
-      area: document.getElementById('f_area').value, severity: document.getElementById('f_severity').value,
-      complaint: document.getElementById('f_complaint').value, description: document.getElementById('f_desc').value,
-      loggedBy: document.getElementById('f_logger').value
-    });
-  } else if(modalType==='coaching'){
-    const fu = document.getElementById('f_followup').value;
-    coachingRows.push({
-      date: dateVal, name: nameVal, trigger: document.getElementById('f_trigger').value,
-      action: document.getElementById('f_action').value, followUpDate: fu ? new Date(fu) : null,
-      status: document.getElementById('f_status').value, notes: document.getElementById('f_notes').value,
-      loggedBy: document.getElementById('f_logger').value
-    });
-  } else if(modalType==='manager'){
-    const scores = {};
-    ALL_MGR_SKILLS.forEach((sk,i)=>{ scores[sk] = parseInt(document.getElementById('f_mscore_'+i).value,10); });
-    managerRows.push({
-      month: dateVal, name: nameVal, role: (ROSTER_MANAGERS.find(m=>m[0]===nameVal)||[])[1] || '',
-      scores, notes: document.getElementById('f_notes').value, reviewedBy: document.getElementById('f_reviewer').value
-    });
-  }
+  feedbackRows.push({
+    date: dateVal, name: nameVal,
+    compliment: checks[0], food: checks[1], drink: checks[2], wait: checks[3], poor: checks[4],
+    detail: document.getElementById('f_detail').value, mod: document.getElementById('f_mod').value
+  });
 
   document.getElementById('emptyState').style.display = 'none';
-  renderAll();
+  document.getElementById('mainTab').style.display = 'block';
+  renderMain();
   closeModal();
   toast('Entry saved.');
   if(cloudEnabled){ await saveToCloud(); }
