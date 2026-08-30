@@ -5,6 +5,8 @@
 <title>Food Court Soft Skills Dashboard</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 <style>
   :root{
     --navy: #101a30;
@@ -80,7 +82,8 @@
 
   .grid-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:26px;}
   .card{
-    background:var(--navy-2);border:1px solid var(--line);border-radius:12px;padding:18px 20px;
+    background:linear-gradient(155deg, var(--navy-2), var(--navy-3));border:1px solid var(--line);border-radius:12px;padding:18px 20px;
+    box-shadow:0 4px 14px rgba(0,0,0,0.18);
   }
   .card .label{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:8px;}
   .card .value{font-family:Georgia,serif;font-size:30px;color:var(--gold-light);font-weight:600;}
@@ -89,6 +92,7 @@
   .panel{
     background:var(--navy-2);border:1px solid var(--line);border-radius:12px;
     padding:22px 24px;margin-bottom:22px;
+    box-shadow:0 6px 18px rgba(0,0,0,0.16);
   }
   .panel h2{
     font-family:Georgia,serif;font-size:17px;margin:0 0 16px;color:#fff;font-weight:600;
@@ -144,6 +148,7 @@
       <label for="fileInput">Upload Workbook</label>
       <input type="file" id="fileInput" accept=".xlsx">
       <div class="upload-status" id="uploadStatus">No file loaded yet — upload Soft_Skills_KPI_Tracker.xlsx</div>
+      <div class="upload-status" id="syncStatus">Cloud sync: not configured</div>
     </div>
   </header>
 
@@ -169,11 +174,125 @@ const SOFT_SKILLS = ["Guest Engagement & Hospitality Mindset","Communication Cla
 const MANAGER_SKILLS = ["Coaching & Feedback","Accountability","Decision-Making Under Pressure","Delegation","Leading by Example"];
 const ALL_MGR_SKILLS = SOFT_SKILLS.concat(MANAGER_SKILLS);
 
+Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
+Chart.defaults.color = '#8b93a7';
+Chart.defaults.plugins.tooltip.backgroundColor = '#1f2c4d';
+Chart.defaults.plugins.tooltip.titleColor = '#e8d9a0';
+Chart.defaults.plugins.tooltip.titleFont = { weight: '700', size: 12 };
+Chart.defaults.plugins.tooltip.bodyColor = '#f7f3e8';
+Chart.defaults.plugins.tooltip.bodyFont = { size: 12.5 };
+Chart.defaults.plugins.tooltip.borderColor = 'rgba(201,162,39,0.5)';
+Chart.defaults.plugins.tooltip.borderWidth = 1;
+Chart.defaults.plugins.tooltip.padding = 10;
+Chart.defaults.plugins.tooltip.cornerRadius = 8;
+Chart.defaults.plugins.tooltip.displayColors = false;
+Chart.defaults.animation.duration = 650;
+Chart.defaults.animation.easing = 'easeOutQuart';
+
+function scoreColor(v, max, alpha){
+  alpha = alpha===undefined ? 1 : alpha;
+  if(v===null||v===undefined) return `rgba(139,147,167,${alpha})`;
+  const pct = v/max;
+  if(pct >= 0.8) return `rgba(63,166,111,${alpha})`;
+  if(pct >= 0.6) return `rgba(201,162,39,${alpha})`;
+  return `rgba(196,84,63,${alpha})`;
+}
+function vGradient(ctx, hex1, hex2){
+  const {chartArea} = ctx.chart;
+  if(!chartArea) return hex1;
+  const g = ctx.chart.ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+  g.addColorStop(0, hex1);
+  g.addColorStop(1, hex2);
+  return g;
+}
+
 let cashierRows = [];
 let managerRows = [];
 let coachingRows = [];
 let negativeRows = [];
 let charts = {};
+
+// ---------- Cloud sync (Firebase) ----------
+// Paste your Firebase project config below (from Firebase Console > Project Settings > Your apps).
+// Leave apiKey as "" to run in local-only mode (upload works, but nothing is shared with the team).
+const firebaseConfig = {
+  apiKey: "AIzaSyCs6_YRPZsGDkb4hUFU4uVvfwyN9gPKUDg",
+  authDomain: "soft-skills-f6ae0.firebaseapp.com",
+  projectId: "soft-skills-f6ae0",
+  storageBucket: "soft-skills-f6ae0.firebasestorage.app",
+  messagingSenderId: "25790648095",
+  appId: "1:25790648095:web:49fd5d7f151fcd77302a2a"
+};
+
+let db = null;
+let cloudEnabled = false;
+const DOC_PATH = { collection: "kpi_dashboard", doc: "latest" };
+
+function setSyncStatus(text, ok){
+  const el = document.getElementById('syncStatus');
+  el.textContent = 'Cloud sync: ' + text;
+  el.classList.toggle('ok', !!ok);
+}
+
+function initCloud(){
+  if(!firebaseConfig.apiKey){ setSyncStatus('not configured (upload-only mode)', false); return; }
+  try{
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    cloudEnabled = true;
+    setSyncStatus('connecting…', false);
+    db.collection(DOC_PATH.collection).doc(DOC_PATH.doc)
+      .onSnapshot(snap => {
+        if(snap.exists){
+          const data = snap.data();
+          cashierRows = reviveDates(data.cashierRows || []);
+          managerRows = reviveDates(data.managerRows || []);
+          coachingRows = reviveDates(data.coachingRows || []);
+          negativeRows = reviveDates(data.negativeRows || []);
+          const when = data.updatedAt && data.updatedAt.toDate ? data.updatedAt.toDate() : null;
+          const who = data.updatedBy || 'someone';
+          setSyncStatus(`live — last updated by ${who}${when ? ' at ' + when.toLocaleString() : ''}`, true);
+          document.getElementById('emptyState').style.display = 'none';
+          renderAll();
+        } else {
+          setSyncStatus('live — no data uploaded yet', true);
+        }
+      }, err => {
+        setSyncStatus('error connecting (' + err.message + ')', false);
+      });
+  }catch(err){
+    setSyncStatus('error initializing (' + err.message + ')', false);
+  }
+}
+
+function reviveDates(val){
+  if(val === null || val === undefined) return val;
+  if(Array.isArray(val)) return val.map(reviveDates);
+  if(typeof val === 'object'){
+    if(typeof val.toDate === 'function') return val.toDate();
+    const out = {};
+    for(const k in val) out[k] = reviveDates(val[k]);
+    return out;
+  }
+  return val;
+}
+
+async function saveToCloud(){
+  if(!cloudEnabled) return;
+  let name = localStorage.getItem('kpi_uploader_name') || '';
+  name = prompt('Your name (shown as who last updated this):', name) || name || 'Unknown';
+  localStorage.setItem('kpi_uploader_name', name);
+  setSyncStatus('saving…', false);
+  try{
+    await db.collection(DOC_PATH.collection).doc(DOC_PATH.doc).set({
+      cashierRows, managerRows, coachingRows, negativeRows,
+      updatedBy: name,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }catch(err){
+    setSyncStatus('save failed (' + err.message + ')', false);
+  }
+}
 
 function excelDateToJS(v){
   if (v instanceof Date) return v;
@@ -198,6 +317,7 @@ document.getElementById('fileInput').addEventListener('change', function(e){
       document.getElementById('uploadStatus').classList.add('ok');
       document.getElementById('emptyState').style.display = 'none';
       renderAll();
+      if(cloudEnabled) saveToCloud();
     }catch(err){
       document.getElementById('uploadStatus').textContent = 'Could not read that file: ' + err.message;
       document.getElementById('uploadStatus').classList.remove('ok');
@@ -205,6 +325,8 @@ document.getElementById('fileInput').addEventListener('change', function(e){
   };
   reader.readAsArrayBuffer(file);
 });
+
+initCloud();
 
 function sheetRows(wb, name){
   const ws = wb.Sheets[name];
@@ -454,32 +576,35 @@ function renderCashiers(){
   `;
 
   destroyChart('skill'); destroyChart('shift'); destroyChart('outlet'); destroyChart('trend'); destroyChart('focusAreas');
-  const goldish = ['#c9a227','#d9b84a','#e8d9a0','#8b6f14'];
 
   charts.focusAreas = new Chart(document.getElementById('chartFocusAreas'), {
     type:'bar',
-    data:{ labels: areaLabels, datasets:[{ data: areaValues, backgroundColor: areaLabels.map((_,i)=> i===0 ? '#a1402f' : '#c9a227') }]},
-    options:{ ...baseBarOpts(Math.max(...areaValues,1), true), scales:{ y:{beginAtZero:true, ticks:{color:'#8b93a7', precision:0}, grid:{color:'rgba(255,255,255,0.06)'}}, x:{grid:{display:false}, ticks:{color:'#8b93a7', maxRotation:30, minRotation:30}} } }
+    data:{ labels: areaLabels, datasets:[{ data: areaValues, backgroundColor: areaLabels.map((_,i)=> i===0 ? 'rgba(196,84,63,0.85)' : 'rgba(201,162,39,0.85)'), borderRadius:6, maxBarThickness:46 }]},
+    options: baseBarOpts(Math.max(...areaValues,1), true, true)
   });
 
   charts.skill = new Chart(document.getElementById('chartSkill'), {
     type:'bar',
-    data:{labels:CASHIER_SKILLS, datasets:[{data:bySkill, backgroundColor:goldish}]},
+    data:{labels:CASHIER_SKILLS, datasets:[{data:bySkill, backgroundColor: bySkill.map(v=>scoreColor(v,3,0.85)), borderRadius:6, maxBarThickness:56}]},
     options: baseBarOpts(3)
   });
   charts.shift = new Chart(document.getElementById('chartShift'), {
     type:'bar',
-    data:{labels:shifts, datasets:[{data:byShift, backgroundColor:'#c9a227'}]},
+    data:{labels:shifts, datasets:[{data:byShift, backgroundColor: byShift.map(v=>scoreColor(v,3,0.85)), borderRadius:6, maxBarThickness:56}]},
     options: baseBarOpts(3)
   });
   charts.outlet = new Chart(document.getElementById('chartOutlet'), {
     type:'bar',
-    data:{labels:outletSet, datasets:[{data:byOutlet, backgroundColor:'#7fa88c'}]},
+    data:{labels:outletSet, datasets:[{data:byOutlet, backgroundColor: byOutlet.map(v=>scoreColor(v,3,0.85)), borderRadius:6, maxBarThickness:46}]},
     options: baseBarOpts(3, true)
   });
   charts.trend = new Chart(document.getElementById('chartTrend'), {
     type:'line',
-    data:{labels:weekKeys.map(k=>fmtDate(new Date(k))), datasets:[{data:weekAvgs, borderColor:'#e8d9a0', backgroundColor:'rgba(232,217,160,0.15)', fill:true, tension:.3}]},
+    data:{labels:weekKeys.map(k=>fmtDate(new Date(k))), datasets:[{
+      data:weekAvgs, borderColor:'#e8d9a0', borderWidth:2.5,
+      backgroundColor:(ctx)=>vGradient(ctx,'rgba(232,217,160,0.35)','rgba(232,217,160,0.02)'),
+      fill:true, tension:.35, pointRadius:4, pointBackgroundColor:'#e8d9a0', pointBorderColor:'#101a30', pointBorderWidth:1.5, pointHoverRadius:6
+    }]},
     options: baseBarOpts(3)
   });
 
@@ -496,15 +621,20 @@ function renderCashierDetail(name, byCashier){
 
   charts.cashierTrend = new Chart(document.getElementById('chartCashierTrend'), {
     type:'line',
-    data:{ labels: obs.map(o=>fmtDate(o.date)), datasets:[{ data: obs.map(cashierObsAvg), borderColor:'#e8d9a0', backgroundColor:'rgba(232,217,160,0.15)', fill:true, tension:.3, pointRadius:4 }]},
-    options:{ ...baseBarOpts(3), plugins:{legend:{display:false}, title:{display:true, text:'Score Over Time', color:'#e8d9a0', font:{size:12}}} }
+    data:{ labels: obs.map(o=>fmtDate(o.date)), datasets:[{
+      data: obs.map(cashierObsAvg), borderColor:'#e8d9a0', borderWidth:2.5,
+      backgroundColor:(ctx)=>vGradient(ctx,'rgba(232,217,160,0.35)','rgba(232,217,160,0.02)'),
+      fill:true, tension:.35, pointRadius:5, pointBackgroundColor: obs.map(o=>scoreColor(cashierObsAvg(o),3,1)),
+      pointBorderColor:'#101a30', pointBorderWidth:1.5, pointHoverRadius:7
+    }]},
+    options:{ ...baseBarOpts(3), plugins:{legend:{display:false}, tooltip: baseBarOpts(3).plugins.tooltip, title:{display:true, text:'Score Over Time', font:{family:'Georgia, serif', size:13, weight:'600'}, color:'#e8d9a0', padding:{bottom:14}}} }
   });
 
   const skillAvgs = CASHIER_SKILLS.map(sk=>avg(obs.map(o=>o.scores[sk])));
   charts.cashierSkills = new Chart(document.getElementById('chartCashierSkills'), {
     type:'bar',
-    data:{ labels: CASHIER_SKILLS, datasets:[{ data: skillAvgs, backgroundColor:'#7fa88c' }]},
-    options:{ ...baseBarOpts(3), plugins:{legend:{display:false}, title:{display:true, text:'Skill Breakdown (All-Time Avg)', color:'#e8d9a0', font:{size:12}}} }
+    data:{ labels: CASHIER_SKILLS, datasets:[{ data: skillAvgs, backgroundColor: skillAvgs.map(v=>scoreColor(v,3,0.85)), borderRadius:6, maxBarThickness:56 }]},
+    options:{ ...baseBarOpts(3), plugins:{legend:{display:false}, tooltip: baseBarOpts(3).plugins.tooltip, title:{display:true, text:'Skill Breakdown (All-Time Avg)', font:{family:'Georgia, serif', size:13, weight:'600'}, color:'#e8d9a0', padding:{bottom:14}}} }
   });
 
   const openerPct = obs.length ? obs.filter(o=>o.opener==='Y').length/obs.length*100 : 0;
@@ -525,13 +655,20 @@ function renderCashierDetail(name, byCashier){
     </div>`).join('') : '<div style="color:var(--muted);font-size:13px;">No notes recorded yet.</div>';
 }
 
-function baseBarOpts(max, rotateX){
+function baseBarOpts(max, rotateX, isCount){
   return {
     responsive:true,
-    plugins:{legend:{display:false}},
+    maintainAspectRatio:true,
+    plugins:{
+      legend:{display:false},
+      tooltip:{ callbacks:{ label: (ctx) => {
+        const v = ctx.parsed.y ?? ctx.parsed.x;
+        return isCount ? ` ${v}` : ` ${v ?? '—'} / ${max}`;
+      } } }
+    },
     scales:{
-      y:{ beginAtZero:true, max:max, grid:{color:'rgba(255,255,255,0.06)'}, ticks:{color:'#8b93a7'} },
-      x:{ grid:{display:false}, ticks:{color:'#8b93a7', maxRotation: rotateX?40:0, minRotation: rotateX?40:0} }
+      y:{ beginAtZero:true, max: isCount?undefined:max, grid:{color:'rgba(255,255,255,0.05)', drawBorder:false}, ticks:{color:'#8b93a7', precision: isCount?0:undefined}, border:{display:false} },
+      x:{ grid:{display:false}, ticks:{color:'#8b93a7', maxRotation: rotateX?40:0, minRotation: rotateX?40:0}, border:{display:false} }
     }
   };
 }
@@ -599,16 +736,21 @@ function renderManagerDetail(name){
 
   charts.mgrSkills = new Chart(document.getElementById('chartManagerSkills'), {
     type:'bar',
-    data:{ labels: ALL_MGR_SKILLS, datasets:[{ data: ALL_MGR_SKILLS.map(sk=>latest?latest.scores[sk]:null), backgroundColor:'#c9a227' }]},
-    options:{ ...baseBarOpts(5,true), indexAxis:'x', plugins:{legend:{display:false}, title:{display:true, text:'Latest Scores by Skill', color:'#e8d9a0', font:{size:12}}} }
+    data:{ labels: ALL_MGR_SKILLS, datasets:[{ data: ALL_MGR_SKILLS.map(sk=>latest?latest.scores[sk]:null), backgroundColor: ALL_MGR_SKILLS.map(sk=>scoreColor(latest?latest.scores[sk]:null,5,0.85)), borderRadius:6, maxBarThickness:40 }]},
+    options:{ ...baseBarOpts(5,true), indexAxis:'x', plugins:{legend:{display:false}, tooltip: baseBarOpts(5).plugins.tooltip, title:{display:true, text:'Latest Scores by Skill', font:{family:'Georgia, serif', size:13, weight:'600'}, color:'#e8d9a0', padding:{bottom:14}}} }
   });
 
   const monthLabels = rows.map(r=>fmtMonth(r.month));
   const overallSeries = rows.map(r=>avg(Object.values(r.scores)));
   charts.mgrTrend = new Chart(document.getElementById('chartManagerTrend'), {
     type:'line',
-    data:{ labels: monthLabels, datasets:[{ data: overallSeries, borderColor:'#7fa88c', backgroundColor:'rgba(127,168,140,0.15)', fill:true, tension:.3 }]},
-    options:{ ...baseBarOpts(5), plugins:{legend:{display:false}, title:{display:true, text:'Overall Average Over Time', color:'#e8d9a0', font:{size:12}}} }
+    data:{ labels: monthLabels, datasets:[{
+      data: overallSeries, borderColor:'#7fa88c', borderWidth:2.5,
+      backgroundColor:(ctx)=>vGradient(ctx,'rgba(127,168,140,0.35)','rgba(127,168,140,0.02)'),
+      fill:true, tension:.35, pointRadius:5, pointBackgroundColor: overallSeries.map(v=>scoreColor(v,5,1)),
+      pointBorderColor:'#101a30', pointBorderWidth:1.5, pointHoverRadius:7
+    }]},
+    options:{ ...baseBarOpts(5), plugins:{legend:{display:false}, tooltip: baseBarOpts(5).plugins.tooltip, title:{display:true, text:'Overall Average Over Time', font:{family:'Georgia, serif', size:13, weight:'600'}, color:'#e8d9a0', padding:{bottom:14}}} }
   });
 
   const notesEl = document.getElementById('managerNotes');
