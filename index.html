@@ -341,13 +341,13 @@ function outletOptions(){
 const NEGATIVE_AREAS = ["Guest Engagement","Communication Clarity","Attention to Detail","Positive Attitude","Non-Negotiable Missed (Opener)","Non-Negotiable Missed (Closer)","Order Accuracy","Other"];
 const COACHING_TRIGGERS = ["Low Spot-Check Score","Guest Complaint","Routine Check-In","Recognition / Positive"];
 
-const ROSTER_CASHIERS = [["Bella Abarientos","Morning"],["Julie Santiago","Morning"],["Sandra Rothenay","Morning"],["Gloria Paras","Morning"],["Ross Principe","Morning"],["Lucia Lapuz","Morning"],["Bernie Ferrer","Day"],["Tess Santos","Day"],["Mark Seifert Jr.","Day"],["Delilah Villez","Day"],["Bernardo Villez","Day"],["Lynette Garcia","Day"],["Teresa Zamora","Day"],["Andrianova Diaz","Day"],["Aiza Umba","Day"],["Anne Lori Solis","Day"],["Dominique Daphness","Day"],["Dawn Olvido","Day"],["Cathyrine Gomez","Day"],["Michael Herbach","Day"],["Myra Teano","Day"],["Rosaura Rendon","Day"],["Jordan Mcclain","Day"],["Isaac Garcia","Swing"],["Victoria Smith","Swing"],["Velda Stewart","Swing"],["Selena Molina","Swing"],["Hung Le","Swing"],["James Carrillo","Swing"],["Martha Duarte","Swing"],["Estefania Caballero-Cabrera","Swing"],["Troy Mcarty","Swing"],["Nathan Carmenatty","Swing"],["Daniel Pynes","Swing"],["Dylan Starkey","Swing"],["Jason Main","Swing"],["Maria Raquel Colima","Swing"],["Brent Tinoco","Swing"],["Arturo Gonzalez","Swing"],["Nataliya Vigil","Swing"],["Alina Tahirre","Late Swing"],["Taynara Fernandez","Late Swing"],["Ethan Seymour","Late Swing"],["Guillermo Flores","Graveyard"],["Leticia Castillo","Graveyard"],["Angelica Velazquez","Graveyard"],["Alayna Rourke","Graveyard"],["Ashley Ramirez","Graveyard"]];
+let ROSTER_CASHIERS = [["Bella Abarientos","Morning"],["Julie Santiago","Morning"],["Sandra Rothenay","Morning"],["Gloria Paras","Morning"],["Ross Principe","Morning"],["Lucia Lapuz","Morning"],["Bernie Ferrer","Day"],["Tess Santos","Day"],["Mark Seifert Jr.","Day"],["Delilah Villez","Day"],["Bernardo Villez","Day"],["Lynette Garcia","Day"],["Teresa Zamora","Day"],["Andrianova Diaz","Day"],["Aiza Umba","Day"],["Anne Lori Solis","Day"],["Dominique Daphness","Day"],["Dawn Olvido","Day"],["Cathyrine Gomez","Day"],["Michael Herbach","Day"],["Myra Teano","Day"],["Rosaura Rendon","Day"],["Jordan Mcclain","Day"],["Isaac Garcia","Swing"],["Victoria Smith","Swing"],["Velda Stewart","Swing"],["Selena Molina","Swing"],["Hung Le","Swing"],["James Carrillo","Swing"],["Martha Duarte","Swing"],["Estefania Caballero-Cabrera","Swing"],["Troy Mcarty","Swing"],["Nathan Carmenatty","Swing"],["Daniel Pynes","Swing"],["Dylan Starkey","Swing"],["Jason Main","Swing"],["Maria Raquel Colima","Swing"],["Brent Tinoco","Swing"],["Arturo Gonzalez","Swing"],["Nataliya Vigil","Swing"],["Alina Tahirre","Late Swing"],["Taynara Fernandez","Late Swing"],["Ethan Seymour","Late Swing"],["Guillermo Flores","Graveyard"],["Leticia Castillo","Graveyard"],["Angelica Velazquez","Graveyard"],["Alayna Rourke","Graveyard"],["Ashley Ramirez","Graveyard"]];
 
-const ROSTER_MANAGERS = [["Ana Sanchez","Asst. Manager"],["Salve Villez","Asst. Manager"],["Maria Tomas","Asst. Manager"],["Joharra Ruidera","Asst. Manager"],["Jeannifer Spier","Asst. Manager"],["Leo Donato","Asst. Manager"],["Samantha Gamboa","Asst. Manager"],["Elizabeth Guevarra","Lead"],["Gregory Conn","Lead"],["Sergio Andres","Lead"],["Jessica Carreon","Lead"],["Walden Wesley Palacio","Lead"],["Savy Vann","Lead"]];
+let ROSTER_MANAGERS = [["Ana Sanchez","Asst. Manager"],["Salve Villez","Asst. Manager"],["Maria Tomas","Asst. Manager"],["Joharra Ruidera","Asst. Manager"],["Jeannifer Spier","Asst. Manager"],["Leo Donato","Asst. Manager"],["Samantha Gamboa","Asst. Manager"],["Elizabeth Guevarra","Lead"],["Gregory Conn","Lead"],["Sergio Andres","Lead"],["Jessica Carreon","Lead"],["Walden Wesley Palacio","Lead"],["Savy Vann","Lead"]];
 
-const ROSTER_COOKS = [["Juan Miranda","Day"],["Sakie Chaiyakotra","Day"],["Maria Manzano","Day"],["Isabel Canal","Day"],["Rosalina Uribe","Day"],["Lupe Cuevas","Day"],["Jesus Carillo","Day"],["Nyta Dourng","Day"],["Jocelyn Smoulcey","Day"],["Pornchai Lersbuasin","Day"],["Bonifacio Ramirez","Day"],["Ramil Abellana","Day"],["Maria Roman","Day"],["Daniel Abarientos","Day"],["Arcie Elomina","Day"],["Jessica Hamilton","Day"],["Janelle Carreon","Day"],["Lisa Ferreira","Swing"],["Andrew Ortiz","Swing"],["Cedarrius 'Ari' Williams","Swing"],["Johnathon Morante","Swing"],["Vivyan Neimatalla","Swing"],["Ricardo Flores-Sanchez","Swing"],["Cara Esposito","Swing"],["Delia Schooler","Swing"],["Shelby Tedford","Swing"],["Zeyad Qassera","Swing"],["Jacqueline Sanchez","Swing"],["Joseph Baias","Swing"],["Joseph Lopez","Swing"],["Kevin Alcaraz","Swing"],["Sam Hardy","Swing"],["Felix Stone","Swing"],["Victor Enriquez","Swing"],["Adrian Mondesir","Swing"],["George Rezkalla","Swing"],["Bryan Eddy","Swing"]];
-const ROSTER_CHEFS = [["Michell Balajadia","Sous Chef"],["Earvin Bozeman","Sous Chef"],["Lupe Pinedo","Sous Chef"],["Elias Puga Cubillo","Sous Chef"],["Michael Mason","Sous Chef"],["Jessica Diaz","Asst. Chef"]];
-const ROSTER_ALL_EVALUATORS = ROSTER_MANAGERS.map(m=>m[0]).concat(ROSTER_CHEFS.map(c=>c[0]));
+let ROSTER_COOKS = [["Juan Miranda","Day"],["Sakie Chaiyakotra","Day"],["Maria Manzano","Day"],["Isabel Canal","Day"],["Rosalina Uribe","Day"],["Lupe Cuevas","Day"],["Jesus Carillo","Day"],["Nyta Dourng","Day"],["Jocelyn Smoulcey","Day"],["Pornchai Lersbuasin","Day"],["Bonifacio Ramirez","Day"],["Ramil Abellana","Day"],["Maria Roman","Day"],["Daniel Abarientos","Day"],["Arcie Elomina","Day"],["Jessica Hamilton","Day"],["Janelle Carreon","Day"],["Lisa Ferreira","Swing"],["Andrew Ortiz","Swing"],["Cedarrius 'Ari' Williams","Swing"],["Johnathon Morante","Swing"],["Vivyan Neimatalla","Swing"],["Ricardo Flores-Sanchez","Swing"],["Cara Esposito","Swing"],["Delia Schooler","Swing"],["Shelby Tedford","Swing"],["Zeyad Qassera","Swing"],["Jacqueline Sanchez","Swing"],["Joseph Baias","Swing"],["Joseph Lopez","Swing"],["Kevin Alcaraz","Swing"],["Sam Hardy","Swing"],["Felix Stone","Swing"],["Victor Enriquez","Swing"],["Adrian Mondesir","Swing"],["George Rezkalla","Swing"],["Bryan Eddy","Swing"]];
+let ROSTER_CHEFS = [["Michell Balajadia","Sous Chef"],["Earvin Bozeman","Sous Chef"],["Lupe Pinedo","Sous Chef"],["Elias Puga Cubillo","Sous Chef"],["Michael Mason","Sous Chef"],["Jessica Diaz","Asst. Chef"]];
+function getAllEvaluators(){ return ROSTER_MANAGERS.map(m=>m[0]).concat(ROSTER_CHEFS.map(c=>c[0])); }
 
 Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
 Chart.defaults.color = '#5b6472';
@@ -437,6 +437,10 @@ function initCloud(){
           bohManagerRows = reviveDates(data.bohManagerRows || []);
           bohCoachingRows = reviveDates(data.bohCoachingRows || []);
           bohNegativeRows = reviveDates(data.bohNegativeRows || []);
+          if(data.rosterCashiers && data.rosterCashiers.length) ROSTER_CASHIERS = data.rosterCashiers;
+          if(data.rosterManagers && data.rosterManagers.length) ROSTER_MANAGERS = data.rosterManagers;
+          if(data.rosterCooks && data.rosterCooks.length) ROSTER_COOKS = data.rosterCooks;
+          if(data.rosterChefs && data.rosterChefs.length) ROSTER_CHEFS = data.rosterChefs;
           const when = data.updatedAt && data.updatedAt.toDate ? data.updatedAt.toDate() : null;
           const who = data.updatedBy || 'someone';
           setSyncStatus(`live — last updated by ${who}${when ? ' at ' + when.toLocaleString() : ''}`, true);
@@ -482,6 +486,8 @@ async function saveToCloud(){
     await db.collection(DOC_PATH.collection).doc(DOC_PATH.doc).set({
       cashierRows, managerRows, coachingRows, negativeRows,
       bohRows, bohManagerRows, bohCoachingRows, bohNegativeRows,
+      rosterCashiers: ROSTER_CASHIERS, rosterManagers: ROSTER_MANAGERS,
+      rosterCooks: ROSTER_COOKS, rosterChefs: ROSTER_CHEFS,
       updatedBy: name,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
@@ -643,6 +649,26 @@ function parseWorkbook(wb){
       area: r[4], severity: r[5], complaint: r[6], description: desc, loggedBy: r[8]
     });
   }
+
+  // Live rosters — read directly from the workbook so new people show up in
+  // dropdowns immediately, with no dashboard file changes ever needed.
+  function parseRoster(sheetName, nameCol, tagCol){
+    const rows = sheetRows(wb, sheetName);
+    const out = [];
+    for(let i=1;i<rows.length;i++){
+      const r = rows[i];
+      if(r && r[nameCol]) out.push([String(r[nameCol]).trim(), r[tagCol] || '']);
+    }
+    return out;
+  }
+  const newCashiers = parseRoster('Cashier Roster', 0, 2);
+  const newManagers = parseRoster('Manager Roster', 0, 2);
+  const newCooks = parseRoster('BOH Team Roster', 0, 2);
+  const newChefs = parseRoster('BOH Management Roster', 0, 2);
+  if(newCashiers.length) ROSTER_CASHIERS = newCashiers;
+  if(newManagers.length) ROSTER_MANAGERS = newManagers;
+  if(newCooks.length) ROSTER_COOKS = newCooks;
+  if(newChefs.length) ROSTER_CHEFS = newChefs;
 }
 
 function scoreClass(v, max){
@@ -1479,7 +1505,7 @@ function renderBohManagement(){
 
   // Engagement: how much each evaluator (chef OR manager) is logging into BOH logs
   const now = new Date();
-  const engagement = ROSTER_ALL_EVALUATORS.map(name=>{
+  const engagement = getAllEvaluators().map(name=>{
     const spot = bohRows.filter(r=>r.observedBy===name);
     const coach = bohCoachingRows.filter(c=>c.loggedBy===name);
     const neg = bohNegativeRows.filter(n=>n.loggedBy===name);
@@ -1687,7 +1713,7 @@ function fieldsFor(type){
         <div class="field"><label>Notes</label><textarea id="f_notes" placeholder="What happened, what stood out..."></textarea></div>
       </div>
       <div class="field-row">
-        <div class="field"><label>Observed By</label><select id="f_observer">${opts(ROSTER_ALL_EVALUATORS)}</select></div>
+        <div class="field"><label>Observed By</label><select id="f_observer">${opts(getAllEvaluators())}</select></div>
       </div>`;
   }
   if(type==='negative'){
@@ -1706,7 +1732,7 @@ function fieldsFor(type){
       </div>
       <div class="field-row">
         <div class="field"><label>Guest Complaint Filed</label><select id="f_complaint"><option value="N">No</option><option value="Y">Yes</option></select></div>
-        <div class="field"><label>Logged By</label><select id="f_logger">${opts(ROSTER_ALL_EVALUATORS)}</select></div>
+        <div class="field"><label>Logged By</label><select id="f_logger">${opts(getAllEvaluators())}</select></div>
       </div>
       <div class="field-row full">
         <div class="field"><label>Description</label><textarea id="f_desc" placeholder="What went wrong, specifically..."></textarea></div>
@@ -1724,7 +1750,7 @@ function fieldsFor(type){
       </div>
       <div class="field-row">
         <div class="field"><label>Status</label><select id="f_status"><option>Pending</option><option>Completed</option><option>N/A</option></select></div>
-        <div class="field"><label>Logged By</label><select id="f_logger">${opts(ROSTER_ALL_EVALUATORS)}</select></div>
+        <div class="field"><label>Logged By</label><select id="f_logger">${opts(getAllEvaluators())}</select></div>
       </div>
       <div class="field-row full">
         <div class="field"><label>Action Taken</label><input type="text" id="f_action" placeholder="e.g. Reviewed closing-line examples together"></div>
@@ -1765,7 +1791,7 @@ function fieldsFor(type){
         <div class="field"><label>Notes</label><textarea id="f_notes" placeholder="What happened, what stood out..."></textarea></div>
       </div>
       <div class="field-row">
-        <div class="field"><label>Observed By</label><select id="f_observer">${opts(ROSTER_ALL_EVALUATORS)}</select></div>
+        <div class="field"><label>Observed By</label><select id="f_observer">${opts(getAllEvaluators())}</select></div>
       </div>`;
   }
   if(type==='bohNegative'){
@@ -1783,7 +1809,7 @@ function fieldsFor(type){
         <div class="field"><label>Guest Complaint Linked</label><select id="f_complaint"><option value="N">No</option><option value="Y">Yes</option></select></div>
       </div>
       <div class="field-row">
-        <div class="field"><label>Logged By</label><select id="f_logger">${opts(ROSTER_ALL_EVALUATORS)}</select></div>
+        <div class="field"><label>Logged By</label><select id="f_logger">${opts(getAllEvaluators())}</select></div>
       </div>
       <div class="field-row full">
         <div class="field"><label>Description</label><textarea id="f_desc" placeholder="What went wrong, specifically..."></textarea></div>
@@ -1801,7 +1827,7 @@ function fieldsFor(type){
       </div>
       <div class="field-row">
         <div class="field"><label>Status</label><select id="f_status"><option>Pending</option><option>Completed</option><option>N/A</option></select></div>
-        <div class="field"><label>Logged By</label><select id="f_logger">${opts(ROSTER_ALL_EVALUATORS)}</select></div>
+        <div class="field"><label>Logged By</label><select id="f_logger">${opts(getAllEvaluators())}</select></div>
       </div>
       <div class="field-row full">
         <div class="field"><label>Action Taken</label><input type="text" id="f_action" placeholder="e.g. Reviewed plating consistency together"></div>
