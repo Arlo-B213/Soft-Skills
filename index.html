@@ -274,8 +274,10 @@
   </header>
 
   <nav class="tabs">
-    <button class="active" data-tab="cashiers">Cashiers</button>
-    <button data-tab="management">Management</button>
+    <button class="active" data-tab="cashiers">FOH Team</button>
+    <button data-tab="management">FOH Management</button>
+    <button data-tab="bohTeam">BOH Team</button>
+    <button data-tab="bohManagement">BOH Management</button>
   </nav>
 
   <div id="emptyState" class="empty">
@@ -285,6 +287,8 @@
 
   <div id="cashiersTab" style="display:none;"></div>
   <div id="managementTab" style="display:none;"></div>
+  <div id="bohTeamTab" style="display:none;"></div>
+  <div id="bohManagementTab" style="display:none;"></div>
 
   <button class="fab" id="fabEntryBtn" aria-label="Log entry">+</button>
 
@@ -298,10 +302,14 @@
       <button id="closeModalBtn">&times;</button>
     </div>
     <div class="modal-tabs" id="modalTabs">
-      <button data-type="spotcheck" class="active">Cashier Spot-Check</button>
-      <button data-type="negative">Negative Interaction</button>
-      <button data-type="coaching">Coaching Note</button>
-      <button data-type="manager">Manager Score</button>
+      <button data-type="spotcheck" class="active">FOH Spot-Check</button>
+      <button data-type="negative">FOH Negative</button>
+      <button data-type="coaching">FOH Coaching</button>
+      <button data-type="manager">FOH Mgmt Score</button>
+      <button data-type="bohSpotcheck">BOH Spot-Check</button>
+      <button data-type="bohNegative">BOH Negative</button>
+      <button data-type="bohCoaching">BOH Coaching</button>
+      <button data-type="bohManager">BOH Mgmt Score</button>
     </div>
     <div class="modal-body" id="modalBody"></div>
     <div class="modal-actions">
@@ -336,6 +344,10 @@ const COACHING_TRIGGERS = ["Low Spot-Check Score","Guest Complaint","Routine Che
 const ROSTER_CASHIERS = [["Bella Abarientos","Morning"],["Julie Santiago","Morning"],["Sandra Rothenay","Morning"],["Gloria Paras","Morning"],["Ross Principe","Morning"],["Lucia Lapuz","Morning"],["Bernie Ferrer","Day"],["Tess Santos","Day"],["Mark Seifert Jr.","Day"],["Delilah Villez","Day"],["Bernardo Villez","Day"],["Lynette Garcia","Day"],["Teresa Zamora","Day"],["Andrianova Diaz","Day"],["Aiza Umba","Day"],["Anne Lori Solis","Day"],["Dominique Daphness","Day"],["Dawn Olvido","Day"],["Cathyrine Gomez","Day"],["Michael Herbach","Day"],["Myra Teano","Day"],["Rosaura Rendon","Day"],["Jordan Mcclain","Day"],["Isaac Garcia","Swing"],["Victoria Smith","Swing"],["Velda Stewart","Swing"],["Selena Molina","Swing"],["Hung Le","Swing"],["James Carrillo","Swing"],["Martha Duarte","Swing"],["Estefania Caballero-Cabrera","Swing"],["Troy Mcarty","Swing"],["Nathan Carmenatty","Swing"],["Daniel Pynes","Swing"],["Dylan Starkey","Swing"],["Jason Main","Swing"],["Maria Raquel Colima","Swing"],["Brent Tinoco","Swing"],["Arturo Gonzalez","Swing"],["Nataliya Vigil","Swing"],["Alina Tahirre","Late Swing"],["Taynara Fernandez","Late Swing"],["Ethan Seymour","Late Swing"],["Guillermo Flores","Graveyard"],["Leticia Castillo","Graveyard"],["Angelica Velazquez","Graveyard"],["Alayna Rourke","Graveyard"],["Ashley Ramirez","Graveyard"]];
 
 const ROSTER_MANAGERS = [["Ana Sanchez","Asst. Manager"],["Salve Villez","Asst. Manager"],["Maria Tomas","Asst. Manager"],["Joharra Ruidera","Asst. Manager"],["Jeannifer Spier","Asst. Manager"],["Leo Donato","Asst. Manager"],["Samantha Gamboa","Asst. Manager"],["Elizabeth Guevarra","Lead"],["Gregory Conn","Lead"],["Sergio Andres","Lead"],["Jessica Carreon","Lead"],["Walden Wesley Palacio","Lead"],["Savy Vann","Lead"]];
+
+const ROSTER_COOKS = [["Juan Miranda","Day"],["Sakie Chaiyakotra","Day"],["Maria Manzano","Day"],["Isabel Canal","Day"],["Rosalina Uribe","Day"],["Lupe Cuevas","Day"],["Jesus Carillo","Day"],["Nyta Dourng","Day"],["Jocelyn Smoulcey","Day"],["Pornchai Lersbuasin","Day"],["Bonifacio Ramirez","Day"],["Ramil Abellana","Day"],["Maria Roman","Day"],["Daniel Abarientos","Day"],["Arcie Elomina","Day"],["Jessica Hamilton","Day"],["Janelle Carreon","Day"],["Lisa Ferreira","Swing"],["Andrew Ortiz","Swing"],["Cedarrius 'Ari' Williams","Swing"],["Johnathon Morante","Swing"],["Vivyan Neimatalla","Swing"],["Ricardo Flores-Sanchez","Swing"],["Cara Esposito","Swing"],["Delia Schooler","Swing"],["Shelby Tedford","Swing"],["Zeyad Qassera","Swing"],["Jacqueline Sanchez","Swing"],["Joseph Baias","Swing"],["Joseph Lopez","Swing"],["Kevin Alcaraz","Swing"],["Sam Hardy","Swing"],["Felix Stone","Swing"],["Victor Enriquez","Swing"],["Adrian Mondesir","Swing"],["George Rezkalla","Swing"],["Bryan Eddy","Swing"]];
+const ROSTER_CHEFS = [["Michell Balajadia","Sous Chef"],["Earvin Bozeman","Sous Chef"],["Lupe Pinedo","Sous Chef"],["Elias Puga Cubillo","Sous Chef"],["Michael Mason","Sous Chef"],["Jessica Diaz","Asst. Chef"]];
+const ROSTER_ALL_EVALUATORS = ROSTER_MANAGERS.map(m=>m[0]).concat(ROSTER_CHEFS.map(c=>c[0]));
 
 Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
 Chart.defaults.color = '#5b6472';
@@ -373,8 +385,16 @@ let cashierRows = [];
 let managerRows = [];
 let coachingRows = [];
 let negativeRows = [];
+let bohRows = [];
+let bohManagerRows = [];
+let bohCoachingRows = [];
+let bohNegativeRows = [];
 let charts = {};
 let lastByCashier = {};
+let lastByCook = {};
+
+const BOH_SKILLS = ["Food Quality & Consistency","Speed & Time Management","Cleanliness & Sanitation","Teamwork & Communication"];
+const BOH_NEGATIVE_AREAS = ["Food Quality & Consistency","Speed & Time Management","Cleanliness & Sanitation","Teamwork & Communication","Order Accuracy","Safety Violation","Other"];
 
 // ---------- Cloud sync (Firebase) ----------
 // Paste your Firebase project config below (from Firebase Console > Project Settings > Your apps).
@@ -413,6 +433,10 @@ function initCloud(){
           managerRows = reviveDates(data.managerRows || []);
           coachingRows = reviveDates(data.coachingRows || []);
           negativeRows = reviveDates(data.negativeRows || []);
+          bohRows = reviveDates(data.bohRows || []);
+          bohManagerRows = reviveDates(data.bohManagerRows || []);
+          bohCoachingRows = reviveDates(data.bohCoachingRows || []);
+          bohNegativeRows = reviveDates(data.bohNegativeRows || []);
           const when = data.updatedAt && data.updatedAt.toDate ? data.updatedAt.toDate() : null;
           const who = data.updatedBy || 'someone';
           setSyncStatus(`live — last updated by ${who}${when ? ' at ' + when.toLocaleString() : ''}`, true);
@@ -457,6 +481,7 @@ async function saveToCloud(){
   try{
     await db.collection(DOC_PATH.collection).doc(DOC_PATH.doc).set({
       cashierRows, managerRows, coachingRows, negativeRows,
+      bohRows, bohManagerRows, bohCoachingRows, bohNegativeRows,
       updatedBy: name,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
@@ -562,6 +587,62 @@ function parseWorkbook(wb){
       area: r[5], severity: r[6], complaint: r[7], description: desc, loggedBy: r[9]
     });
   }
+
+  const blog = sheetRows(wb, 'BOH Team Log');
+  bohRows = [];
+  for(let i=5;i<blog.length;i++){
+    const r = blog[i];
+    if(!r || !r[2]) continue;
+    const notes = r[9] || '';
+    if(String(notes).startsWith('[SAMPLE]')) continue;
+    bohRows.push({
+      date: excelDateToJS(r[0]), shift: r[1], name: r[2], badge: r[3],
+      scores: { "Food Quality & Consistency": r[4], "Speed & Time Management": r[5], "Cleanliness & Sanitation": r[6], "Teamwork & Communication": r[7] },
+      observedBy: r[8], notes: notes
+    });
+  }
+
+  const bmlog = sheetRows(wb, 'BOH Management Scorecard');
+  bohManagerRows = [];
+  for(let i=5;i<bmlog.length;i++){
+    const r = bmlog[i];
+    if(!r || !r[1]) continue;
+    const notes = r[18] || '';
+    if(String(notes).startsWith('[SAMPLE]')) continue;
+    const scores = {};
+    ALL_MGR_SKILLS.forEach((sk,idx)=>{ scores[sk] = r[3+idx]; });
+    bohManagerRows.push({
+      month: excelDateToJS(r[0]), name: r[1], role: r[2], scores,
+      notes: notes, reviewedBy: r[19]
+    });
+  }
+
+  const bclog = sheetRows(wb, 'BOH Coaching Log');
+  bohCoachingRows = [];
+  for(let i=5;i<bclog.length;i++){
+    const r = bclog[i];
+    if(!r || !r[1]) continue;
+    const notes = r[7] || '';
+    if(String(notes).startsWith('[SAMPLE]')) continue;
+    bohCoachingRows.push({
+      date: excelDateToJS(r[0]), name: r[1], badge: r[2], trigger: r[3],
+      action: r[4], followUpDate: excelDateToJS(r[5]), status: r[6],
+      notes: notes, loggedBy: r[8]
+    });
+  }
+
+  const bnlog = sheetRows(wb, 'BOH Negative Incidents');
+  bohNegativeRows = [];
+  for(let i=5;i<bnlog.length;i++){
+    const r = bnlog[i];
+    if(!r || !r[1]) continue;
+    const desc = r[7] || '';
+    if(String(desc).startsWith('[SAMPLE]')) continue;
+    bohNegativeRows.push({
+      date: excelDateToJS(r[0]), name: r[1], badge: r[2], shift: r[3],
+      area: r[4], severity: r[5], complaint: r[6], description: desc, loggedBy: r[8]
+    });
+  }
 }
 
 function scoreClass(v, max){
@@ -585,6 +666,9 @@ function destroyChart(id){ if(charts[id]){ charts[id].destroy(); delete charts[i
 function renderAll(){
   renderCashiers();
   renderManagement();
+  renderBohTeam();
+  renderBohManagement();
+  showTab(activeTabKey());
 }
 
 function cashierObsAvg(r){ return avg(Object.values(r.scores)); }
@@ -1076,13 +1160,19 @@ function renderManagerDetail(name){
     </div>`).join('') : '<div style="color:var(--muted);font-size:13px;">No notes recorded yet.</div>';
 }
 
-document.querySelectorAll('nav.tabs button').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('cashiersTab').style.display = btn.dataset.tab==='cashiers' ? 'block':'none';
-    document.getElementById('managementTab').style.display = btn.dataset.tab==='management' ? 'block':'none';
+const TAB_IDS = { cashiers:'cashiersTab', management:'managementTab', bohTeam:'bohTeamTab', bohManagement:'bohManagementTab' };
+function activeTabKey(){
+  const btn = document.querySelector('nav.tabs button.active');
+  return btn ? btn.dataset.tab : 'cashiers';
+}
+function showTab(key){
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab===key));
+  Object.entries(TAB_IDS).forEach(([k, id])=>{
+    document.getElementById(id).style.display = (k===key) ? 'block' : 'none';
   });
+}
+document.querySelectorAll('nav.tabs button').forEach(btn=>{
+  btn.addEventListener('click', ()=>showTab(btn.dataset.tab));
 });
 
 // ---------- Quick Entry modal ----------
@@ -1110,6 +1200,446 @@ function openManagerDetailFromAlert(name){
   if(!sel) return;
   sel.value = name;
   renderManagerDetail(name);
+  sel.scrollIntoView({behavior:'smooth', block:'center'});
+}
+
+// ============ BOH Team ============
+function cookObsAvg(r){ return avg(Object.values(r.scores)); }
+
+function computeCookRollups(){
+  const byCook = {};
+  bohRows.forEach(r=>{
+    if(!byCook[r.name]) byCook[r.name] = {obs:[], shift:r.shift};
+    byCook[r.name].obs.push(r);
+  });
+  Object.values(byCook).forEach(d=>d.obs.sort((a,b)=>(a.date||0)-(b.date||0)));
+  return byCook;
+}
+
+function renderBohTeam(){
+  const el = document.getElementById('bohTeamTab');
+  const total = bohRows.length;
+  const overall = avg(bohRows.flatMap(r=>Object.values(r.scores)));
+  const pendingCoaching = bohCoachingRows.filter(c=>c.status==='Pending').length;
+  const overdueCoaching = bohCoachingRows.filter(c=>c.status==='Pending' && c.followUpDate && c.followUpDate < new Date()).length;
+  const totalNegative = bohNegativeRows.length;
+  const complaintPct = totalNegative ? bohNegativeRows.filter(n=>n.complaint==='Y').length/totalNegative*100 : 0;
+
+  const areaCounts = {};
+  bohNegativeRows.forEach(n=>{ if(n.area){ areaCounts[n.area] = (areaCounts[n.area]||0)+1; } });
+  const areaLabels = Object.keys(areaCounts).sort((a,b)=>areaCounts[b]-areaCounts[a]);
+  const areaValues = areaLabels.map(a=>areaCounts[a]);
+  const topArea = areaLabels[0];
+
+  const bySkill = BOH_SKILLS.map(sk => avg(bohRows.map(r=>r.scores[sk])));
+  const byShift = SHIFTS.map(s => avg(bohRows.filter(r=>r.shift===s).flatMap(r=>Object.values(r.scores))));
+
+  const byCook = computeCookRollups();
+  lastByCook = byCook;
+  const cookNames = Object.keys(byCook).sort();
+
+  const flagged = cookNames.map(name=>{
+    const d = byCook[name];
+    const scores = d.obs.flatMap(o=>Object.values(o.scores).filter(v=>typeof v==='number'));
+    return { name, avg: avg(scores), count: d.obs.length, shift: d.shift };
+  }).filter(x=>x.avg!==null).sort((a,b)=>a.avg-b.avg);
+
+  const improvement = cookNames.map(name=>{
+    const obs = byCook[name].obs;
+    if(obs.length < 4) return null;
+    const mid = Math.floor(obs.length/2);
+    const earlier = avg(obs.slice(0,mid).map(cookObsAvg));
+    const recent = avg(obs.slice(mid).map(cookObsAvg));
+    if(earlier===null || recent===null) return null;
+    return { name, earlier, recent, delta: recent-earlier, count: obs.length, shift: byCook[name].shift };
+  }).filter(Boolean);
+  const mostImproved = [...improvement].sort((a,b)=>b.delta-a.delta).filter(x=>x.delta>0).slice(0,6);
+  const declining = [...improvement].sort((a,b)=>a.delta-b.delta).filter(x=>x.delta<0).slice(0,6);
+
+  const negByCook = {};
+  bohNegativeRows.forEach(n=>{ negByCook[n.name] = (negByCook[n.name]||0)+1; });
+  const overdueByCook = new Set(bohCoachingRows.filter(c=>c.status==='Pending' && c.followUpDate && c.followUpDate < new Date()).map(c=>c.name));
+  const improvementByName = {}; improvement.forEach(i=>improvementByName[i.name]=i);
+  const flaggedByName = {}; flagged.forEach(f=>flaggedByName[f.name]=f);
+
+  const upAlerts = [], downAlerts = [];
+  cookNames.forEach(name=>{
+    const f = flaggedByName[name];
+    const imp = improvementByName[name];
+    const upReasons = [], downReasons = [];
+    if(f && f.count>=4 && f.avg>=2.7) upReasons.push(`Overall average ${f.avg.toFixed(2)}/3 across ${f.count} checks`);
+    if(imp && imp.delta>=0.75) upReasons.push(`Improved ${imp.delta.toFixed(2)} pts recently`);
+    if(f && f.count>=3 && f.avg<=1.7) downReasons.push(`Overall average ${f.avg.toFixed(2)}/3 across ${f.count} checks`);
+    if((negByCook[name]||0)>=2) downReasons.push(`${negByCook[name]} negative incidents logged`);
+    if(overdueByCook.has(name)) downReasons.push('Overdue coaching follow-up');
+    if(upReasons.length) upAlerts.push({name, reasons:upReasons});
+    if(downReasons.length) downAlerts.push({name, reasons:downReasons});
+  });
+
+  const byWeek = {};
+  bohRows.forEach(r=>{
+    if(!r.date) return;
+    const d = new Date(r.date);
+    const monday = new Date(d); monday.setDate(d.getDate() - ((d.getDay()+6)%7));
+    const key = monday.toISOString().slice(0,10);
+    if(!byWeek[key]) byWeek[key] = [];
+    byWeek[key].push(...Object.values(r.scores).filter(v=>typeof v==='number'));
+  });
+  const weekKeys = Object.keys(byWeek).sort();
+  const weekAvgs = weekKeys.map(k=>avg(byWeek[k]));
+
+  function deltaPill(d){
+    const arrow = d>0 ? '&#9650;' : (d<0 ? '&#9660;' : '&mdash;');
+    const cls = d>0 ? 'good' : (d<0 ? 'bad' : 'warn');
+    return `<span class="pill ${cls}">${arrow} ${Math.abs(d).toFixed(2)}</span>`;
+  }
+
+  el.innerHTML = `
+    <div class="grid-cards">
+      <div class="card"><div class="label">Total Spot-Checks</div><div class="value">${total}</div></div>
+      <div class="card"><div class="label">Overall Avg Score</div><div class="value">${overall?overall.toFixed(2):'—'}<small> /3</small></div></div>
+      <div class="card"><div class="label">Open Coaching Follow-Ups</div><div class="value">${pendingCoaching}${overdueCoaching?` <small style="color:#a1402f;">(${overdueCoaching} overdue)</small>`:''}</div></div>
+      <div class="card"><div class="label">Negative Incidents Logged</div><div class="value">${totalNegative}<small> (${complaintPct.toFixed(0)}% guest-linked)</small></div></div>
+    </div>
+
+    <div class="two-col">
+      <div class="panel">
+        <h2>&#127942; Above &amp; Beyond<small>Automatically flagged from recent performance</small></h2>
+        ${upAlerts.length ? upAlerts.map(a=>`
+          <div class="alert-row up">
+            <div class="alert-icon">&#11088;</div>
+            <div><div class="name">${a.name}</div><div class="reason">${a.reasons.join(' &middot; ')}</div></div>
+            <button onclick="openCookDetailFromAlert('${a.name.replace(/'/g,"\\'")}')">View</button>
+          </div>`).join('') : '<div style="color:var(--muted);font-size:13px;">No standout performers flagged yet.</div>'}
+      </div>
+      <div class="panel">
+        <h2>&#9888;&#65039; Needs Coaching<small>Automatically flagged from recent performance</small></h2>
+        ${downAlerts.length ? downAlerts.map(a=>`
+          <div class="alert-row down">
+            <div class="alert-icon">&#128276;</div>
+            <div><div class="name">${a.name}</div><div class="reason">${a.reasons.join(' &middot; ')}</div></div>
+            <button onclick="openCookDetailFromAlert('${a.name.replace(/'/g,"\\'")}')">View</button>
+          </div>`).join('') : '<div style="color:var(--muted);font-size:13px;">No one currently flagged for coaching.</div>'}
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Coaching Focus Areas<small>Negative incidents by skill area &mdash; where to focus training next${topArea?`, currently led by <b style="color:var(--gold-light);">${topArea}</b>`:''}</small></h2>
+      <canvas id="chartBohFocusAreas"></canvas>
+    </div>
+
+    <div class="two-col">
+      <div class="panel"><h2>Average Score by Skill<small>1&ndash;3 scale, across all spot-checks</small></h2><canvas id="chartBohSkill"></canvas></div>
+      <div class="panel"><h2>Average Score by Shift</h2><canvas id="chartBohShift"></canvas></div>
+    </div>
+    <div class="panel"><h2>Weekly Trend<small>Team average over time</small></h2><canvas id="chartBohTrend"></canvas></div>
+
+    <div class="panel">
+      <h2>Cooks Needing Attention<small>Sorted lowest average first &mdash; a low count means the average isn't reliable yet</small></h2>
+      <table>
+        <thead><tr><th>Cook</th><th>Shift</th><th>Avg Score</th><th># Observations</th><th>Open Coaching Item</th></tr></thead>
+        <tbody>
+          ${flagged.slice(0,10).map(f=>`<tr><td>${f.name}</td><td>${f.shift||''}</td><td><span class="pill ${scoreClass(f.avg,3)}">${f.avg.toFixed(2)}</span></td><td>${f.count}</td><td>${(bohCoachingRows.filter(c=>c.name===f.name && c.status==='Pending').length) ? `<span class="pill warn">${bohCoachingRows.filter(c=>c.name===f.name && c.status==='Pending').length} pending</span>` : '—'}</td></tr>`).join('') || '<tr><td colspan="5">No data yet.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="panel">
+      <h2>Individual Cook Trend<small>Pick a cook to see their full history, notes, and coaching log</small></h2>
+      <select id="cookSelect">${cookNames.map(n=>`<option value="${n}">${n}</option>`).join('')}</select>
+      <div class="two-col" style="margin-top:18px;">
+        <div><canvas id="chartCookTrend"></canvas></div>
+        <div><canvas id="chartCookSkills"></canvas></div>
+      </div>
+      <div id="cookDetailMeta" style="margin-top:14px;font-size:13px;color:var(--muted);"></div>
+      <div class="notes-list" id="cookNotes"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Coaching Log<small>All logged follow-ups, most recent first</small></h2>
+      <table>
+        <thead><tr><th>Date</th><th>Cook</th><th>Trigger</th><th>Action</th><th>Follow-Up</th><th>Status</th><th>Logged By</th></tr></thead>
+        <tbody>
+          ${bohCoachingRows.slice().sort((a,b)=>(b.date||0)-(a.date||0)).map(c=>{
+            const overdue = c.status==='Pending' && c.followUpDate && c.followUpDate < new Date();
+            const statusPill = c.status==='Completed' ? 'good' : (overdue ? 'bad' : 'warn');
+            return `<tr><td>${fmtDate(c.date)}</td><td>${c.name}</td><td>${c.trigger||''}</td><td>${c.action||''}</td><td>${fmtDate(c.followUpDate)}</td><td><span class="pill ${statusPill}">${overdue?'Overdue':c.status||''}</span></td><td>${c.loggedBy||''}</td></tr>`;
+          }).join('') || '<tr><td colspan="7">No coaching entries logged yet.</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  destroyChart('bohSkill'); destroyChart('bohShift'); destroyChart('bohTrend'); destroyChart('bohFocusAreas');
+
+  charts.bohFocusAreas = new Chart(document.getElementById('chartBohFocusAreas'), {
+    type:'bar', indexAxis:'y',
+    data:{ labels: areaLabels, datasets:[{ data: areaValues, backgroundColor: areaLabels.map((_,i)=> i===0 ? 'rgba(196,84,63,0.85)' : 'rgba(201,162,39,0.85)'), borderRadius:6, maxBarThickness:26 }]},
+    options:{
+      responsive:true, maintainAspectRatio:true,
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:(ctx)=>` ${ctx.parsed.x}` } } },
+      scales:{
+        x:{ beginAtZero:true, grid:{color:'rgba(15,23,42,0.07)', drawBorder:false}, ticks:{color:'#5b6472', precision:0}, border:{display:false} },
+        y:{ grid:{display:false}, ticks:{color:'#5b6472', font:{size:11.5}}, border:{display:false} }
+      }
+    }
+  });
+
+  charts.bohSkill = new Chart(document.getElementById('chartBohSkill'), {
+    type:'bar',
+    data:{labels:BOH_SKILLS, datasets:[{data:bySkill, backgroundColor: bySkill.map(v=>scoreColor(v,3,0.85)), borderRadius:6, maxBarThickness:56}]},
+    options: baseBarOpts(3, true)
+  });
+  charts.bohShift = new Chart(document.getElementById('chartBohShift'), {
+    type:'bar',
+    data:{labels:SHIFTS, datasets:[{data:byShift, backgroundColor: byShift.map(v=>scoreColor(v,3,0.85)), borderRadius:6, maxBarThickness:56}]},
+    options: baseBarOpts(3)
+  });
+  charts.bohTrend = new Chart(document.getElementById('chartBohTrend'), {
+    type:'line',
+    data:{labels:weekKeys.map(k=>fmtDate(new Date(k))), datasets:[{
+      data:weekAvgs, borderColor:'#8a6d14', borderWidth:2.5,
+      backgroundColor:(ctx)=>vGradient(ctx,'rgba(232,217,160,0.35)','rgba(232,217,160,0.02)'),
+      fill:true, tension:.35, pointRadius:4, pointBackgroundColor:'#8a6d14', pointBorderColor:'#101a30', pointBorderWidth:1.5, pointHoverRadius:6
+    }]},
+    options: baseBarOpts(3)
+  });
+
+  const sel = document.getElementById('cookSelect');
+  if(cookNames.length){
+    sel.addEventListener('change', ()=>renderCookDetail(sel.value, byCook));
+    renderCookDetail(cookNames[0], byCook);
+  }
+}
+
+function renderCookDetail(name, byCook){
+  const obs = byCook[name].obs;
+  destroyChart('cookTrend'); destroyChart('cookSkills');
+
+  charts.cookTrend = new Chart(document.getElementById('chartCookTrend'), {
+    type:'line',
+    data:{ labels: obs.map(o=>fmtDate(o.date)), datasets:[{
+      data: obs.map(cookObsAvg), borderColor:'#8a6d14', borderWidth:2.5,
+      backgroundColor:(ctx)=>vGradient(ctx,'rgba(232,217,160,0.35)','rgba(232,217,160,0.02)'),
+      fill:true, tension:.35, pointRadius:5, pointBackgroundColor: obs.map(o=>scoreColor(cookObsAvg(o),3,1)),
+      pointBorderColor:'#101a30', pointBorderWidth:1.5, pointHoverRadius:7
+    }]},
+    options:{ ...baseBarOpts(3), plugins:{legend:{display:false}, tooltip: baseBarOpts(3).plugins.tooltip, title:{display:true, text:'Score Over Time', font:{family:'Georgia, serif', size:13, weight:'600'}, color:'#8a6d14', padding:{bottom:14}}} }
+  });
+
+  const skillAvgs = BOH_SKILLS.map(sk=>avg(obs.map(o=>o.scores[sk])));
+  charts.cookSkills = new Chart(document.getElementById('chartCookSkills'), {
+    type:'bar',
+    data:{ labels: BOH_SKILLS, datasets:[{ data: skillAvgs, backgroundColor: skillAvgs.map(v=>scoreColor(v,3,0.85)), borderRadius:6, maxBarThickness:56 }]},
+    options:{ ...baseBarOpts(3, true), plugins:{legend:{display:false}, tooltip: baseBarOpts(3).plugins.tooltip, title:{display:true, text:'Skill Breakdown (All-Time Avg)', font:{family:'Georgia, serif', size:13, weight:'600'}, color:'#8a6d14', padding:{bottom:14}}} }
+  });
+
+  document.getElementById('cookDetailMeta').innerHTML = `${obs.length} spot-check${obs.length===1?'':'s'} on record`;
+
+  const notesEl = document.getElementById('cookNotes');
+  const items = [];
+  obs.slice().reverse().forEach(o=>{ if(o.notes) items.push({date:o.date, who:o.observedBy, text:o.notes, type:'Spot-check'}); });
+  bohCoachingRows.filter(c=>c.name===name).forEach(c=>{ items.push({date:c.date, who:c.loggedBy, text:`${c.trigger||'Coaching'}: ${c.action||''}${c.notes?' — '+c.notes:''}`, type:'Coaching'}); });
+  bohNegativeRows.filter(n=>n.name===name).forEach(n=>{ items.push({date:n.date, who:n.loggedBy, text:`${n.area||'Incident'} (${n.severity||''}${n.complaint==='Y'?', guest-linked':''}): ${n.description||''}`, type:'Negative incident'}); });
+  items.sort((a,b)=>(b.date||0)-(a.date||0));
+  notesEl.innerHTML = items.length ? items.map(n=>`
+    <div class="note-item${n.type==='Negative incident'?' negative':''}">
+      <div class="meta">${fmtDate(n.date)} &middot; ${n.type} &middot; ${n.who||'—'}</div>
+      <div class="text">${n.text}</div>
+    </div>`).join('') : '<div style="color:var(--muted);font-size:13px;">No notes recorded yet.</div>';
+}
+
+function openCookDetailFromAlert(name){
+  const sel = document.getElementById('cookSelect');
+  if(!sel) return;
+  sel.value = name;
+  renderCookDetail(name, lastByCook);
+  sel.scrollIntoView({behavior:'smooth', block:'center'});
+}
+
+// ============ BOH Management ============
+function renderBohManagement(){
+  const el = document.getElementById('bohManagementTab');
+  const names = [...new Set(bohManagerRows.map(r=>r.name))];
+
+  function latestFor(name){
+    const rows = bohManagerRows.filter(r=>r.name===name).sort((a,b)=>(a.month||0)-(b.month||0));
+    return rows.length ? rows[rows.length-1] : null;
+  }
+
+  const mgrUp = [], mgrDown = [];
+  names.forEach(name=>{
+    const latest = latestFor(name);
+    if(!latest) return;
+    const overall = avg(Object.values(latest.scores));
+    if(overall===null) return;
+    if(overall>=4.25) mgrUp.push({name, reasons:[`Latest overall average ${overall.toFixed(1)}/5`]});
+    if(overall<=2.75) mgrDown.push({name, reasons:[`Latest overall average ${overall.toFixed(1)}/5`]});
+  });
+
+  // Engagement: how much each evaluator (chef OR manager) is logging into BOH logs
+  const now = new Date();
+  const engagement = ROSTER_ALL_EVALUATORS.map(name=>{
+    const spot = bohRows.filter(r=>r.observedBy===name);
+    const coach = bohCoachingRows.filter(c=>c.loggedBy===name);
+    const neg = bohNegativeRows.filter(n=>n.loggedBy===name);
+    const allDates = [...spot.map(r=>r.date), ...coach.map(r=>r.date), ...neg.map(r=>r.date)].filter(Boolean);
+    const lastActivity = allDates.length ? new Date(Math.max(...allDates.map(d=>+d))) : null;
+    const daysSince = lastActivity ? Math.floor((now - lastActivity)/86400000) : null;
+    const role = (ROSTER_CHEFS.find(c=>c[0]===name) ? 'Chef' : 'FOH Manager');
+    return { name, role, spot: spot.length, coach: coach.length, neg: neg.length, total: spot.length+coach.length+neg.length, lastActivity, daysSince };
+  });
+  const activeEngagement = engagement.filter(e=>e.total>0 || ROSTER_CHEFS.some(c=>c[0]===e.name));
+  const totalEntries = engagement.reduce((a,e)=>a+e.total,0);
+  const mostActive = engagement.slice().sort((a,b)=>b.total-a.total)[0];
+  const lowEngagement = activeEngagement.filter(e => e.daysSince===null || e.daysSince>14);
+  const engagementSorted = activeEngagement.slice().sort((a,b)=>b.total-a.total);
+
+  const rowsHTML = names.map(name=>{
+    const latest = latestFor(name);
+    if(!latest) return '';
+    const cells = ALL_MGR_SKILLS.map(sk=>{
+      const v = latest.scores[sk];
+      return `<td class="score" style="background:${heatColor(v,5)}">${v??'—'}</td>`;
+    }).join('');
+    const overall = avg(Object.values(latest.scores));
+    return `<tr><td><b>${name}</b><br><span style="color:var(--muted);font-size:11.5px;">${latest.role||''}</span></td>${cells}<td class="score"><span class="pill ${scoreClass(overall,5)}">${overall?overall.toFixed(1):'—'}</span></td><td style="color:var(--muted);font-size:12px;">${fmtMonth(latest.month)}</td></tr>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="two-col">
+      <div class="panel">
+        <h2>&#127942; Above &amp; Beyond<small>Strong performers this review cycle</small></h2>
+        ${mgrUp.length ? mgrUp.map(a=>`
+          <div class="alert-row up">
+            <div class="alert-icon">&#11088;</div>
+            <div><div class="name">${a.name}</div><div class="reason">${a.reasons.join(' &middot; ')}</div></div>
+            <button onclick="openChefDetailFromAlert('${a.name.replace(/'/g,"\\'")}')">View</button>
+          </div>`).join('') : '<div style="color:var(--muted);font-size:13px;">No standout scores flagged yet.</div>'}
+      </div>
+      <div class="panel">
+        <h2>&#9888;&#65039; Needs Support<small>Worth a closer coaching conversation</small></h2>
+        ${mgrDown.length ? mgrDown.map(a=>`
+          <div class="alert-row down">
+            <div class="alert-icon">&#128276;</div>
+            <div><div class="name">${a.name}</div><div class="reason">${a.reasons.join(' &middot; ')}</div></div>
+            <button onclick="openChefDetailFromAlert('${a.name.replace(/'/g,"\\'")}')">View</button>
+          </div>`).join('') : '<div style="color:var(--muted);font-size:13px;">No one currently flagged.</div>'}
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>BOH Team Engagement<small>How much each evaluator (Chef or FOH Manager) is logging into the kitchen tracker</small></h2>
+      <div class="grid-cards" style="margin-bottom:20px;">
+        <div class="card"><div class="label">Total Entries Logged</div><div class="value">${totalEntries}</div></div>
+        <div class="card"><div class="label">Most Active</div><div class="value" style="font-size:19px;">${mostActive && mostActive.total>0 ? mostActive.name : '—'}${mostActive && mostActive.total>0 ? `<small> (${mostActive.total})</small>`:''}</div></div>
+        <div class="card"><div class="label">Quiet 14+ Days</div><div class="value">${lowEngagement.length}<small> of ${activeEngagement.length}</small></div></div>
+      </div>
+      <canvas id="chartBohEngagement"></canvas>
+      <div style="overflow-x:auto;margin-top:18px;">
+      <table>
+        <thead><tr><th>Evaluator</th><th>Role</th><th>Spot-Checks</th><th>Coaching Notes</th><th>Negative Incidents</th><th>Total</th><th>Last Activity</th></tr></thead>
+        <tbody>
+          ${engagementSorted.map(e=>`<tr><td>${e.name}</td><td>${e.role}</td><td>${e.spot}</td><td>${e.coach}</td><td>${e.neg}</td><td><b>${e.total}</b></td><td>${e.lastActivity ? fmtDate(e.lastActivity) + (e.daysSince>14?` <span class="pill bad">${e.daysSince}d ago</span>`:'') : '<span class="pill bad">Never</span>'}</td></tr>`).join('')}
+        </tbody>
+      </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>BOH Management Scorecard &mdash; Most Recent Month<small>10 Essential Soft Skills + 5 Critical Manager Skills, scored 1&ndash;5</small></h2>
+      <div style="overflow-x:auto;">
+      <table class="heat-table">
+        <thead><tr><th>Chef</th>${ALL_MGR_SKILLS.map(s=>`<th>${s}</th>`).join('')}<th>Overall</th><th>Reviewed</th></tr></thead>
+        <tbody>${rowsHTML || '<tr><td colspan="17">No data yet.</td></tr>'}</tbody>
+      </table>
+      </div>
+      <div class="legend-row">
+        <span><span class="legend-swatch" style="background:rgba(63,125,92,0.55)"></span>Strong (4.25&ndash;5)</span>
+        <span><span class="legend-swatch" style="background:rgba(63,125,92,0.3)"></span>Solid (3.5&ndash;4.24)</span>
+        <span><span class="legend-swatch" style="background:rgba(184,135,31,0.35)"></span>Developing (2.75&ndash;3.49)</span>
+        <span><span class="legend-swatch" style="background:rgba(161,64,47,0.4)"></span>Needs Focus (below 2.75)</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Individual Trend<small>Pick a chef to see their history month over month</small></h2>
+      <select id="chefSelect">${names.map(n=>`<option value="${n}">${n}</option>`).join('')}</select>
+      <div class="two-col" style="margin-top:18px;">
+        <div><canvas id="chartChefSkills"></canvas></div>
+        <div><canvas id="chartChefTrend"></canvas></div>
+      </div>
+      <div class="notes-list" id="chefNotes"></div>
+    </div>
+  `;
+
+  destroyChart('bohEngagement');
+  charts.bohEngagement = new Chart(document.getElementById('chartBohEngagement'), {
+    type:'bar', indexAxis:'y',
+    data:{
+      labels: engagementSorted.map(e=>e.name),
+      datasets:[
+        { label:'Spot-Checks', data: engagementSorted.map(e=>e.spot), backgroundColor:'rgba(201,162,39,0.85)', borderRadius:4 },
+        { label:'Coaching Notes', data: engagementSorted.map(e=>e.coach), backgroundColor:'rgba(127,168,140,0.85)', borderRadius:4 },
+        { label:'Negative Incidents', data: engagementSorted.map(e=>e.neg), backgroundColor:'rgba(196,84,63,0.85)', borderRadius:4 }
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:true,
+      plugins:{ legend:{display:true, position:'bottom', labels:{color:'#5b6472', boxWidth:12, font:{size:11.5}}} },
+      scales:{
+        x:{ stacked:true, beginAtZero:true, grid:{color:'rgba(15,23,42,0.07)', drawBorder:false}, ticks:{color:'#5b6472', precision:0}, border:{display:false} },
+        y:{ stacked:true, grid:{display:false}, ticks:{color:'#5b6472', font:{size:11.5}}, border:{display:false} }
+      }
+    }
+  });
+
+  const sel = document.getElementById('chefSelect');
+  if(names.length){
+    sel.addEventListener('change', ()=>renderChefDetail(sel.value));
+    renderChefDetail(names[0]);
+  }
+}
+
+function renderChefDetail(name){
+  const rows = bohManagerRows.filter(r=>r.name===name).sort((a,b)=>(a.month||0)-(b.month||0));
+  const latest = rows[rows.length-1];
+
+  destroyChart('chefSkills'); destroyChart('chefTrend');
+
+  charts.chefSkills = new Chart(document.getElementById('chartChefSkills'), {
+    type:'bar',
+    data:{ labels: ALL_MGR_SKILLS, datasets:[{ data: ALL_MGR_SKILLS.map(sk=>latest?latest.scores[sk]:null), backgroundColor: ALL_MGR_SKILLS.map(sk=>scoreColor(latest?latest.scores[sk]:null,5,0.85)), borderRadius:6, maxBarThickness:40 }]},
+    options:{ ...baseBarOpts(5,true), indexAxis:'x', plugins:{legend:{display:false}, tooltip: baseBarOpts(5).plugins.tooltip, title:{display:true, text:'Latest Scores by Skill', font:{family:'Georgia, serif', size:13, weight:'600'}, color:'#8a6d14', padding:{bottom:14}}} }
+  });
+
+  const monthLabels = rows.map(r=>fmtMonth(r.month));
+  const overallSeries = rows.map(r=>avg(Object.values(r.scores)));
+  charts.chefTrend = new Chart(document.getElementById('chartChefTrend'), {
+    type:'line',
+    data:{ labels: monthLabels, datasets:[{
+      data: overallSeries, borderColor:'#1f7a4d', borderWidth:2.5,
+      backgroundColor:(ctx)=>vGradient(ctx,'rgba(127,168,140,0.35)','rgba(127,168,140,0.02)'),
+      fill:true, tension:.35, pointRadius:5, pointBackgroundColor: overallSeries.map(v=>scoreColor(v,5,1)),
+      pointBorderColor:'#101a30', pointBorderWidth:1.5, pointHoverRadius:7
+    }]},
+    options:{ ...baseBarOpts(5), plugins:{legend:{display:false}, tooltip: baseBarOpts(5).plugins.tooltip, title:{display:true, text:'Overall Average Over Time', font:{family:'Georgia, serif', size:13, weight:'600'}, color:'#8a6d14', padding:{bottom:14}}} }
+  });
+
+  const notesEl = document.getElementById('chefNotes');
+  const withNotes = rows.filter(r=>r.notes).reverse();
+  notesEl.innerHTML = withNotes.length ? withNotes.map(r=>`
+    <div class="note-item">
+      <div class="meta">${fmtMonth(r.month)} &middot; reviewed by ${r.reviewedBy||'—'}</div>
+      <div class="text">${r.notes}</div>
+    </div>`).join('') : '<div style="color:var(--muted);font-size:13px;">No notes recorded yet.</div>';
+}
+
+function openChefDetailFromAlert(name){
+  const sel = document.getElementById('chefSelect');
+  if(!sel) return;
+  sel.value = name;
+  renderChefDetail(name);
   sel.scrollIntoView({behavior:'smooth', block:'center'});
 }
 
@@ -1157,7 +1687,7 @@ function fieldsFor(type){
         <div class="field"><label>Notes</label><textarea id="f_notes" placeholder="What happened, what stood out..."></textarea></div>
       </div>
       <div class="field-row">
-        <div class="field"><label>Observed By</label><select id="f_observer">${opts(ROSTER_MANAGERS, true)}</select></div>
+        <div class="field"><label>Observed By</label><select id="f_observer">${opts(ROSTER_ALL_EVALUATORS)}</select></div>
       </div>`;
   }
   if(type==='negative'){
@@ -1176,7 +1706,7 @@ function fieldsFor(type){
       </div>
       <div class="field-row">
         <div class="field"><label>Guest Complaint Filed</label><select id="f_complaint"><option value="N">No</option><option value="Y">Yes</option></select></div>
-        <div class="field"><label>Logged By</label><select id="f_logger">${opts(ROSTER_MANAGERS, true)}</select></div>
+        <div class="field"><label>Logged By</label><select id="f_logger">${opts(ROSTER_ALL_EVALUATORS)}</select></div>
       </div>
       <div class="field-row full">
         <div class="field"><label>Description</label><textarea id="f_desc" placeholder="What went wrong, specifically..."></textarea></div>
@@ -1194,7 +1724,7 @@ function fieldsFor(type){
       </div>
       <div class="field-row">
         <div class="field"><label>Status</label><select id="f_status"><option>Pending</option><option>Completed</option><option>N/A</option></select></div>
-        <div class="field"><label>Logged By</label><select id="f_logger">${opts(ROSTER_MANAGERS, true)}</select></div>
+        <div class="field"><label>Logged By</label><select id="f_logger">${opts(ROSTER_ALL_EVALUATORS)}</select></div>
       </div>
       <div class="field-row full">
         <div class="field"><label>Action Taken</label><input type="text" id="f_action" placeholder="e.g. Reviewed closing-line examples together"></div>
@@ -1208,6 +1738,83 @@ function fieldsFor(type){
       <div class="field-row">
         <div class="field"><label>Month</label><input type="date" id="f_date" value="${todayStr()}"></div>
         <div class="field"><label>Manager</label><select id="f_name">${opts(ROSTER_MANAGERS, true)}</select></div>
+      </div>
+      <div class="score-grid">
+        ${ALL_MGR_SKILLS.map((sk,i)=>`<div class="field"><label title="${sk}">${sk}</label><select id="f_mscore_${i}"><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option></select></div>`).join('')}
+      </div>
+      <div class="field-row full">
+        <div class="field"><label>Notes / Examples</label><textarea id="f_notes"></textarea></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Reviewed By</label><input type="text" id="f_reviewer" value="Armando"></div>
+      </div>`;
+  }
+  if(type==='bohSpotcheck'){
+    return `
+      <div class="field-row">
+        <div class="field"><label>Date</label><input type="date" id="f_date" value="${todayStr()}"></div>
+        <div class="field"><label>Cook</label><select id="f_name">${opts(ROSTER_COOKS, true)}</select></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Shift</label><select id="f_shift">${opts(SHIFTS)}</select></div>
+      </div>
+      <div class="score-grid">
+        ${BOH_SKILLS.map((sk,i)=>`<div class="field"><label title="${sk}">${sk}</label><select id="f_bscore_${i}"><option value="1">1 — Needs Improvement</option><option value="2" selected>2 — Meets Expectation</option><option value="3">3 — Exceeds Expectation</option></select></div>`).join('')}
+      </div>
+      <div class="field-row full">
+        <div class="field"><label>Notes</label><textarea id="f_notes" placeholder="What happened, what stood out..."></textarea></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Observed By</label><select id="f_observer">${opts(ROSTER_ALL_EVALUATORS)}</select></div>
+      </div>`;
+  }
+  if(type==='bohNegative'){
+    return `
+      <div class="field-row">
+        <div class="field"><label>Date</label><input type="date" id="f_date" value="${todayStr()}"></div>
+        <div class="field"><label>Cook</label><select id="f_name">${opts(ROSTER_COOKS, true)}</select></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Shift</label><select id="f_shift">${opts(SHIFTS)}</select></div>
+        <div class="field"><label>Severity</label><select id="f_severity"><option>Minor</option><option>Moderate</option><option>Major</option></select></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Skill Area</label><select id="f_area">${opts(BOH_NEGATIVE_AREAS)}</select></div>
+        <div class="field"><label>Guest Complaint Linked</label><select id="f_complaint"><option value="N">No</option><option value="Y">Yes</option></select></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Logged By</label><select id="f_logger">${opts(ROSTER_ALL_EVALUATORS)}</select></div>
+      </div>
+      <div class="field-row full">
+        <div class="field"><label>Description</label><textarea id="f_desc" placeholder="What went wrong, specifically..."></textarea></div>
+      </div>`;
+  }
+  if(type==='bohCoaching'){
+    return `
+      <div class="field-row">
+        <div class="field"><label>Date</label><input type="date" id="f_date" value="${todayStr()}"></div>
+        <div class="field"><label>Cook</label><select id="f_name">${opts(ROSTER_COOKS, true)}</select></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Trigger</label><select id="f_trigger">${opts(COACHING_TRIGGERS)}</select></div>
+        <div class="field"><label>Follow-Up Date</label><input type="date" id="f_followup"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Status</label><select id="f_status"><option>Pending</option><option>Completed</option><option>N/A</option></select></div>
+        <div class="field"><label>Logged By</label><select id="f_logger">${opts(ROSTER_ALL_EVALUATORS)}</select></div>
+      </div>
+      <div class="field-row full">
+        <div class="field"><label>Action Taken</label><input type="text" id="f_action" placeholder="e.g. Reviewed plating consistency together"></div>
+      </div>
+      <div class="field-row full">
+        <div class="field"><label>Notes</label><textarea id="f_notes"></textarea></div>
+      </div>`;
+  }
+  if(type==='bohManager'){
+    return `
+      <div class="field-row">
+        <div class="field"><label>Month</label><input type="date" id="f_date" value="${todayStr()}"></div>
+        <div class="field"><label>Chef</label><select id="f_name">${opts(ROSTER_CHEFS, true)}</select></div>
       </div>
       <div class="score-grid">
         ${ALL_MGR_SKILLS.map((sk,i)=>`<div class="field"><label title="${sk}">${sk}</label><select id="f_mscore_${i}"><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option></select></div>`).join('')}
@@ -1264,6 +1871,36 @@ document.getElementById('submitEntryBtn').addEventListener('click', async ()=>{
     ALL_MGR_SKILLS.forEach((sk,i)=>{ scores[sk] = parseInt(document.getElementById('f_mscore_'+i).value,10); });
     managerRows.push({
       month: dateVal, name: nameVal, role: (ROSTER_MANAGERS.find(m=>m[0]===nameVal)||[])[1] || '',
+      scores, notes: document.getElementById('f_notes').value, reviewedBy: document.getElementById('f_reviewer').value
+    });
+  } else if(modalType==='bohSpotcheck'){
+    const scores = {};
+    BOH_SKILLS.forEach((sk,i)=>{ scores[sk] = parseInt(document.getElementById('f_bscore_'+i).value,10); });
+    bohRows.push({
+      date: dateVal, shift: document.getElementById('f_shift').value,
+      name: nameVal, badge: (ROSTER_COOKS.find(c=>c[0]===nameVal)||[])[1] || '',
+      scores, observedBy: document.getElementById('f_observer').value, notes: document.getElementById('f_notes').value
+    });
+  } else if(modalType==='bohNegative'){
+    bohNegativeRows.push({
+      date: dateVal, name: nameVal, shift: document.getElementById('f_shift').value,
+      area: document.getElementById('f_area').value, severity: document.getElementById('f_severity').value,
+      complaint: document.getElementById('f_complaint').value, description: document.getElementById('f_desc').value,
+      loggedBy: document.getElementById('f_logger').value
+    });
+  } else if(modalType==='bohCoaching'){
+    const fu = document.getElementById('f_followup').value;
+    bohCoachingRows.push({
+      date: dateVal, name: nameVal, trigger: document.getElementById('f_trigger').value,
+      action: document.getElementById('f_action').value, followUpDate: fu ? new Date(fu) : null,
+      status: document.getElementById('f_status').value, notes: document.getElementById('f_notes').value,
+      loggedBy: document.getElementById('f_logger').value
+    });
+  } else if(modalType==='bohManager'){
+    const scores = {};
+    ALL_MGR_SKILLS.forEach((sk,i)=>{ scores[sk] = parseInt(document.getElementById('f_mscore_'+i).value,10); });
+    bohManagerRows.push({
+      month: dateVal, name: nameVal, role: (ROSTER_CHEFS.find(m=>m[0]===nameVal)||[])[1] || '',
       scores, notes: document.getElementById('f_notes').value, reviewedBy: document.getElementById('f_reviewer').value
     });
   }
