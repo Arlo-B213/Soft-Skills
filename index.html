@@ -417,12 +417,23 @@ const firebaseConfig = {
 
 let db = null;
 let cloudEnabled = false;
-const DOC_PATH = { collection: "kpi_dashboard", doc: "latest" };
+const SYNC_COLLECTION = "kpi_dashboard";
+const LEGACY_DOC = "latest"; // old single-document format, read once for migration only
 
 function setSyncStatus(text, ok){
   const el = document.getElementById('syncStatus');
   el.textContent = 'Cloud sync: ' + text;
   el.classList.toggle('ok', !!ok);
+}
+
+let syncState = { foh: false, boh: false, fohWho: '', fohWhen: null, bohWho: '', bohWhen: null };
+
+function updateCombinedSyncStatus(){
+  if(!syncState.foh && !syncState.boh){ setSyncStatus('connecting…', false); return; }
+  const parts = [];
+  if(syncState.fohWho) parts.push(`FOH by ${syncState.fohWho}${syncState.fohWhen ? ' at ' + syncState.fohWhen.toLocaleString() : ''}`);
+  if(syncState.bohWho) parts.push(`BOH by ${syncState.bohWho}${syncState.bohWhen ? ' at ' + syncState.bohWhen.toLocaleString() : ''}`);
+  setSyncStatus('live — last updated ' + (parts.join(' | ') || 'no data uploaded yet'), true);
 }
 
 function initCloud(){
@@ -432,33 +443,70 @@ function initCloud(){
     db = firebase.firestore();
     cloudEnabled = true;
     setSyncStatus('connecting…', false);
-    db.collection(DOC_PATH.collection).doc(DOC_PATH.doc)
-      .onSnapshot(snap => {
-        if(snap.exists){
-          const data = snap.data();
-          cashierRows = reviveDates(data.cashierRows || []);
-          managerRows = reviveDates(data.managerRows || []);
-          coachingRows = reviveDates(data.coachingRows || []);
-          negativeRows = reviveDates(data.negativeRows || []);
-          bohRows = reviveDates(data.bohRows || []);
-          bohManagerRows = reviveDates(data.bohManagerRows || []);
-          bohCoachingRows = reviveDates(data.bohCoachingRows || []);
-          bohNegativeRows = reviveDates(data.bohNegativeRows || []);
-          if(data.rosterCashiers && data.rosterCashiers.length) ROSTER_CASHIERS = data.rosterCashiers;
-          if(data.rosterManagers && data.rosterManagers.length) ROSTER_MANAGERS = data.rosterManagers;
-          if(data.rosterCooks && data.rosterCooks.length) ROSTER_COOKS = data.rosterCooks;
-          if(data.rosterChefs && data.rosterChefs.length) ROSTER_CHEFS = data.rosterChefs;
-          const when = data.updatedAt && data.updatedAt.toDate ? data.updatedAt.toDate() : null;
-          const who = data.updatedBy || 'someone';
-          setSyncStatus(`live — last updated by ${who}${when ? ' at ' + when.toLocaleString() : ''}`, true);
-          document.getElementById('emptyState').style.display = 'none';
-          renderAll();
-        } else {
-          setSyncStatus('live — no data uploaded yet', true);
+
+    // One-time fallback: if the old single-document format still has data and the
+    // new split documents don't exist yet, seed from it so nothing is lost.
+    db.collection(SYNC_COLLECTION).doc(LEGACY_DOC).get().then(legacySnap => {
+      if(!legacySnap.exists) return;
+      const data = legacySnap.data();
+      db.collection(SYNC_COLLECTION).doc('foh').get().then(fohSnap => {
+        if(!fohSnap.exists && (data.cashierRows||data.managerRows||data.coachingRows||data.negativeRows)){
+          db.collection(SYNC_COLLECTION).doc('foh').set({
+            cashierRows: data.cashierRows||[], managerRows: data.managerRows||[],
+            coachingRows: data.coachingRows||[], negativeRows: data.negativeRows||[],
+            rosterCashiers: data.rosterCashiers||[], rosterManagers: data.rosterManagers||[],
+            updatedBy: data.updatedBy||'Unknown', updatedAt: data.updatedAt||firebase.firestore.FieldValue.serverTimestamp()
+          });
         }
-      }, err => {
-        setSyncStatus('error connecting (' + err.message + ')', false);
       });
+      db.collection(SYNC_COLLECTION).doc('boh').get().then(bohSnap => {
+        if(!bohSnap.exists && (data.bohRows||data.bohManagerRows||data.bohCoachingRows||data.bohNegativeRows)){
+          db.collection(SYNC_COLLECTION).doc('boh').set({
+            bohRows: data.bohRows||[], bohManagerRows: data.bohManagerRows||[],
+            bohCoachingRows: data.bohCoachingRows||[], bohNegativeRows: data.bohNegativeRows||[],
+            rosterCooks: data.rosterCooks||[], rosterChefs: data.rosterChefs||[],
+            updatedBy: data.updatedBy||'Unknown', updatedAt: data.updatedAt||firebase.firestore.FieldValue.serverTimestamp()
+          });
+        }
+      });
+    }).catch(()=>{ /* legacy doc unreadable or absent — fine, nothing to migrate */ });
+
+    db.collection(SYNC_COLLECTION).doc('foh').onSnapshot(snap => {
+      if(snap.exists){
+        const data = snap.data();
+        cashierRows = reviveDates(data.cashierRows || []);
+        managerRows = reviveDates(data.managerRows || []);
+        coachingRows = reviveDates(data.coachingRows || []);
+        negativeRows = reviveDates(data.negativeRows || []);
+        if(data.rosterCashiers && data.rosterCashiers.length) ROSTER_CASHIERS = data.rosterCashiers;
+        if(data.rosterManagers && data.rosterManagers.length) ROSTER_MANAGERS = data.rosterManagers;
+        syncState.fohWho = data.updatedBy || 'someone';
+        syncState.fohWhen = data.updatedAt && data.updatedAt.toDate ? data.updatedAt.toDate() : null;
+        document.getElementById('emptyState').style.display = 'none';
+      }
+      syncState.foh = true;
+      updateCombinedSyncStatus();
+      renderAll();
+    }, err => { setSyncStatus('error connecting — FOH (' + err.message + ')', false); });
+
+    db.collection(SYNC_COLLECTION).doc('boh').onSnapshot(snap => {
+      if(snap.exists){
+        const data = snap.data();
+        bohRows = reviveDates(data.bohRows || []);
+        bohManagerRows = reviveDates(data.bohManagerRows || []);
+        bohCoachingRows = reviveDates(data.bohCoachingRows || []);
+        bohNegativeRows = reviveDates(data.bohNegativeRows || []);
+        if(data.rosterCooks && data.rosterCooks.length) ROSTER_COOKS = data.rosterCooks;
+        if(data.rosterChefs && data.rosterChefs.length) ROSTER_CHEFS = data.rosterChefs;
+        syncState.bohWho = data.updatedBy || 'someone';
+        syncState.bohWhen = data.updatedAt && data.updatedAt.toDate ? data.updatedAt.toDate() : null;
+        document.getElementById('emptyState').style.display = 'none';
+      }
+      syncState.boh = true;
+      updateCombinedSyncStatus();
+      renderAll();
+    }, err => { setSyncStatus('error connecting — BOH (' + err.message + ')', false); });
+
   }catch(err){
     setSyncStatus('error initializing (' + err.message + ')', false);
   }
@@ -490,14 +538,19 @@ async function saveToCloud(){
   const name = getUploaderName(false);
   setSyncStatus('saving…', false);
   try{
-    await db.collection(DOC_PATH.collection).doc(DOC_PATH.doc).set({
-      cashierRows, managerRows, coachingRows, negativeRows,
-      bohRows, bohManagerRows, bohCoachingRows, bohNegativeRows,
-      rosterCashiers: ROSTER_CASHIERS, rosterManagers: ROSTER_MANAGERS,
-      rosterCooks: ROSTER_COOKS, rosterChefs: ROSTER_CHEFS,
-      updatedBy: name,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    const timestamp = firebase.firestore.FieldValue.serverTimestamp();
+    await Promise.all([
+      db.collection(SYNC_COLLECTION).doc('foh').set({
+        cashierRows, managerRows, coachingRows, negativeRows,
+        rosterCashiers: ROSTER_CASHIERS, rosterManagers: ROSTER_MANAGERS,
+        updatedBy: name, updatedAt: timestamp
+      }),
+      db.collection(SYNC_COLLECTION).doc('boh').set({
+        bohRows, bohManagerRows, bohCoachingRows, bohNegativeRows,
+        rosterCooks: ROSTER_COOKS, rosterChefs: ROSTER_CHEFS,
+        updatedBy: name, updatedAt: timestamp
+      })
+    ]);
   }catch(err){
     setSyncStatus('save failed (' + err.message + ')', false);
   }
