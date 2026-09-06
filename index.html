@@ -247,6 +247,13 @@
   .note-item .meta{color:var(--gold-light);font-weight:600;font-size:12px;margin-bottom:3px;}
   .note-item.negative .meta{color:#a1402f;}
   .note-item .text{color:var(--cream);opacity:.9;}
+  .note-item{ position:relative; }
+  .delete-btn{
+    background:transparent; border:1px solid var(--line); color:var(--muted);
+    font-size:11px; padding:2px 8px; border-radius:6px; cursor:pointer;
+    float:right; margin-left:8px;
+  }
+  .delete-btn:hover{ border-color:var(--bad); color:var(--bad); }
 
   canvas{max-height:280px;}
   #chartFocusAreas, #chartEngagement{ max-height:340px; }
@@ -562,6 +569,33 @@ function excelDateToJS(v){
   if (typeof v === 'string'){ const d = new Date(v); if(!isNaN(d)) return d; }
   return null;
 }
+function newEntryId(){ return 'e' + Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+
+function getArrayByKey(key){
+  switch(key){
+    case 'cashierRows': return cashierRows;
+    case 'managerRows': return managerRows;
+    case 'coachingRows': return coachingRows;
+    case 'negativeRows': return negativeRows;
+    case 'bohRows': return bohRows;
+    case 'bohManagerRows': return bohManagerRows;
+    case 'bohCoachingRows': return bohCoachingRows;
+    case 'bohNegativeRows': return bohNegativeRows;
+    default: return null;
+  }
+}
+
+async function deleteEntry(arrayKey, id){
+  if(!confirm('Delete this entry? This cannot be undone here — if it originally came from an Excel upload, it will reappear if that same file is uploaded again.')) return;
+  const arr = getArrayByKey(arrayKey);
+  if(!arr) return;
+  const idx = arr.findIndex(r => r._id === id);
+  if(idx === -1) return;
+  arr.splice(idx, 1);
+  renderAll();
+  toast('Entry deleted.');
+  if(cloudEnabled){ await saveToCloud(); }
+}
 function fmtMonth(d){ if(!d) return ''; return d.toLocaleDateString('en-US',{month:'short',year:'numeric'}); }
 function fmtDate(d){ if(!d) return ''; return d.toLocaleDateString('en-US',{month:'short',day:'numeric'}); }
 function screenshotLinkHtml(url){
@@ -612,7 +646,7 @@ function parseWorkbook(wb){
       date: excelDateToJS(r[0]),
       shift: r[1], outlet: normalizeOutlet(r[2]), name: r[3], badge: r[4],
       scores: { "Guest Engagement": r[5], "Communication Clarity": r[6], "Attention to Detail": r[7], "Positive Attitude": r[8] },
-      opener: r[9], closer: r[10], observedBy: r[11], notes: notes, screenshotUrl: r[13] || ''
+      opener: r[9], closer: r[10], observedBy: r[11], notes: notes, screenshotUrl: r[13] || '', _id: newEntryId()
     });
   }
 
@@ -627,7 +661,7 @@ function parseWorkbook(wb){
     ALL_MGR_SKILLS.forEach((sk,idx)=>{ scores[sk] = r[3+idx]; });
     managerRows.push({
       month: excelDateToJS(r[0]), name: r[1], role: r[2], scores,
-      notes: notes, reviewedBy: r[19]
+      notes: notes, reviewedBy: r[19], _id: newEntryId()
     });
   }
 
@@ -641,7 +675,7 @@ function parseWorkbook(wb){
     coachingRows.push({
       date: excelDateToJS(r[0]), name: r[1], badge: r[2], trigger: r[3],
       action: r[4], followUpDate: excelDateToJS(r[5]), status: r[6],
-      notes: notes, loggedBy: r[8], screenshotUrl: r[9] || ''
+      notes: notes, loggedBy: r[8], screenshotUrl: r[9] || '', _id: newEntryId()
     });
   }
 
@@ -654,7 +688,7 @@ function parseWorkbook(wb){
     if(String(desc).startsWith('[SAMPLE]')) continue;
     negativeRows.push({
       date: excelDateToJS(r[0]), name: r[1], badge: r[2], outlet: normalizeOutlet(r[3]), shift: r[4],
-      area: r[5], severity: r[6], complaint: r[7], description: desc, loggedBy: r[9], screenshotUrl: r[10] || ''
+      area: r[5], severity: r[6], complaint: r[7], description: desc, loggedBy: r[9], screenshotUrl: r[10] || '', _id: newEntryId()
     });
   }
 
@@ -668,7 +702,7 @@ function parseWorkbook(wb){
     bohRows.push({
       date: excelDateToJS(r[0]), shift: r[1], name: r[2], badge: r[3],
       scores: { "Food Quality & Consistency": r[4], "Speed & Time Management": r[5], "Cleanliness & Sanitation": r[6], "Teamwork & Communication": r[7] },
-      observedBy: r[8], notes: notes, screenshotUrl: r[10] || ''
+      observedBy: r[8], notes: notes, screenshotUrl: r[10] || '', _id: newEntryId()
     });
   }
 
@@ -683,7 +717,7 @@ function parseWorkbook(wb){
     ALL_MGR_SKILLS.forEach((sk,idx)=>{ scores[sk] = r[3+idx]; });
     bohManagerRows.push({
       month: excelDateToJS(r[0]), name: r[1], role: r[2], scores,
-      notes: notes, reviewedBy: r[19]
+      notes: notes, reviewedBy: r[19], _id: newEntryId()
     });
   }
 
@@ -697,7 +731,7 @@ function parseWorkbook(wb){
     bohCoachingRows.push({
       date: excelDateToJS(r[0]), name: r[1], badge: r[2], trigger: r[3],
       action: r[4], followUpDate: excelDateToJS(r[5]), status: r[6],
-      notes: notes, loggedBy: r[8], screenshotUrl: r[9] || ''
+      notes: notes, loggedBy: r[8], screenshotUrl: r[9] || '', _id: newEntryId()
     });
   }
 
@@ -710,7 +744,7 @@ function parseWorkbook(wb){
     if(String(desc).startsWith('[SAMPLE]')) continue;
     bohNegativeRows.push({
       date: excelDateToJS(r[0]), name: r[1], badge: r[2], shift: r[3],
-      area: r[4], severity: r[5], complaint: r[6], description: desc, loggedBy: r[8], screenshotUrl: r[9] || ''
+      area: r[4], severity: r[5], complaint: r[6], description: desc, loggedBy: r[8], screenshotUrl: r[9] || '', _id: newEntryId()
     });
   }
 
@@ -956,13 +990,13 @@ function renderCashiers(){
     <div class="panel">
       <h2>Coaching Log<small>All logged follow-ups, most recent first</small></h2>
       <table>
-        <thead><tr><th>Date</th><th>Cashier</th><th>Trigger</th><th>Action</th><th>Follow-Up</th><th>Status</th><th>Logged By</th><th>Attachment</th></tr></thead>
+        <thead><tr><th>Date</th><th>Cashier</th><th>Trigger</th><th>Action</th><th>Follow-Up</th><th>Status</th><th>Logged By</th><th>Attachment</th><th></th></tr></thead>
         <tbody>
           ${coachingRows.slice().sort((a,b)=>(b.date||0)-(a.date||0)).map(c=>{
             const overdue = c.status==='Pending' && c.followUpDate && c.followUpDate < new Date();
             const statusPill = c.status==='Completed' ? 'good' : (overdue ? 'bad' : 'warn');
-            return `<tr><td>${fmtDate(c.date)}</td><td>${c.name}</td><td>${c.trigger||''}</td><td>${c.action||''}</td><td>${fmtDate(c.followUpDate)}</td><td><span class="pill ${statusPill}">${overdue?'Overdue':c.status||''}</span></td><td>${c.loggedBy||''}</td><td>${c.screenshotUrl ? `<a href="${c.screenshotUrl}" target="_blank" rel="noopener">&#128206; View</a>` : ''}</td></tr>`;
-          }).join('') || '<tr><td colspan="8">No coaching entries logged yet.</td></tr>'}
+            return `<tr><td>${fmtDate(c.date)}</td><td>${c.name}</td><td>${c.trigger||''}</td><td>${c.action||''}</td><td>${fmtDate(c.followUpDate)}</td><td><span class="pill ${statusPill}">${overdue?'Overdue':c.status||''}</span></td><td>${c.loggedBy||''}</td><td>${c.screenshotUrl ? `<a href="${c.screenshotUrl}" target="_blank" rel="noopener">&#128206; View</a>` : ''}</td><td><button class="delete-btn" onclick="deleteEntry('coachingRows','${c._id}')">&#128465;</button></td></tr>`;
+          }).join('') || '<tr><td colspan="9">No coaching entries logged yet.</td></tr>'}
         </tbody>
       </table>
     </div>
@@ -1045,12 +1079,13 @@ function renderCashierDetail(name, byCashier){
 
   const notesEl = document.getElementById('cashierNotes');
   const items = [];
-  obs.slice().reverse().forEach(o=>{ if(o.notes || o.screenshotUrl) items.push({date:o.date, who:o.observedBy, text:o.notes||'', type:'Spot-check', screenshotUrl:o.screenshotUrl}); });
-  coachingRows.filter(c=>c.name===name).forEach(c=>{ items.push({date:c.date, who:c.loggedBy, text:`${c.trigger||'Coaching'}: ${c.action||''}${c.notes?' — '+c.notes:''}`, type:'Coaching', screenshotUrl:c.screenshotUrl}); });
-  negativeRows.filter(n=>n.name===name).forEach(n=>{ items.push({date:n.date, who:n.loggedBy, text:`${n.area||'Incident'} (${n.severity||''}${n.complaint==='Y'?', guest complaint':''}): ${n.description||''}`, type:'Negative interaction', screenshotUrl:n.screenshotUrl}); });
+  obs.slice().reverse().forEach(o=>{ if(o.notes || o.screenshotUrl) items.push({date:o.date, who:o.observedBy, text:o.notes||'', type:'Spot-check', screenshotUrl:o.screenshotUrl, arrayKey:'cashierRows', id:o._id}); });
+  coachingRows.filter(c=>c.name===name).forEach(c=>{ items.push({date:c.date, who:c.loggedBy, text:`${c.trigger||'Coaching'}: ${c.action||''}${c.notes?' — '+c.notes:''}`, type:'Coaching', screenshotUrl:c.screenshotUrl, arrayKey:'coachingRows', id:c._id}); });
+  negativeRows.filter(n=>n.name===name).forEach(n=>{ items.push({date:n.date, who:n.loggedBy, text:`${n.area||'Incident'} (${n.severity||''}${n.complaint==='Y'?', guest complaint':''}): ${n.description||''}`, type:'Negative interaction', screenshotUrl:n.screenshotUrl, arrayKey:'negativeRows', id:n._id}); });
   items.sort((a,b)=>(b.date||0)-(a.date||0));
   notesEl.innerHTML = items.length ? items.map(n=>`
     <div class="note-item${n.type==='Negative interaction'?' negative':''}">
+      <button class="delete-btn" onclick="deleteEntry('${n.arrayKey}','${n.id}')" title="Delete this entry">&#128465; Delete</button>
       <div class="meta">${fmtDate(n.date)} &middot; ${n.type} &middot; ${n.who||'—'}${screenshotLinkHtml(n.screenshotUrl)}</div>
       <div class="text">${n.text}</div>
     </div>`).join('') : '<div style="color:var(--muted);font-size:13px;">No notes recorded yet.</div>';
@@ -1245,6 +1280,7 @@ function renderManagerDetail(name){
   const withNotes = rows.filter(r=>r.notes).reverse();
   notesEl.innerHTML = withNotes.length ? withNotes.map(r=>`
     <div class="note-item">
+      <button class="delete-btn" onclick="deleteEntry('managerRows','${r._id}')" title="Delete this entry">&#128465; Delete</button>
       <div class="meta">${fmtMonth(r.month)} &middot; reviewed by ${r.reviewedBy||'—'}</div>
       <div class="text">${r.notes}</div>
     </div>`).join('') : '<div style="color:var(--muted);font-size:13px;">No notes recorded yet.</div>';
@@ -1458,13 +1494,13 @@ function renderBohTeam(){
     <div class="panel">
       <h2>Coaching Log<small>All logged follow-ups, most recent first</small></h2>
       <table>
-        <thead><tr><th>Date</th><th>Cook</th><th>Trigger</th><th>Action</th><th>Follow-Up</th><th>Status</th><th>Logged By</th><th>Attachment</th></tr></thead>
+        <thead><tr><th>Date</th><th>Cook</th><th>Trigger</th><th>Action</th><th>Follow-Up</th><th>Status</th><th>Logged By</th><th>Attachment</th><th></th></tr></thead>
         <tbody>
           ${bohCoachingRows.slice().sort((a,b)=>(b.date||0)-(a.date||0)).map(c=>{
             const overdue = c.status==='Pending' && c.followUpDate && c.followUpDate < new Date();
             const statusPill = c.status==='Completed' ? 'good' : (overdue ? 'bad' : 'warn');
-            return `<tr><td>${fmtDate(c.date)}</td><td>${c.name}</td><td>${c.trigger||''}</td><td>${c.action||''}</td><td>${fmtDate(c.followUpDate)}</td><td><span class="pill ${statusPill}">${overdue?'Overdue':c.status||''}</span></td><td>${c.loggedBy||''}</td><td>${c.screenshotUrl ? `<a href="${c.screenshotUrl}" target="_blank" rel="noopener">&#128206; View</a>` : ''}</td></tr>`;
-          }).join('') || '<tr><td colspan="8">No coaching entries logged yet.</td></tr>'}
+            return `<tr><td>${fmtDate(c.date)}</td><td>${c.name}</td><td>${c.trigger||''}</td><td>${c.action||''}</td><td>${fmtDate(c.followUpDate)}</td><td><span class="pill ${statusPill}">${overdue?'Overdue':c.status||''}</span></td><td>${c.loggedBy||''}</td><td>${c.screenshotUrl ? `<a href="${c.screenshotUrl}" target="_blank" rel="noopener">&#128206; View</a>` : ''}</td><td><button class="delete-btn" onclick="deleteEntry('bohCoachingRows','${c._id}')">&#128465;</button></td></tr>`;
+          }).join('') || '<tr><td colspan="9">No coaching entries logged yet.</td></tr>'}
         </tbody>
       </table>
     </div>
@@ -1538,12 +1574,13 @@ function renderCookDetail(name, byCook){
 
   const notesEl = document.getElementById('cookNotes');
   const items = [];
-  obs.slice().reverse().forEach(o=>{ if(o.notes || o.screenshotUrl) items.push({date:o.date, who:o.observedBy, text:o.notes||'', type:'Spot-check', screenshotUrl:o.screenshotUrl}); });
-  bohCoachingRows.filter(c=>c.name===name).forEach(c=>{ items.push({date:c.date, who:c.loggedBy, text:`${c.trigger||'Coaching'}: ${c.action||''}${c.notes?' — '+c.notes:''}`, type:'Coaching', screenshotUrl:c.screenshotUrl}); });
-  bohNegativeRows.filter(n=>n.name===name).forEach(n=>{ items.push({date:n.date, who:n.loggedBy, text:`${n.area||'Incident'} (${n.severity||''}${n.complaint==='Y'?', guest-linked':''}): ${n.description||''}`, type:'Negative incident', screenshotUrl:n.screenshotUrl}); });
+  obs.slice().reverse().forEach(o=>{ if(o.notes || o.screenshotUrl) items.push({date:o.date, who:o.observedBy, text:o.notes||'', type:'Spot-check', screenshotUrl:o.screenshotUrl, arrayKey:'bohRows', id:o._id}); });
+  bohCoachingRows.filter(c=>c.name===name).forEach(c=>{ items.push({date:c.date, who:c.loggedBy, text:`${c.trigger||'Coaching'}: ${c.action||''}${c.notes?' — '+c.notes:''}`, type:'Coaching', screenshotUrl:c.screenshotUrl, arrayKey:'bohCoachingRows', id:c._id}); });
+  bohNegativeRows.filter(n=>n.name===name).forEach(n=>{ items.push({date:n.date, who:n.loggedBy, text:`${n.area||'Incident'} (${n.severity||''}${n.complaint==='Y'?', guest-linked':''}): ${n.description||''}`, type:'Negative incident', screenshotUrl:n.screenshotUrl, arrayKey:'bohNegativeRows', id:n._id}); });
   items.sort((a,b)=>(b.date||0)-(a.date||0));
   notesEl.innerHTML = items.length ? items.map(n=>`
     <div class="note-item${n.type==='Negative incident'?' negative':''}">
+      <button class="delete-btn" onclick="deleteEntry('${n.arrayKey}','${n.id}')" title="Delete this entry">&#128465; Delete</button>
       <div class="meta">${fmtDate(n.date)} &middot; ${n.type} &middot; ${n.who||'—'}${screenshotLinkHtml(n.screenshotUrl)}</div>
       <div class="text">${n.text}</div>
     </div>`).join('') : '<div style="color:var(--muted);font-size:13px;">No notes recorded yet.</div>';
@@ -1730,6 +1767,7 @@ function renderChefDetail(name){
   const withNotes = rows.filter(r=>r.notes).reverse();
   notesEl.innerHTML = withNotes.length ? withNotes.map(r=>`
     <div class="note-item">
+      <button class="delete-btn" onclick="deleteEntry('bohManagerRows','${r._id}')" title="Delete this entry">&#128465; Delete</button>
       <div class="meta">${fmtMonth(r.month)} &middot; reviewed by ${r.reviewedBy||'—'}</div>
       <div class="text">${r.notes}</div>
     </div>`).join('') : '<div style="color:var(--muted);font-size:13px;">No notes recorded yet.</div>';
@@ -1975,14 +2013,14 @@ document.getElementById('submitEntryBtn').addEventListener('click', async ()=>{
       name: nameVal, badge: (ROSTER_CASHIERS.find(c=>c[0]===nameVal)||[])[1] || '',
       scores, opener: document.getElementById('f_opener').value, closer: document.getElementById('f_closer').value,
       observedBy: document.getElementById('f_observer').value, notes: document.getElementById('f_notes').value,
-      screenshotUrl: document.getElementById('f_screenshot').value
+      screenshotUrl: document.getElementById('f_screenshot').value, _id: newEntryId()
     });
   } else if(modalType==='negative'){
     negativeRows.push({
       date: dateVal, name: nameVal, outlet: document.getElementById('f_outlet').value, shift: document.getElementById('f_shift').value,
       area: document.getElementById('f_area').value, severity: document.getElementById('f_severity').value,
       complaint: document.getElementById('f_complaint').value, description: document.getElementById('f_desc').value,
-      loggedBy: document.getElementById('f_logger').value, screenshotUrl: document.getElementById('f_screenshot').value
+      loggedBy: document.getElementById('f_logger').value, screenshotUrl: document.getElementById('f_screenshot').value, _id: newEntryId()
     });
   } else if(modalType==='coaching'){
     const fu = document.getElementById('f_followup').value;
@@ -1990,14 +2028,14 @@ document.getElementById('submitEntryBtn').addEventListener('click', async ()=>{
       date: dateVal, name: nameVal, trigger: document.getElementById('f_trigger').value,
       action: document.getElementById('f_action').value, followUpDate: fu ? new Date(fu) : null,
       status: document.getElementById('f_status').value, notes: document.getElementById('f_notes').value,
-      loggedBy: document.getElementById('f_logger').value, screenshotUrl: document.getElementById('f_screenshot').value
+      loggedBy: document.getElementById('f_logger').value, screenshotUrl: document.getElementById('f_screenshot').value, _id: newEntryId()
     });
   } else if(modalType==='manager'){
     const scores = {};
     ALL_MGR_SKILLS.forEach((sk,i)=>{ scores[sk] = parseInt(document.getElementById('f_mscore_'+i).value,10); });
     managerRows.push({
       month: dateVal, name: nameVal, role: (ROSTER_MANAGERS.find(m=>m[0]===nameVal)||[])[1] || '',
-      scores, notes: document.getElementById('f_notes').value, reviewedBy: document.getElementById('f_reviewer').value
+      scores, notes: document.getElementById('f_notes').value, reviewedBy: document.getElementById('f_reviewer').value, _id: newEntryId()
     });
   } else if(modalType==='bohSpotcheck'){
     const scores = {};
@@ -2006,14 +2044,14 @@ document.getElementById('submitEntryBtn').addEventListener('click', async ()=>{
       date: dateVal, shift: document.getElementById('f_shift').value,
       name: nameVal, badge: (ROSTER_COOKS.find(c=>c[0]===nameVal)||[])[1] || '',
       scores, observedBy: document.getElementById('f_observer').value, notes: document.getElementById('f_notes').value,
-      screenshotUrl: document.getElementById('f_screenshot').value
+      screenshotUrl: document.getElementById('f_screenshot').value, _id: newEntryId()
     });
   } else if(modalType==='bohNegative'){
     bohNegativeRows.push({
       date: dateVal, name: nameVal, shift: document.getElementById('f_shift').value,
       area: document.getElementById('f_area').value, severity: document.getElementById('f_severity').value,
       complaint: document.getElementById('f_complaint').value, description: document.getElementById('f_desc').value,
-      loggedBy: document.getElementById('f_logger').value, screenshotUrl: document.getElementById('f_screenshot').value
+      loggedBy: document.getElementById('f_logger').value, screenshotUrl: document.getElementById('f_screenshot').value, _id: newEntryId()
     });
   } else if(modalType==='bohCoaching'){
     const fu = document.getElementById('f_followup').value;
@@ -2021,14 +2059,14 @@ document.getElementById('submitEntryBtn').addEventListener('click', async ()=>{
       date: dateVal, name: nameVal, trigger: document.getElementById('f_trigger').value,
       action: document.getElementById('f_action').value, followUpDate: fu ? new Date(fu) : null,
       status: document.getElementById('f_status').value, notes: document.getElementById('f_notes').value,
-      loggedBy: document.getElementById('f_logger').value, screenshotUrl: document.getElementById('f_screenshot').value
+      loggedBy: document.getElementById('f_logger').value, screenshotUrl: document.getElementById('f_screenshot').value, _id: newEntryId()
     });
   } else if(modalType==='bohManager'){
     const scores = {};
     ALL_MGR_SKILLS.forEach((sk,i)=>{ scores[sk] = parseInt(document.getElementById('f_mscore_'+i).value,10); });
     bohManagerRows.push({
       month: dateVal, name: nameVal, role: (ROSTER_CHEFS.find(m=>m[0]===nameVal)||[])[1] || '',
-      scores, notes: document.getElementById('f_notes').value, reviewedBy: document.getElementById('f_reviewer').value
+      scores, notes: document.getElementById('f_notes').value, reviewedBy: document.getElementById('f_reviewer').value, _id: newEntryId()
     });
   }
 
