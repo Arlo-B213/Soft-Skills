@@ -16,6 +16,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -256,6 +257,66 @@
   .pill.warn{background:rgba(184,135,31,.16);color:var(--gold-light);}
   .pill.bad{background:rgba(161,64,47,.14);color:#a1402f;}
 
+  /* ---- Leadership Training ---- */
+  .auth-box{max-width:400px;margin:60px auto;text-align:center;}
+  .auth-box h2{font-family:"Fraunces",Georgia,serif;font-size:22px;margin:0 0 6px;color:var(--cream);}
+  .auth-box .sub{margin-bottom:22px;}
+  .auth-box form{display:flex;flex-direction:column;gap:12px;text-align:left;}
+  .auth-box .field label{margin-bottom:2px;}
+  .auth-switch{margin-top:16px;font-size:12.5px;color:var(--muted);}
+  .auth-switch a{color:var(--gold-light);cursor:pointer;font-weight:600;text-decoration:none;}
+  .auth-error{color:#a1402f;font-size:12.5px;margin-top:4px;min-height:16px;}
+
+  .module-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;}
+  .module-card{
+    background:var(--navy-2);border:1px solid var(--line);border-radius:var(--radius-md);
+    padding:18px 20px;box-shadow:var(--shadow-sm);transition:box-shadow .2s var(--ease), transform .2s var(--ease);
+  }
+  .module-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px);}
+  .module-card .icon{font-size:22px;margin-bottom:8px;}
+  .module-card h3{font-family:"Fraunces",Georgia,serif;font-size:15.5px;margin:0 0 10px;color:var(--cream);font-weight:600;line-height:1.3;}
+  .module-card .progress-row{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:11.5px;color:var(--muted);}
+  .progress-track{flex:1;height:6px;border-radius:999px;background:var(--navy-3);overflow:hidden;}
+  .progress-fill{height:100%;background:var(--gold);border-radius:999px;transition:width .3s var(--ease);}
+  .module-card .actions{display:flex;gap:8px;}
+  .module-card .actions button{flex:1;}
+
+  .quiz-progress{font-size:12px;color:var(--muted);margin-bottom:6px;}
+  .quiz-question{font-family:"Fraunces",Georgia,serif;font-size:17px;color:var(--cream);margin:0 0 16px;line-height:1.4;}
+  .quiz-options{display:flex;flex-direction:column;gap:9px;margin-bottom:16px;}
+  .quiz-option{
+    display:flex;align-items:center;gap:10px;text-align:left;
+    background:var(--navy-3);border:1px solid var(--line);color:var(--cream);
+    padding:12px 15px;border-radius:var(--radius-sm);font-size:13.5px;cursor:pointer;
+    transition:all .15s var(--ease);
+  }
+  .quiz-option:hover{border-color:var(--gold);}
+  .quiz-option.selected{border-color:var(--gold);background:rgba(201,162,39,0.10);}
+  .quiz-option.correct{border-color:#1f7a4d;background:rgba(31,122,77,.12);}
+  .quiz-option.incorrect{border-color:#a1402f;background:rgba(161,64,47,.12);}
+  .quiz-option:disabled, .quiz-option[disabled]{cursor:default;}
+  .quiz-explain{font-size:13px;color:var(--muted);background:var(--navy-3);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:16px;}
+
+  .likert-row{padding:14px 0;border-bottom:1px solid var(--line);}
+  .likert-row:last-child{border-bottom:none;}
+  .likert-statement{font-size:13.5px;color:var(--cream);margin-bottom:10px;}
+  .likert-scale{display:flex;gap:8px;flex-wrap:wrap;}
+  .likert-scale button{
+    flex:1;min-width:64px;background:var(--navy-3);border:1px solid var(--line);color:var(--muted);
+    padding:9px 6px;border-radius:var(--radius-sm);font-size:11.5px;font-weight:600;cursor:pointer;
+    transition:all .15s var(--ease);
+  }
+  .likert-scale button.selected{background:var(--gold);color:var(--ink);border-color:var(--gold);}
+
+  .result-hero{text-align:center;padding:28px 20px;}
+  .result-hero .score-big{font-family:"Fraunces",Georgia,serif;font-size:46px;color:var(--gold-light);font-weight:600;}
+  .result-hero .score-label{color:var(--muted);font-size:13px;margin-top:4px;}
+
+  .attempt-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--line);font-size:13px;}
+  .attempt-row:last-child{border-bottom:none;}
+  .breadcrumb-link{color:var(--gold-light);cursor:pointer;font-size:12.5px;font-weight:600;text-decoration:none;}
+  .breadcrumb-link:hover{text-decoration:underline;}
+
   select{
     background:var(--navy-3);color:var(--cream);border:1px solid var(--line);
     padding:9px 14px;border-radius:999px;font-size:13.5px;cursor:pointer;
@@ -304,6 +365,8 @@
     <button class="mgmt-tab" data-tab="management">FOH Management</button>
     <button data-tab="bohTeam">BOH Team</button>
     <button class="mgmt-tab" data-tab="bohManagement">BOH Management</button>
+    <button data-tab="training">Leadership Training</button>
+    <button class="mgmt-tab" data-tab="trainingRollup">Training Rollup</button>
     <button id="mgmtLockBtn" class="mgmt-lock" title="Show management tabs">&#128274;</button>
   </nav>
 
@@ -316,6 +379,8 @@
   <div id="managementTab" style="display:none;"></div>
   <div id="bohTeamTab" style="display:none;"></div>
   <div id="bohManagementTab" style="display:none;"></div>
+  <div id="trainingTab" style="display:none;"></div>
+  <div id="trainingRollupTab" style="display:none;"></div>
 
   <button class="fab" id="fabEntryBtn" aria-label="Log entry">+</button>
 
@@ -1213,7 +1278,7 @@ function renderManagerDetail(name){
     </div>`).join('') : '<div style="color:var(--muted);font-size:13px;">No notes recorded yet.</div>';
 }
 
-const TAB_IDS = { cashiers:'cashiersTab', management:'managementTab', bohTeam:'bohTeamTab', bohManagement:'bohManagementTab' };
+const TAB_IDS = { cashiers:'cashiersTab', management:'managementTab', bohTeam:'bohTeamTab', bohManagement:'bohManagementTab', training:'trainingTab', trainingRollup:'trainingRollupTab' };
 function activeTabKey(){
   const btn = document.querySelector('nav.tabs button.active');
   return btn ? btn.dataset.tab : 'cashiers';
@@ -1223,6 +1288,8 @@ function showTab(key){
   Object.entries(TAB_IDS).forEach(([k, id])=>{
     document.getElementById(id).style.display = (k===key) ? 'block' : 'none';
   });
+  if(key==='training' && window.renderTraining) renderTraining();
+  if(key==='trainingRollup' && window.renderTrainingRollup) renderTrainingRollup();
 }
 document.querySelectorAll('nav.tabs button[data-tab]').forEach(btn=>{
   btn.addEventListener('click', ()=>showTab(btn.dataset.tab));
