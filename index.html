@@ -2065,16 +2065,17 @@ document.getElementById('submitEntryBtn').addEventListener('click', async ()=>{
 const trainingAuth = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth() : null;
 
 // Single hardcoded admin identity, mirrors the isTrainingAdmin() Firestore rule.
-// Can edit any employee's profile (name/role/tier/outlet). Password/login resets
+// Can edit any employee's profile (name/role/tier). Password/login resets
 // are NOT handled here — done directly in the Firebase Console by the project owner.
 const TRAINING_ADMIN_EMAIL = 'arlo.bedolla@gmail.com';
 function isTrainingAdmin(){ return !!(tCurrentUser && tCurrentUser.email === TRAINING_ADMIN_EMAIL); }
 
 const ROLE_TIER_MAP = {
   'Lead': 'entry', 'Asst. Chef': 'entry',
-  'Asst. Manager': 'mid', 'Sous Chef': 'mid'
+  'Asst. Manager': 'mid', 'Sous Chef': 'mid',
+  'Restaurant Manager': 'senior'
 };
-const TIER_LABEL = { entry: 'Entry-Level Leadership', mid: 'Mid-Level Leadership' };
+const TIER_LABEL = { entry: 'Entry-Level Leadership', mid: 'Mid-Level Leadership', senior: 'Senior Leadership (Restaurant Manager)' };
 
 const TRAINING_MODULES = [
   { id:'eq', tier:'entry', title:'Emotional Intelligence & Interpersonal Soft Skills', icon:'&#129504;' },
@@ -2084,7 +2085,10 @@ const TRAINING_MODULES = [
   { id:'compliance', tier:'entry', title:'Time, Attendance & Compliance Basics', icon:'&#9201;' },
   { id:'coaching', tier:'mid', title:'Coaching & Progressive Discipline', icon:'&#127919;' },
   { id:'escalation', tier:'mid', title:'Guest Escalation & Service Recovery', icon:'&#128276;' },
-  { id:'hiring', tier:'mid', title:'Hiring & Team Development', icon:'&#129309;' }
+  { id:'hiring', tier:'mid', title:'Hiring & Team Development', icon:'&#129309;' },
+  { id:'pnl', tier:'senior', title:'P&L & Cost Management', icon:'&#128200;' },
+  { id:'culture', tier:'senior', title:'Leading Leaders & Team Culture', icon:'&#127963;&#65039;' },
+  { id:'crisis', tier:'senior', title:'Crisis & Incident Management', icon:'&#128680;' }
 ];
 
 const QUIZ_BANK = {
@@ -2167,6 +2171,36 @@ const QUIZ_BANK = {
     { q:'Why should hiring decisions avoid relying purely on "gut feeling"?', options:["Gut feeling is always accurate","It's more prone to bias; pairing it with structured criteria leads to better hires","Structured criteria don't matter","Gut feeling is the only reliable method"], correct:1, explain:"Gut feeling alone is prone to bias — pairing it with structured criteria produces better outcomes." },
     { q:"What's an effective way to develop a promising Lead toward an Asst. Manager role?", options:["Give them the title with no preparation","Gradually stretch their responsibility (scheduling input, coaching reps) with feedback along the way","Wait until a position opens with zero prior development","Development isn't necessary — good people figure it out"], correct:1, explain:"Gradual, supported stretch assignments are how real readiness for the next level gets built." },
     { q:"Why does team development matter for retention in a QSR environment?", options:["It doesn't affect retention","People are more likely to stay when they see a real growth path","Retention is only about pay","Development only matters for management-track employees"], correct:1, explain:"A visible growth path is one of the strongest retention levers available, alongside pay." }
+  ],
+  pnl: [
+    { q:"What's the primary purpose of a weekly P&L review at the Restaurant Manager level?", options:["To assign blame for bad days","To catch cost and revenue trends early enough to act on them","To satisfy corporate paperwork requirements","To decide who gets promoted"], correct:1, explain:"Regular review exists to catch and act on trends early, not to assign blame after the fact." },
+    { q:"If food cost percentage is trending above target, what's the first thing a Restaurant Manager should investigate?", options:["Immediately raise menu prices","Portion consistency, waste, and invoicing accuracy before assuming theft","Fire the kitchen staff","Ignore it if sales are still up"], correct:1, explain:"Most food cost drift comes from portioning, waste, or invoicing — not theft. Rule those out first." },
+    { q:"Why does labor scheduling need to flex with forecasted volume rather than staying fixed?", options:["Fixed schedules are always more efficient","Over-scheduling wastes labor dollars and under-scheduling hurts service and burns out the team","Volume never really changes","Corporate sets the schedule regardless"], correct:1, explain:"Flexing labor to forecasted volume is how you protect both cost and service quality." },
+    { q:'What does "controllable cost" mean in a restaurant P&L?', options:["Any cost at all","Costs the on-site manager can directly influence (labor, food, supplies) versus fixed costs set above the store level","Only rent and insurance","Costs that never change"], correct:1, explain:"Knowing what you can actually influence is what makes a P&L review useful rather than just informational." },
+    { q:"A Restaurant Manager notices a vendor's invoice pricing has crept up over several months. Correct move?", options:["Keep paying it, it's not a big deal","Flag it and renegotiate or escalate to purchasing — small creeps compound significantly over a year","Switch vendors without any documentation","Absorb it silently into the budget"], correct:1, explain:"Small, unnoticed price creep compounds into real money over a year — it's worth catching early." },
+    { q:"Why is forecasting accuracy important at a resort/casino property specifically?", options:["It isn't, volume is always steady","Casino/resort traffic can swing heavily with events, promotions, and seasonality, so static forecasts miss badly","Forecasting is corporate's job only","Forecasts are just guesses regardless"], correct:1, explain:"Resort/casino volume swings hard with events and seasonality, so forecasts need active attention." },
+    { q:"What's a healthy way to respond to a missed monthly budget target?", options:["Hide the variance in the next report","Understand the root cause, correct what's controllable, and communicate clearly to leadership","Blame the team publicly","Ignore it and hope next month is better"], correct:1, explain:"Understanding root cause and communicating clearly is what turns a miss into a fixable problem." },
+    { q:"Why should a Restaurant Manager understand the P&L in detail, not just the bottom-line number?", options:["The bottom line is the only thing that matters","Understanding the line items is what lets you actually diagnose and fix problems, not just report them","Detail slows down decision-making","Corporate handles all the detail"], correct:1, explain:"Line-item understanding is what turns a P&L from a report into a management tool." }
+  ],
+  culture: [
+    { q:"What's different about coaching an Asst. Manager compared to coaching a line-level Lead?", options:["Nothing, coaching is identical at every level","You're developing their ability to coach others, not just their individual performance","Asst. Managers don't need coaching","You should coach them less"], correct:1, explain:"At this level you're building their coaching capability, not just their individual output." },
+    { q:"What's a strong sign of a healthy leadership bench at a property?", options:["The Restaurant Manager does everything personally","Multiple people below the top could step up if someone left tomorrow","One person holds all the institutional knowledge","Turnover among leaders is high but line staff stays"], correct:1, explain:"Bench strength means the operation doesn't depend entirely on any one person." },
+    { q:"Why does culture-setting matter more at the Restaurant Manager level than at the shift-lead level?", options:["It doesn't matter more, it's identical","The RM's behavior and priorities set the tone that cascades through every manager and shift below them","Culture is HR's job entirely","Only new hires are affected by culture"], correct:1, explain:"Culture cascades from the top — the RM's own behavior sets what the whole team treats as normal." },
+    { q:"An Asst. Manager under you is struggling to hold their own team accountable. Best RM move?", options:["Take over disciplining their team directly and permanently","Coach the Asst. Manager on HOW to hold their team accountable, building their skill","Ignore it, it will resolve itself","Demote them immediately"], correct:1, explain:"Building the Asst. Manager's own accountability skill scales further than doing it for them." },
+    { q:"Why is retention of good Asst. Managers/Sous Chefs a Restaurant Manager priority?", options:["It isn't a priority, they're replaceable","Losing developed leaders is expensive and disruptive; retention protects the whole operation's stability","Retention is only about pay","Only line-level retention matters"], correct:1, explain:"Developed leaders are expensive to replace and losing them destabilizes the whole operation." },
+    { q:'What does "leading leaders" require that "leading a shift" doesn\'t?', options:["The exact same skill set","Influencing through others rather than doing everything yourself","Less communication","No delegation at all"], correct:1, explain:"Leading leaders means multiplying your impact through others, not doing it all yourself." },
+    { q:"How should a Restaurant Manager handle a disagreement between two Asst. Managers?", options:["Ignore it and let them sort it out indefinitely","Facilitate a direct conversation between them, coaching both toward resolution","Always side with whoever has more tenure","Make both of them stop talking to each other"], correct:1, explain:"Facilitating a direct, coached conversation resolves it while building both managers' skills." },
+    { q:"Why is modeling composure under pressure especially important for a Restaurant Manager?", options:["It isn't important at this level","Every manager below is watching and will mirror how the RM handles high-stress situations","Only line staff need composure","Composure only matters during reviews"], correct:1, explain:"Every manager below is watching and will mirror how the RM handles pressure." }
+  ],
+  crisis: [
+    { q:"What's the first priority in any on-property crisis or safety incident?", options:["Protecting the outlet's reputation","Immediate safety of guests and team members","Documenting it for insurance","Notifying corporate first"], correct:1, explain:"Safety always comes before reputation, documentation, or notification." },
+    { q:"Why does a Restaurant Manager need a clear escalation path to resort/casino security?", options:["Security isn't relevant to food & beverage outlets","Fast, correct escalation is critical when an incident goes beyond what the outlet can handle alone","Only the front desk needs this","Escalation paths are unnecessary at Four Diamond properties"], correct:1, explain:"Knowing exactly who to call and when is critical the moment an incident exceeds the outlet's own capability." },
+    { q:"A guest has a medical emergency in your outlet. Correct immediate action?", options:["Wait for them to ask for help","Call for property medical/security response immediately and clear the area appropriately","Continue service as normal","Ask another guest to handle it"], correct:1, explain:"Immediate professional response and clearing the area is the correct first move, every time." },
+    { q:"Why is a documented incident report important after any significant event?", options:["It's just paperwork","It creates an accurate record for follow-up, liability, and pattern-tracking across incidents","Reports are only needed if a guest complains","Verbal notes are always sufficient"], correct:1, explain:"A written record protects everyone and reveals patterns that a verbal memory won't." },
+    { q:"What's the risk of a Restaurant Manager improvising a media/PR response to a serious incident?", options:["There's no risk, managers should always speak publicly","Off-message statements can create legal and reputational damage — that's why comms should route through proper channels","PR never matters for a single outlet","Guests don't share incidents online"], correct:1, explain:"Off-message statements on a serious incident can create real legal and reputational damage." },
+    { q:"Why should a Restaurant Manager run through emergency procedures with the team periodically, not just once at onboarding?", options:["Repetition wastes time","Under real stress, people default to what's practiced, not what's remembered from one training session","One-time training is always sufficient","Emergency procedures never change"], correct:1, explain:"Under real stress people fall back on what's practiced, not what they heard once months ago." },
+    { q:"A team member is hurt on the job. Correct sequence?", options:["Finish the shift, deal with it later","Ensure immediate care, follow incident-reporting procedure, and support the employee through next steps","Send them home without documentation","Only act if they ask for help"], correct:1, explain:"Immediate care, proper documentation, and follow-through support is the correct sequence, always." },
+    { q:"Why does a AAA Four Diamond property hold crisis response to a higher standard than a typical QSR?", options:["It doesn't, response is the same everywhere","Guest expectations and brand exposure are higher, so calm, professional handling matters even more","Crisis response doesn't relate to service standards","Only security staff are held to that standard"], correct:1, explain:"Higher guest expectations and brand exposure mean crisis response needs the same premium standard as everyday service." }
   ]
 };
 
@@ -2234,6 +2268,30 @@ const ASSESSMENT_BANK = {
     "I give stretch opportunities to develop promising team members.",
     "I balance gut feeling with objective criteria when evaluating candidates.",
     "I see team development as part of my job, not extra work."
+  ],
+  pnl: [
+    "I review my P&L regularly enough to catch cost trends before they become a real problem.",
+    "I understand which costs I can actually control versus which are fixed above my level.",
+    "I adjust labor scheduling proactively based on forecasted volume, not just habit.",
+    "I dig into root causes of cost variances instead of just reporting the number.",
+    "I plan for the volume swings that come with resort/casino events and seasonality.",
+    "I can clearly explain my P&L performance to my own leadership, not just react to it."
+  ],
+  culture: [
+    "I actively develop my Asst. Managers'/Sous Chefs' ability to coach and lead their own teams.",
+    "I have at least one person ready to step up if a key leader left tomorrow.",
+    "My own behavior and priorities set a tone I'd want cascading through the whole team.",
+    "I coach my managers on how to solve problems rather than solving everything myself.",
+    "I make retention of strong leaders a deliberate priority, not an afterthought.",
+    "I stay composed under pressure in a way I'd want my managers to model."
+  ],
+  crisis: [
+    "I know exactly who to call and what to do in a medical or safety emergency in my outlet.",
+    "I document incidents thoroughly and promptly, not just when something goes seriously wrong.",
+    "I route anything media/PR-sensitive through the proper channels rather than improvising.",
+    "I run emergency procedures with my team periodically, not just once.",
+    "I stay calm and decisive in the moment during a real incident.",
+    "I hold my outlet's crisis response to the same premium standard as our everyday service."
   ]
 };
 
@@ -2383,31 +2441,34 @@ function wireAuthHandlers(){
 }
 
 // ---- Profile setup view ----
-const TRAINING_ROLES = ['Lead','Asst. Chef','Asst. Manager','Sous Chef','Other (entry-level)','Other (mid-level)'];
+const TRAINING_ROLES = ['Lead','Asst. Chef','Asst. Manager','Sous Chef','Restaurant Manager','Other (entry-level)','Other (mid-level)','Other (senior-level)'];
 function renderProfileSetupHtml(){
   return `
     <div class="panel" style="max-width:460px;margin:40px auto;">
       <h2>Set up your training profile<small>One-time — used to show you the right modules and track your progress.</small></h2>
       <form id="tProfileForm">
         <div class="field" style="margin-bottom:12px;"><label>Your name</label><input type="text" id="tProfileName" required placeholder="Full name"></div>
-        <div class="field" style="margin-bottom:12px;"><label>Your role</label>
+        <div class="field" style="margin-bottom:16px;"><label>Your role</label>
           <select id="tProfileRole">${TRAINING_ROLES.map(r=>`<option value="${r}">${r}</option>`).join('')}</select>
-        </div>
-        <div class="field" style="margin-bottom:16px;"><label>Outlet</label>
-          <select id="tProfileOutlet"><option>Pronto</option><option>Agave</option><option>American Classics</option><option>Pechanga Fried Chicken</option><option>Other</option></select>
         </div>
         <button type="submit" class="btn-primary">Start Training</button>
       </form>
     </div>`;
 }
+function deriveTier(role){
+  if(ROLE_TIER_MAP[role]) return ROLE_TIER_MAP[role];
+  if(role.includes('senior-level')) return 'senior';
+  if(role.includes('mid-level')) return 'mid';
+  return 'entry';
+}
 function wireProfileSetupHandlers(){
   document.getElementById('tProfileForm').addEventListener('submit', async (e)=>{
     e.preventDefault();
     const role = document.getElementById('tProfileRole').value;
-    const tier = ROLE_TIER_MAP[role] || (role.includes('mid-level') ? 'mid' : 'entry');
+    const tier = deriveTier(role);
     await saveTrainingProfile({
       displayName: document.getElementById('tProfileName').value.trim(),
-      role, tier, outlet: document.getElementById('tProfileOutlet').value,
+      role, tier,
       createdAt: Date.now()
     });
     tView = 'home';
@@ -2422,7 +2483,7 @@ function renderTrainingHomeHtml(){
   return `
     <div class="panel" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
       <div>
-        <h2 style="margin-bottom:4px;">Welcome, ${tCurrentProfile.displayName}<small>${TIER_LABEL[tier]} &middot; ${tCurrentProfile.role} &middot; ${tCurrentProfile.outlet}</small></h2>
+        <h2 style="margin-bottom:4px;">Welcome, ${tCurrentProfile.displayName}<small>${TIER_LABEL[tier]} &middot; ${tCurrentProfile.role}</small></h2>
       </div>
       <div style="display:flex;gap:8px;">
         ${isTrainingAdmin() ? '<button class="btn-secondary" id="tAdminUsersBtn">Manage Users</button>' : ''}
@@ -2476,17 +2537,12 @@ function renderAdminUsersHtml(){
   return `
     <div class="panel" style="max-width:720px;margin:0 auto;">
       <a class="breadcrumb-link" id="tAdminBack">&larr; Back to modules</a>
-      <h2 style="margin-top:14px;">Manage Users<small>Edit name, role, tier, or outlet for any employee. Password/login resets are done in the Firebase Console.</small></h2>
+      <h2 style="margin-top:14px;">Manage Users<small>Edit name, role, or tier for any employee. Password/login resets are done in the Firebase Console.</small></h2>
       <div class="auth-error">${tAdminError||''}</div>
       ${tAdminProfiles.length ? tAdminProfiles.map(p=>`
         <div class="panel" style="margin-bottom:12px;">
-          <div class="field-row">
+          <div class="field-row full">
             <div class="field"><label>Name</label><input type="text" data-field="displayName" data-uid="${p.uid}" value="${(p.displayName||'').replace(/"/g,'&quot;')}"></div>
-            <div class="field"><label>Outlet</label>
-              <select data-field="outlet" data-uid="${p.uid}">
-                ${['Pronto','Agave','American Classics','Pechanga Fried Chicken','Other'].map(o=>`<option value="${o}" ${p.outlet===o?'selected':''}>${o}</option>`).join('')}
-              </select>
-            </div>
           </div>
           <div class="field-row">
             <div class="field"><label>Role</label>
@@ -2498,6 +2554,7 @@ function renderAdminUsersHtml(){
               <select data-field="tier" data-uid="${p.uid}">
                 <option value="entry" ${p.tier==='entry'?'selected':''}>Entry-Level Leadership</option>
                 <option value="mid" ${p.tier==='mid'?'selected':''}>Mid-Level Leadership</option>
+                <option value="senior" ${p.tier==='senior'?'selected':''}>Senior Leadership (Restaurant Manager)</option>
               </select>
             </div>
           </div>
@@ -2724,16 +2781,15 @@ async function renderTrainingRollup(){
       <div class="panel">
         <h2>Leadership Training — Team Rollup<small>Completion across all enrolled staff, by tier.</small></h2>
         <table style="width:100%;border-collapse:collapse;font-size:13px;">
-          <thead><tr style="text-align:left;color:var(--muted);"><th style="padding:8px 0;">Name</th><th>Tier</th><th>Outlet</th><th>Quizzes Completed</th><th>Self-Assessments Completed</th></tr></thead>
+          <thead><tr style="text-align:left;color:var(--muted);"><th style="padding:8px 0;">Name</th><th>Tier</th><th>Quizzes Completed</th><th>Self-Assessments Completed</th></tr></thead>
           <tbody>
             ${rows.length ? rows.map(r=>`
               <tr style="border-top:1px solid var(--line);">
                 <td style="padding:10px 0;"><b>${r.displayName}</b><br><span style="color:var(--muted);font-size:11.5px;">${r.role||''}</span></td>
                 <td>${TIER_LABEL[r.tier]||r.tier}</td>
-                <td>${r.outlet||'—'}</td>
                 <td><span class="pill ${r.quizCount===r.totalModules?'good':'warn'}">${r.quizCount}/${r.totalModules}</span></td>
                 <td><span class="pill ${r.assessCount===r.totalModules?'good':'warn'}">${r.assessCount}/${r.totalModules}</span></td>
-              </tr>`).join('') : '<tr><td colspan="5" style="padding:16px 0;color:var(--muted);">No one has set up a training profile yet.</td></tr>'}
+              </tr>`).join('') : '<tr><td colspan="4" style="padding:16px 0;color:var(--muted);">No one has set up a training profile yet.</td></tr>'}
           </tbody>
         </table>
       </div>`;
