@@ -2060,6 +2060,607 @@ document.getElementById('submitEntryBtn').addEventListener('click', async ()=>{
   toast('Entry saved.');
   if(cloudEnabled){ await saveToCloud(); }
 });
+
+// ================= Leadership Training Module =================
+const trainingAuth = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth() : null;
+
+const ROLE_TIER_MAP = {
+  'Lead': 'entry', 'Asst. Chef': 'entry',
+  'Asst. Manager': 'mid', 'Sous Chef': 'mid'
+};
+const TIER_LABEL = { entry: 'Entry-Level Leadership', mid: 'Mid-Level Leadership' };
+
+const TRAINING_MODULES = [
+  { id:'eq', tier:'entry', title:'Emotional Intelligence & Interpersonal Soft Skills', icon:'&#129504;' },
+  { id:'guest', tier:'entry', title:'Guest Service & AAA Four Diamond Standards', icon:'&#11088;' },
+  { id:'foodsafety', tier:'entry', title:'Food Safety & Shift Procedures', icon:'&#129537;' },
+  { id:'comm', tier:'entry', title:'Team Communication & De-escalation', icon:'&#128172;' },
+  { id:'compliance', tier:'entry', title:'Time, Attendance & Compliance Basics', icon:'&#9201;' },
+  { id:'coaching', tier:'mid', title:'Coaching & Progressive Discipline', icon:'&#127919;' },
+  { id:'escalation', tier:'mid', title:'Guest Escalation & Service Recovery', icon:'&#128276;' },
+  { id:'hiring', tier:'mid', title:'Hiring & Team Development', icon:'&#129309;' }
+];
+
+const QUIZ_BANK = {
+  eq: [
+    { q:"A teammate snaps at you during a busy rush. What's the most emotionally intelligent first response?", options:["Snap back so they know it's not okay","Stay calm, finish the immediate task, and check in with them after the rush","Report them to a manager immediately","Ignore them for the rest of the shift"], correct:1, explain:"Staying regulated in the moment and following up later shows self-regulation and empathy — the core of EQ under pressure." },
+    { q:'Which of these is the best example of "self-awareness" on the job?', options:["Knowing your store's sales numbers","Recognizing when your own stress is starting to affect how you talk to your team","Memorizing the menu","Following the schedule exactly"], correct:1, explain:"Self-awareness means noticing your own internal state and how it's affecting your behavior in real time." },
+    { q:"A guest is visibly frustrated but hasn't said anything rude yet. What does high empathy look like here?", options:["Waiting for them to complain first","Proactively acknowledging their wait or frustration before they have to ask","Ignoring it since they haven't said anything","Calling a manager right away"], correct:1, explain:"Empathy means noticing another person's state without needing them to spell it out." },
+    { q:"You made a mistake on an order during a rush. What's the emotionally intelligent next step?", options:["Blame the ticket system","Own it briefly, fix it fast, move on without dwelling","Get defensive if a teammate points it out","Avoid that station for the rest of the shift"], correct:1, explain:"Owning mistakes quickly and moving forward keeps the shift running and models accountability for the team." },
+    { q:"Which best describes \"social skill\" in Goleman's EQ model as it applies to a shift lead?", options:["Being the loudest person on shift","Building trust and communicating clearly enough that the team wants to follow your lead","Never talking to guests","Working alone as much as possible"], correct:1, explain:"Social skill is about building relationships and influence, not volume." },
+    { q:"A team member seems withdrawn today. What's the EQ-forward move?", options:["Assume they're being lazy and assign them more tasks","Quietly check in one-on-one when there's a natural break","Call them out in front of the team to \"motivate\" them","Say nothing — it's not your job"], correct:1, explain:"A private, low-key check-in respects the person and often surfaces what's really going on." },
+    { q:"What's a healthy way to manage your own frustration mid-shift?", options:["Vent to a guest about it","A quick reset — a breath, a short walk to the back, then re-engage","Let it build until you snap","Take it out on the next order that's slow"], correct:1, explain:"Short resets prevent frustration from leaking into guest and team interactions." },
+    { q:"Why does emotional intelligence matter for a Lead more than for a line-level team member?", options:["It doesn't — it's the same for everyone","Leads set the emotional tone for the whole shift; the team mirrors how the Lead handles pressure","Leads don't interact with guests","It only matters for corporate roles"], correct:1, explain:"A Lead's emotional state is contagious across the shift — regulated Leads create regulated teams." }
+  ],
+  guest: [
+    { q:"What generally distinguishes AAA Four Diamond service from a standard quick-service experience?", options:["Lower prices","Consistently anticipatory, polished, and personalized service","Self-service kiosks only","No table service ever"], correct:1, explain:"Four Diamond standards are about consistent polish and anticipating guest needs, even in a quick-service format." },
+    { q:"A guest at the resort asks a question you don't know the answer to. Four Diamond standard response?", options:["Say \"I don't know\" and walk away","Find the answer or a colleague who has it, rather than leaving the guest guessing","Guess at an answer","Tell them to look it up themselves"], correct:1, explain:"Following through until the guest has a real answer is core to premium service." },
+    { q:"Why does eye contact and a genuine greeting matter even in a fast-paced food court?", options:["It's required by law","It signals the guest is seen and valued, which is core to premium service even in quick formats","It slows down service unnecessarily","It doesn't matter in QSR settings"], correct:1, explain:"Being seen and acknowledged is often what guests remember most, regardless of format." },
+    { q:"A regular guest mentions they're celebrating an anniversary while in line. Four Diamond-minded response?", options:["Nothing — just take the order","Acknowledge it warmly, maybe a small gesture within your ability","Ask them to keep it down","Offer a discount without asking a manager"], correct:1, explain:"A warm acknowledgment costs nothing and creates a memorable, personalized moment." },
+    { q:'What\'s the best definition of "anticipatory service"?', options:["Waiting for the guest to ask for everything","Noticing and meeting a need before the guest has to voice it","Guessing guest orders to speed up the line","Skipping steps to move faster"], correct:1, explain:"Anticipatory service means meeting needs before they're voiced — the hallmark of premium hospitality." },
+    { q:"A guest's order is taking longer than expected. Four Diamond standard?", options:["Say nothing until they ask","Proactively update them on the wait and thank them for patience","Let another guest tell them","Rush the food and risk quality"], correct:1, explain:"Proactive communication keeps guests informed and shows respect for their time." },
+    { q:"Why does cleanliness of the dining area matter as much as food quality in a Four Diamond property?", options:["It doesn't — only food matters","The overall environment is part of the guest's total experience and reflects on the whole resort","Cleanliness is housekeeping's job only","Guests don't notice the dining area"], correct:1, explain:"Guests experience the whole environment, and every outlet reflects on the resort's overall standard." },
+    { q:"What should a Lead do if they notice a teammate giving a guest short, curt answers?", options:["Nothing, it's not urgent","Coach them in the moment or right after with a specific, calm example","Publicly correct them in front of the guest","Wait until the annual review"], correct:1, explain:"Timely, specific, private coaching corrects the behavior without embarrassing the teammate." }
+  ],
+  foodsafety: [
+    { q:'What is "the danger zone" in food safety?', options:["32°F–40°F","41°F–135°F, the temperature range where bacteria grow fastest","Above 165°F","There is no such range"], correct:1, explain:"The danger zone (41°F–135°F) is where bacteria multiply fastest, which is why time-in-zone is tracked closely." },
+    { q:"How often should hot-held food temperatures typically be logged during a shift?", options:["Once at the start of the day only","At regular intervals per your food safety plan (commonly every 2–4 hours)","Never, unless a guest complains","Only during health inspections"], correct:1, explain:"Regular logging catches problems early, long before they'd ever reach a guest." },
+    { q:"A cutting board was just used for raw chicken. Before using it for produce, you should:", options:["Wipe it with a dry towel","Wash, rinse, and sanitize it (or use a separate board) to prevent cross-contamination","Just rinse with water","It's fine to use as-is"], correct:1, explain:"Proper wash-rinse-sanitize (or dedicated boards) prevents cross-contamination between raw protein and ready-to-eat food." },
+    { q:"What's the first thing a Lead should do when opening a station for the shift?", options:["Start taking orders immediately","Run through the opening checklist — temps, cleanliness, equipment checks","Skip checks if the previous shift said everything's fine","Wait for a manager to arrive"], correct:1, explain:"The opening checklist exists precisely so nothing is assumed to be fine without verifying it." },
+    { q:"An employee shows up to shift with a fever. Correct food safety action?", options:["Let them work as normal","Send them home / have them not handle food, per illness policy","Just have them wash hands more","Ignore it unless a guest asks"], correct:1, explain:"Illness policies exist to prevent foodborne illness transmission — this isn't optional." },
+    { q:"Why is a documented closing checklist important?", options:["It's just paperwork","It ensures food safety and equipment steps aren't skipped when people are tired and rushing to leave","It's only for corporate audits","It's optional if the shift went smoothly"], correct:1, explain:"Checklists exist because tired, rushed closers are exactly when steps get skipped." },
+    { q:"What should you do if you find food held outside safe temperature for longer than allowed?", options:["Serve it anyway to avoid waste","Discard it — guest safety comes before food cost","Reheat it and hope for the best","Ask a guest if they mind"], correct:1, explain:"Guest safety always outweighs food cost concerns — when in doubt, throw it out." },
+    { q:"Why does a Lead need to know food safety rules even if they're not cooking that shift?", options:["They don't need to know them","They're responsible for catching and correcting violations across the whole team","Only BOH staff need this knowledge","It's the health inspector's job"], correct:1, explain:"Leads are accountable for the whole shift's compliance, not just their own station." }
+  ],
+  comm: [
+    { q:"Two teammates are bickering during a rush. Best immediate Lead move?", options:["Let them work it out themselves mid-rush","Calmly separate the immediate issue, keep the line moving, address it fully after","Take one teammate's side immediately","Send both of them home"], correct:1, explain:"Stabilize the shift first, then have the real conversation when there's time to do it right." },
+    { q:"What's the most effective way to give a teammate quick feedback during a shift?", options:["Yell across the kitchen so everyone hears","Brief, specific, and calm — pull them aside for a moment if possible","Wait until the next scheduled review","Say nothing and just redo it yourself"], correct:1, explain:"In-the-moment, private, specific feedback is heard best and corrects behavior fastest." },
+    { q:"A guest raises their voice at a team member. First communication move for the Lead?", options:["Ignore it and hope it resolves","Step in calmly, acknowledge the guest's frustration, and give the team member a moment","Match their energy to show authority","Ask the guest to leave immediately"], correct:1, explain:"Calm de-escalation protects both the guest relationship and the team member." },
+    { q:"What's a sign of de-escalation working?", options:["The other person's volume and tension decreasing","The other person getting louder","The conversation ending abruptly","Nothing changes"], correct:0, explain:"Decreasing volume and tension is the clearest signal a de-escalation approach is working." },
+    { q:"Which phrase best de-escalates a frustrated guest?", options:["\"That's not our policy, sorry.\"","\"I hear you — let's see what we can do.\"","\"You'll have to calm down.\"","\"That's not my problem.\""], correct:1, explain:"Acknowledging and offering to help shifts the guest from adversary to partner in solving it." },
+    { q:"Why is tone often more important than the actual words during a tense moment?", options:["It isn't — words are all that matter","People respond to tone and body language before they process the words","Tone only matters with guests, not teammates","Tone doesn't affect de-escalation"], correct:1, explain:"Tone and body language register before word content does, especially under stress." },
+    { q:"A team member misunderstood an instruction and it caused an error. Best next step?", options:["Assume they weren't listening and give up explaining","Clarify calmly, check understanding, and confirm the fix","Redo the instruction the exact same way","Write them up immediately"], correct:1, explain:"Checking for understanding (not just repeating) closes the communication gap that caused the error." },
+    { q:"What should a Lead do before communicating a stressful policy change to the team?", options:["Just post a note with no context","Understand it themselves first, then explain the \"why,\" not just the \"what\"","Let corporate explain it directly with no Lead involvement","Avoid mentioning it"], correct:1, explain:"Understanding the reasoning first lets the Lead answer questions and reduce anxiety on the team." }
+  ],
+  compliance: [
+    { q:"Why does accurate clock-in/clock-out matter?", options:["It doesn't affect anything real","It ensures correct pay and accurate labor records for compliance","Only managers' time matters","It's just a formality"], correct:1, explain:"Accurate time records protect employee pay and the business's legal compliance." },
+    { q:"An employee forgot to clock in for a break. Correct Lead action?", options:["Ignore it","Follow the documented correction process to fix the record accurately","Just estimate and move on","Tell them not to worry about it"], correct:1, explain:"Accurate correction (not guessing) keeps the record legally defensible." },
+    { q:"Why are meal/rest break laws taken seriously in hospitality operations?", options:["They're optional guidelines","They're legal requirements, and missed breaks can create real liability for the business","They only apply to corporate offices","They don't apply to leads"], correct:1, explain:"Break laws are legal requirements with real financial and legal consequences when missed." },
+    { q:"What's a Lead's responsibility around punctuality standards?", options:["Only worry about their own punctuality","Model punctuality themselves and address patterns of tardiness on the team","Ignore lateness if the shift still gets covered","Punctuality isn't a Lead's concern"], correct:1, explain:"Leads set the standard by modeling it and hold the team accountable to the same bar." },
+    { q:"If a teammate repeatedly clocks in late, what's the appropriate first step?", options:["Immediate termination","A direct, private conversation to understand and address the pattern","Public call-out in a team meeting","Say nothing and hope it improves"], correct:1, explain:"A direct private conversation is the appropriate first step in any progressive approach." },
+    { q:"Why should schedule changes be documented rather than just verbally agreed?", options:["Documentation isn't necessary","It protects both the employee and the business and avoids confusion/disputes","It's extra unnecessary paperwork","Verbal agreements are always sufficient"], correct:1, explain:"Documentation prevents disputes and protects everyone when memories differ later." },
+    { q:"What's a basic compliance responsibility around minors on staff (where applicable)?", options:["No special rules apply","Following applicable minor-labor scheduling/hour restrictions","Minors can work any hours like adults","Only HR needs to know this"], correct:1, explain:"Minor-labor laws restrict scheduling and hours, and Leads scheduling shifts need to know them." },
+    { q:"Why does consistent enforcement of attendance policy matter across the whole team?", options:["It doesn't — enforce case by case with no pattern","Inconsistent enforcement damages trust and can create fairness/legal issues","Favorites should get more flexibility","Policies are just suggestions"], correct:1, explain:"Consistency is what makes a policy fair and legally defensible." }
+  ],
+  coaching: [
+    { q:'What does the "SBI" feedback model stand for?', options:["Speed, Balance, Impact","Situation, Behavior, Impact","Simple, Brief, Immediate","Skill, Belief, Intention"], correct:1, explain:"SBI (Situation-Behavior-Impact) keeps feedback specific and grounded in observed fact." },
+    { q:"What is the purpose of progressive discipline?", options:["To punish employees as harshly as possible","To give employees a fair, documented chance to correct behavior before more serious action","To skip straight to termination","To avoid ever addressing performance issues"], correct:1, explain:"Progressive discipline is about a fair path to improvement, documented at each step." },
+    { q:"A typical progressive discipline sequence often looks like:", options:["Termination first, discussion later","Verbal coaching → written warning → final warning → termination (org-dependent)","Only written warnings, no conversations","Random order depending on mood"], correct:1, explain:"A staged, escalating sequence gives the employee real opportunities to correct course." },
+    { q:"Why should coaching conversations happen privately?", options:["It doesn't matter where","Public correction damages trust and morale; private conversations preserve dignity and are more effective","Privacy isn't necessary for adults","Public correction is more efficient"], correct:1, explain:"Privacy preserves dignity and makes the employee far more likely to actually hear the feedback." },
+    { q:"What makes coaching feedback most actionable?", options:["Vague general statements like \"do better\"","Specific, observed behavior tied to a clear expectation and next step","Comparing them to another employee","Focusing only on personality traits"], correct:1, explain:"Specific, behavior-based feedback with a clear next step is what people can actually act on." },
+    { q:"Why is documentation important in progressive discipline?", options:["It's just bureaucracy","It protects the employee, the business, and creates a clear record if further action is needed","Documentation isn't needed if you remember the conversation","Only HR should document anything"], correct:1, explain:"Documentation protects everyone and ensures fairness and consistency over time." },
+    { q:"An employee reacts defensively during a coaching conversation. Best next move?", options:["Escalate the tone to match them","Stay calm, acknowledge their perspective, and refocus on the specific behavior and expectation","End the conversation immediately","Back down and drop the issue entirely"], correct:1, explain:"Staying calm and refocusing on facts keeps the conversation productive instead of adversarial." },
+    { q:"What's the goal of a coaching conversation, ultimately?", options:["To make the employee feel bad","To help the employee succeed by closing the gap between current and expected performance","To build a paper trail for termination","To assert authority"], correct:1, explain:"Coaching is fundamentally about helping someone succeed, not about punishment." }
+  ],
+  escalation: [
+    { q:"What's the first step in most service recovery models when a guest is upset?", options:["Offer a discount immediately","Listen fully and acknowledge their concern without interrupting","Explain company policy first","Ask them to write a formal complaint"], correct:1, explain:"Listening fully before responding is the foundation of every effective service recovery model." },
+    { q:"Why is a sincere apology important in service recovery, even if the mistake wasn't your fault personally?", options:["It admits legal liability","It shows the guest they're heard and the team owns the experience, which rebuilds trust","Apologies should be avoided to protect the business","It's not necessary if the food was eventually correct"], correct:1, explain:"A sincere apology signals ownership of the guest's experience, which is what rebuilds trust." },
+    { q:"A guest's complaint requires a decision above your authority (e.g., a large refund). Correct move?", options:["Deny the request outright","Acknowledge, then quickly involve a manager rather than leaving the guest waiting indefinitely","Make the guest wait until the manager happens to walk by","Tell the guest it's not your department"], correct:1, explain:"Acknowledging and promptly looping in the right authority keeps the guest from feeling stuck." },
+    { q:'What does "service recovery paradox" refer to?', options:["Recovery always makes things worse","A guest whose problem is handled exceptionally well can end up more loyal than if nothing had gone wrong","It means recovery never works","It only applies to online complaints"], correct:1, explain:"Excellent recovery can actually increase loyalty beyond what a flawless-from-the-start visit would." },
+    { q:"A guest is escalating in a crowded area. Best move for a mid-level leader?", options:["Continue the conversation loudly where it started","Calmly invite them to a quieter spot to continue the conversation","Ignore the crowd and hope it de-escalates","Ask other guests to leave"], correct:1, explain:"Moving to a quieter space lowers the guest's stress and protects everyone's experience." },
+    { q:"What should happen after a service recovery gesture is given (comp, replacement, etc.)?", options:["Nothing further is needed","Follow up to confirm the guest is satisfied and log the incident for pattern-tracking","Avoid mentioning it again","Tell other guests about it"], correct:1, explain:"Following up and logging the incident closes the loop and helps catch systemic issues." },
+    { q:"Why track recurring complaint patterns rather than just resolving each one individually?", options:["Tracking isn't useful","Patterns reveal root causes (a broken process, a training gap) that one-off fixes won't solve","Every complaint is unrelated to the others","Only corporate needs to see patterns"], correct:1, explain:"Patterns point to the real, fixable root cause behind repeated one-off complaints." },
+    { q:"At a AAA Four Diamond property, what's the standard for service recovery compared to a typical QSR?", options:["The same minimal response is fine","The bar is higher — recovery should feel personalized and match the property's premium standard","Four Diamond guests don't expect recovery","Recovery only applies to hotel rooms, not food outlets"], correct:1, explain:"Recovery at a Four Diamond property should feel as premium and personalized as the rest of the experience." }
+  ],
+  hiring: [
+    { q:'What is a "behavioral interview question" designed to do?', options:["Test general knowledge","Ask about a real past situation to predict future behavior (\"Tell me about a time...\")","Trick the candidate","Test typing speed"], correct:1, explain:"Past behavior in a real situation is one of the best predictors of future behavior." },
+    { q:"Why is a structured interview (same core questions for every candidate) better than a freeform chat?", options:["It's not — freeform is always better","It allows fairer, more consistent comparison between candidates and reduces bias","Structure isn't important in hiring","It only matters for corporate roles"], correct:1, explain:"Structure enables fair, apples-to-apples comparison and reduces the influence of bias." },
+    { q:"What's a red flag during onboarding that a new hire may need extra support?", options:["They ask clarifying questions","They seem lost on basic expectations days after their first shift with no improvement","They're friendly with the team","They finish training early"], correct:1, explain:"No improvement over several shifts on basics is the signal worth acting on, not asking questions." },
+    { q:'Why is identifying "high-potential" team members valuable for a mid-level leader?', options:["It isn't valuable","It helps build a pipeline for future Leads/Asst. Managers and improves retention","Only HR should think about this","High performers don't need development"], correct:1, explain:"A visible growth pipeline is one of the strongest levers for retaining good people." },
+    { q:"What's a good first step when a new hire seems to be struggling in week two?", options:["Assume they won't work out and disengage","Have a direct check-in to understand what's hard and offer specific support","Wait for them to quit","Move them to a harder station to \"toughen up\""], correct:1, explain:"A direct, supportive check-in is far more effective than assuming the worst." },
+    { q:'Why should hiring decisions avoid relying purely on "gut feeling"?', options:["Gut feeling is always accurate","It's more prone to bias; pairing it with structured criteria leads to better hires","Structured criteria don't matter","Gut feeling is the only reliable method"], correct:1, explain:"Gut feeling alone is prone to bias — pairing it with structured criteria produces better outcomes." },
+    { q:"What's an effective way to develop a promising Lead toward an Asst. Manager role?", options:["Give them the title with no preparation","Gradually stretch their responsibility (scheduling input, coaching reps) with feedback along the way","Wait until a position opens with zero prior development","Development isn't necessary — good people figure it out"], correct:1, explain:"Gradual, supported stretch assignments are how real readiness for the next level gets built." },
+    { q:"Why does team development matter for retention in a QSR environment?", options:["It doesn't affect retention","People are more likely to stay when they see a real growth path","Retention is only about pay","Development only matters for management-track employees"], correct:1, explain:"A visible growth path is one of the strongest retention levers available, alongside pay." }
+  ]
+};
+
+const ASSESSMENT_BANK = {
+  eq: [
+    "I stay calm and think clearly when the shift gets stressful or chaotic.",
+    "I notice when my own mood is affecting how I talk to my team, and I adjust.",
+    "I pick up on when a teammate or guest is frustrated, even before they say anything.",
+    "I can give feedback to a teammate without it turning into a conflict.",
+    "I recover quickly after a mistake instead of dwelling on it.",
+    "My team would say I set a steady, positive tone during busy periods."
+  ],
+  guest: [
+    "I greet every guest in a way that makes them feel genuinely welcomed.",
+    "I look for ways to exceed what the guest expects, not just meet the order.",
+    "I proactively update guests when something is taking longer than usual.",
+    "I hold myself to a premium service standard even during the busiest rushes.",
+    "I notice and correct small things (spills, messy counters) without being told.",
+    "I coach teammates in the moment when I see a guest interaction that could be better."
+  ],
+  foodsafety: [
+    "I consistently follow temperature-check procedures without needing reminders.",
+    "I catch and correct cross-contamination risks before they become a problem.",
+    "I complete opening/closing checklists fully, even when we're short-staffed.",
+    "I speak up immediately when I see a food safety issue, regardless of who caused it.",
+    "I hold my team accountable to food safety standards, not just myself.",
+    "I stay current on our food safety procedures and ask when I'm unsure."
+  ],
+  comm: [
+    "I stay composed when a conversation with a teammate or guest gets tense.",
+    "I give clear, specific instructions that my team rarely has to ask me to repeat.",
+    "I address conflict between teammates directly instead of letting it linger.",
+    "I explain the \"why\" behind changes, not just the \"what.\"",
+    "I listen fully before responding when someone is upset.",
+    "My team feels comfortable coming to me when something's wrong."
+  ],
+  compliance: [
+    "I am consistently on time and ready to work at the start of my shift.",
+    "I follow clock-in/clock-out and break procedures accurately every shift.",
+    "I address attendance issues with my team promptly and fairly.",
+    "I document schedule changes and exceptions instead of relying on verbal agreements.",
+    "I apply policy consistently across the team, without playing favorites.",
+    "I understand the compliance basics well enough to explain them to a new hire."
+  ],
+  coaching: [
+    "I give feedback using specific examples, not vague generalities.",
+    "I have coaching conversations privately, not in front of the team.",
+    "I document performance conversations so there's a clear record.",
+    "I follow through on progressive discipline steps consistently and fairly.",
+    "I stay calm when an employee reacts defensively to feedback.",
+    "I check in after a coaching conversation to see if things have improved."
+  ],
+  escalation: [
+    "I listen fully to a guest's complaint before responding or explaining.",
+    "I involve a manager quickly when a situation is beyond my authority, rather than stalling.",
+    "I move tense conversations to a quieter, more private space when possible.",
+    "I follow up after a service recovery gesture to confirm the guest is satisfied.",
+    "I log recurring complaint patterns instead of treating each one as unrelated.",
+    "I hold recovery efforts to the property's premium service standard, not the bare minimum."
+  ],
+  hiring: [
+    "I ask consistent, structured questions when I'm involved in interviewing.",
+    "I check in proactively with new hires during their first two weeks.",
+    "I actively look for team members with leadership potential.",
+    "I give stretch opportunities to develop promising team members.",
+    "I balance gut feeling with objective criteria when evaluating candidates.",
+    "I see team development as part of my job, not extra work."
+  ]
+};
+
+// ---- State ----
+let tCurrentUser = null;
+let tCurrentProfile = null;
+let tAttempts = [];
+let tView = 'loading'; // loading | auth | profile-setup | home | quiz | assessment | result | my-results
+let tAuthMode = 'signin';
+let tAuthError = '';
+let tActiveModuleId = null;
+let tQuizState = null;
+let tAssessState = null;
+let tLastResult = null;
+
+function moduleById(id){ return TRAINING_MODULES.find(m=>m.id===id); }
+function tierModules(tier){ return TRAINING_MODULES.filter(m=>m.tier===tier); }
+
+function trainingModuleAttempts(moduleId, type){
+  return tAttempts.filter(a=>a.moduleId===moduleId && a.type===type).sort((a,b)=> (b.completedAt||0)-(a.completedAt||0));
+}
+function bestQuizScore(moduleId){
+  const list = trainingModuleAttempts(moduleId,'quiz');
+  if(!list.length) return null;
+  return Math.max(...list.map(a=>a.score));
+}
+function latestAssessment(moduleId){
+  const list = trainingModuleAttempts(moduleId,'assessment');
+  return list.length ? list[0] : null;
+}
+
+// ---- Auth ----
+if(trainingAuth){
+  trainingAuth.onAuthStateChanged(async (user)=>{
+    tCurrentUser = user;
+    if(!user){
+      tCurrentProfile = null; tAttempts = [];
+      tView = 'auth';
+      if(activeTabKey()==='training') renderTraining();
+      return;
+    }
+    tView = 'loading';
+    if(activeTabKey()==='training') renderTraining();
+    await loadTrainingProfile();
+    await loadTrainingAttempts();
+    tView = tCurrentProfile ? 'home' : 'profile-setup';
+    if(activeTabKey()==='training') renderTraining();
+  });
+}
+
+async function loadTrainingProfile(){
+  if(!db || !tCurrentUser) return;
+  try{
+    const snap = await db.collection('training_profiles').doc(tCurrentUser.uid).get();
+    tCurrentProfile = snap.exists ? snap.data() : null;
+  }catch(err){ console.error('loadTrainingProfile', err); tCurrentProfile = null; }
+}
+async function loadTrainingAttempts(){
+  if(!db || !tCurrentUser) return;
+  try{
+    const q = await db.collection('training_attempts').where('uid','==',tCurrentUser.uid).get();
+    tAttempts = q.docs.map(d=>({ id:d.id, ...d.data() }));
+  }catch(err){ console.error('loadTrainingAttempts', err); tAttempts = []; }
+}
+async function saveTrainingProfile(profile){
+  tCurrentProfile = profile;
+  if(!db || !tCurrentUser) return;
+  await db.collection('training_profiles').doc(tCurrentUser.uid).set(profile);
+}
+async function saveTrainingAttempt(record){
+  const withMeta = { ...record, uid: tCurrentUser.uid, completedAt: Date.now() };
+  tAttempts.unshift(withMeta);
+  if(!db) return;
+  try{
+    const ref = await db.collection('training_attempts').add(withMeta);
+    withMeta.id = ref.id;
+  }catch(err){ console.error('saveTrainingAttempt', err); }
+}
+
+async function handleTrainingSignUp(email, password, pin){
+  tAuthError = '';
+  try{
+    await trainingAuth.createUserWithEmailAndPassword(email, password);
+  }catch(err){ tAuthError = err.message; renderTraining(); }
+}
+async function handleTrainingSignIn(email, password){
+  tAuthError = '';
+  try{
+    await trainingAuth.signInWithEmailAndPassword(email, password);
+  }catch(err){ tAuthError = err.message; renderTraining(); }
+}
+function handleTrainingSignOut(){ trainingAuth.signOut(); }
+
+// ---- Render dispatcher ----
+function renderTraining(){
+  const el = document.getElementById('trainingTab');
+  if(!trainingAuth){ el.innerHTML = '<div class="panel"><p>Training sign-in is not available (Firebase Authentication is not configured for this app).</p></div>'; return; }
+  if(tView==='loading'){ el.innerHTML = '<div class="panel" style="text-align:center;color:var(--muted);">Loading…</div>'; return; }
+  if(tView==='auth'){ el.innerHTML = renderAuthHtml(); wireAuthHandlers(); return; }
+  if(tView==='profile-setup'){ el.innerHTML = renderProfileSetupHtml(); wireProfileSetupHandlers(); return; }
+  if(tView==='home'){ el.innerHTML = renderTrainingHomeHtml(); wireTrainingHomeHandlers(); return; }
+  if(tView==='quiz'){ el.innerHTML = renderQuizHtml(); wireQuizHandlers(); return; }
+  if(tView==='assessment'){ el.innerHTML = renderAssessmentHtml(); wireAssessmentHandlers(); return; }
+  if(tView==='result'){ el.innerHTML = renderResultHtml(); wireResultHandlers(); return; }
+  if(tView==='my-results'){ el.innerHTML = renderMyResultsHtml(); wireMyResultsHandlers(); return; }
+}
+window.renderTraining = renderTraining;
+
+function tGoHome(){ tView='home'; renderTraining(); }
+
+// ---- Auth view ----
+function renderAuthHtml(){
+  const isSignUp = tAuthMode==='signup';
+  return `
+    <div class="auth-box">
+      <h2>Leadership Training</h2>
+      <div class="sub" style="color:var(--muted);font-size:13px;">Sign in with your work email to take quizzes and self-assessments and track your progress.</div>
+      <form id="tAuthForm">
+        <div class="field"><label>Email</label><input type="email" id="tAuthEmail" required placeholder="you@example.com"></div>
+        <div class="field"><label>Password</label><input type="password" id="tAuthPassword" required minlength="6" placeholder="At least 6 characters"></div>
+        <button type="submit" class="btn-primary">${isSignUp ? 'Create Account' : 'Sign In'}</button>
+        <div class="auth-error">${tAuthError||''}</div>
+      </form>
+      <div class="auth-switch">
+        ${isSignUp ? "Already have an account? <a id='tAuthSwitch'>Sign in</a>" : "New here? <a id='tAuthSwitch'>Create an account</a>"}
+      </div>
+    </div>`;
+}
+function wireAuthHandlers(){
+  document.getElementById('tAuthForm').addEventListener('submit', (e)=>{
+    e.preventDefault();
+    const email = document.getElementById('tAuthEmail').value.trim();
+    const password = document.getElementById('tAuthPassword').value;
+    if(tAuthMode==='signup') handleTrainingSignUp(email, password);
+    else handleTrainingSignIn(email, password);
+  });
+  document.getElementById('tAuthSwitch').addEventListener('click', ()=>{
+    tAuthMode = tAuthMode==='signup' ? 'signin' : 'signup';
+    tAuthError = '';
+    renderTraining();
+  });
+}
+
+// ---- Profile setup view ----
+const TRAINING_ROLES = ['Lead','Asst. Chef','Asst. Manager','Sous Chef','Other (entry-level)','Other (mid-level)'];
+function renderProfileSetupHtml(){
+  return `
+    <div class="panel" style="max-width:460px;margin:40px auto;">
+      <h2>Set up your training profile<small>One-time — used to show you the right modules and track your progress.</small></h2>
+      <form id="tProfileForm">
+        <div class="field" style="margin-bottom:12px;"><label>Your name</label><input type="text" id="tProfileName" required placeholder="Full name"></div>
+        <div class="field" style="margin-bottom:12px;"><label>Your role</label>
+          <select id="tProfileRole">${TRAINING_ROLES.map(r=>`<option value="${r}">${r}</option>`).join('')}</select>
+        </div>
+        <div class="field" style="margin-bottom:16px;"><label>Outlet</label>
+          <select id="tProfileOutlet"><option>Pronto</option><option>Agave</option><option>American Classics</option><option>Pechanga Fried Chicken</option><option>Other</option></select>
+        </div>
+        <button type="submit" class="btn-primary">Start Training</button>
+      </form>
+    </div>`;
+}
+function wireProfileSetupHandlers(){
+  document.getElementById('tProfileForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const role = document.getElementById('tProfileRole').value;
+    const tier = ROLE_TIER_MAP[role] || (role.includes('mid-level') ? 'mid' : 'entry');
+    await saveTrainingProfile({
+      displayName: document.getElementById('tProfileName').value.trim(),
+      role, tier, outlet: document.getElementById('tProfileOutlet').value,
+      createdAt: Date.now()
+    });
+    tView = 'home';
+    renderTraining();
+  });
+}
+
+// ---- Home view (module grid) ----
+function renderTrainingHomeHtml(){
+  const tier = tCurrentProfile.tier;
+  const modules = tierModules(tier);
+  return `
+    <div class="panel" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+      <div>
+        <h2 style="margin-bottom:4px;">Welcome, ${tCurrentProfile.displayName}<small>${TIER_LABEL[tier]} &middot; ${tCurrentProfile.role} &middot; ${tCurrentProfile.outlet}</small></h2>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-secondary" id="tMyResultsBtn">My Results</button>
+        <button class="btn-secondary" id="tSignOutBtn">Sign Out</button>
+      </div>
+    </div>
+    <div class="module-grid">
+      ${modules.map(m=>{
+        const best = bestQuizScore(m.id);
+        const assess = latestAssessment(m.id);
+        const pct = best===null ? 0 : best;
+        return `
+        <div class="module-card">
+          <div class="icon">${m.icon}</div>
+          <h3>${m.title}</h3>
+          <div class="progress-row">
+            <span>Quiz ${best===null ? 'not taken' : best+'%'}</span>
+            <div class="progress-track"><div class="progress-fill" style="width:${pct}%;"></div></div>
+          </div>
+          <div class="progress-row"><span>Self-assessment ${assess ? 'completed' : 'not started'}</span></div>
+          <div class="actions">
+            <button class="btn-secondary" data-quiz="${m.id}">${best===null?'Take Quiz':'Retake Quiz'}</button>
+            <button class="btn-secondary" data-assess="${m.id}">${assess?'Redo Self-Assess':'Self-Assess'}</button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+function wireTrainingHomeHandlers(){
+  document.getElementById('tMyResultsBtn').addEventListener('click', ()=>{ tView='my-results'; renderTraining(); });
+  document.getElementById('tSignOutBtn').addEventListener('click', handleTrainingSignOut);
+  document.querySelectorAll('[data-quiz]').forEach(b=>b.addEventListener('click', ()=>startQuiz(b.dataset.quiz)));
+  document.querySelectorAll('[data-assess]').forEach(b=>b.addEventListener('click', ()=>startAssessment(b.dataset.assess)));
+}
+
+// ---- Quiz runner ----
+function startQuiz(moduleId){
+  tActiveModuleId = moduleId;
+  tQuizState = { qIndex:0, answers:[], selected:null, answered:false, finalizing:false };
+  tView = 'quiz';
+  renderTraining();
+}
+function renderQuizHtml(){
+  const bank = QUIZ_BANK[tActiveModuleId];
+  const q = bank[tQuizState.qIndex];
+  const mod = moduleById(tActiveModuleId);
+  return `
+    <div class="panel" style="max-width:640px;margin:0 auto;">
+      <a class="breadcrumb-link" id="tQuizBack">&larr; Back to modules</a>
+      <div class="quiz-progress" style="margin-top:14px;">${mod.title} &middot; Question ${tQuizState.qIndex+1} of ${bank.length}</div>
+      <div class="quiz-question">${q.q}</div>
+      <div class="quiz-options">
+        ${q.options.map((opt,i)=>{
+          let cls = 'quiz-option';
+          if(tQuizState.answered){
+            if(i===q.correct) cls += ' correct';
+            else if(i===tQuizState.selected) cls += ' incorrect';
+          } else if(i===tQuizState.selected) cls += ' selected';
+          return `<button class="${cls}" data-opt="${i}" ${tQuizState.answered?'disabled':''}>${opt}</button>`;
+        }).join('')}
+      </div>
+      ${tQuizState.answered ? `<div class="quiz-explain">${q.explain}</div>` : ''}
+      <button class="btn-primary" id="tQuizNext" ${tQuizState.answered?'':'disabled'}>${tQuizState.qIndex+1===bank.length ? 'See Results' : 'Next Question'}</button>
+    </div>`;
+}
+function wireQuizHandlers(){
+  document.getElementById('tQuizBack').addEventListener('click', tGoHome);
+  const bank = QUIZ_BANK[tActiveModuleId];
+  const q = bank[tQuizState.qIndex];
+  document.querySelectorAll('[data-opt]').forEach(b=>b.addEventListener('click', ()=>{
+    if(tQuizState.answered) return;
+    tQuizState.selected = parseInt(b.dataset.opt,10);
+    tQuizState.answered = true;
+    tQuizState.answers.push({ qIndex: tQuizState.qIndex, selected: tQuizState.selected, correct: tQuizState.selected===q.correct });
+    renderTraining();
+  }));
+  const nextBtn = document.getElementById('tQuizNext');
+  if(!tQuizState.answered) return;
+  nextBtn.addEventListener('click', async ()=>{
+    if(tQuizState.finalizing) return;
+    if(tQuizState.qIndex+1 < bank.length){
+      tQuizState.qIndex++; tQuizState.selected=null; tQuizState.answered=false;
+      renderTraining();
+    } else {
+      tQuizState.finalizing = true;
+      nextBtn.disabled = true;
+      const correctCount = tQuizState.answers.filter(a=>a.correct).length;
+      const score = Math.round((correctCount/bank.length)*100);
+      await saveTrainingAttempt({ moduleId: tActiveModuleId, type:'quiz', score, answers: tQuizState.answers });
+      tLastResult = { type:'quiz', moduleId: tActiveModuleId, score, passed: score>=80 };
+      tView = 'result';
+      renderTraining();
+    }
+  });
+}
+
+// ---- Self-assessment runner ----
+function startAssessment(moduleId){
+  tActiveModuleId = moduleId;
+  tAssessState = { ratings:{}, finalizing:false };
+  tView = 'assessment';
+  renderTraining();
+}
+function renderAssessmentHtml(){
+  const statements = ASSESSMENT_BANK[tActiveModuleId];
+  const mod = moduleById(tActiveModuleId);
+  const allAnswered = statements.every((_,i)=> tAssessState.ratings[i]!==undefined);
+  return `
+    <div class="panel" style="max-width:640px;margin:0 auto;">
+      <a class="breadcrumb-link" id="tAssessBack">&larr; Back to modules</a>
+      <h2 style="margin-top:14px;">${mod.title} — Self-Assessment<small>Rate yourself honestly: 1 = Rarely, 5 = Consistently. There's no wrong answer — this is for your own growth.</small></h2>
+      ${statements.map((s,i)=>`
+        <div class="likert-row">
+          <div class="likert-statement">${s}</div>
+          <div class="likert-scale">
+            ${[1,2,3,4,5].map(v=>`<button data-i="${i}" data-v="${v}" class="${tAssessState.ratings[i]===v?'selected':''}">${v}</button>`).join('')}
+          </div>
+        </div>`).join('')}
+      <button class="btn-primary" id="tAssessSubmit" style="margin-top:16px;" ${allAnswered?'':'disabled'}>See My Results</button>
+    </div>`;
+}
+function wireAssessmentHandlers(){
+  document.getElementById('tAssessBack').addEventListener('click', tGoHome);
+  document.querySelectorAll('.likert-scale button').forEach(b=>b.addEventListener('click', ()=>{
+    tAssessState.ratings[parseInt(b.dataset.i,10)] = parseInt(b.dataset.v,10);
+    renderTraining();
+  }));
+  const submitBtn = document.getElementById('tAssessSubmit');
+  if(submitBtn.disabled) return;
+  submitBtn.addEventListener('click', async ()=>{
+    if(tAssessState.finalizing) return;
+    tAssessState.finalizing = true;
+    submitBtn.disabled = true;
+    const statements = ASSESSMENT_BANK[tActiveModuleId];
+    const values = statements.map((_,i)=>tAssessState.ratings[i]);
+    const avg = values.reduce((a,b)=>a+b,0)/values.length;
+    await saveTrainingAttempt({ moduleId: tActiveModuleId, type:'assessment', score: Math.round(avg*20), ratings: tAssessState.ratings });
+    tLastResult = { type:'assessment', moduleId: tActiveModuleId, avg };
+    tView = 'result';
+    renderTraining();
+  });
+}
+
+// ---- Result view ----
+function renderResultHtml(){
+  const mod = moduleById(tLastResult.moduleId);
+  if(tLastResult.type==='quiz'){
+    const passed = tLastResult.passed;
+    return `
+      <div class="panel result-hero" style="max-width:480px;margin:0 auto;">
+        <div class="score-big">${tLastResult.score}%</div>
+        <div class="score-label">${mod.title} Quiz</div>
+        <div class="pill ${passed?'good':'bad'}" style="margin-top:14px;">${passed ? 'Passed (80%+)' : 'Below passing — retake anytime'}</div>
+        <div style="margin-top:22px;display:flex;gap:10px;justify-content:center;">
+          <button class="btn-secondary" id="tResultRetake">Retake Quiz</button>
+          <button class="btn-primary" id="tResultHome">Back to Modules</button>
+        </div>
+      </div>`;
+  }
+  return `
+    <div class="panel result-hero" style="max-width:480px;margin:0 auto;">
+      <div class="score-big">${tLastResult.avg.toFixed(1)}/5</div>
+      <div class="score-label">${mod.title} Self-Assessment</div>
+      <div style="margin-top:22px;display:flex;gap:10px;justify-content:center;">
+        <button class="btn-primary" id="tResultHome">Back to Modules</button>
+      </div>
+    </div>`;
+}
+function wireResultHandlers(){
+  document.getElementById('tResultHome').addEventListener('click', tGoHome);
+  const retake = document.getElementById('tResultRetake');
+  if(retake) retake.addEventListener('click', ()=>startQuiz(tLastResult.moduleId));
+}
+
+// ---- My Results view ----
+function renderMyResultsHtml(){
+  const tier = tCurrentProfile.tier;
+  const modules = tierModules(tier);
+  const rows = tAttempts.slice().sort((a,b)=>(b.completedAt||0)-(a.completedAt||0));
+  return `
+    <div class="panel" style="max-width:640px;margin:0 auto;">
+      <a class="breadcrumb-link" id="tResultsBack">&larr; Back to modules</a>
+      <h2 style="margin-top:14px;">My Results</h2>
+      <canvas id="tResultsChart" height="220"></canvas>
+      <div style="margin-top:20px;">
+        ${rows.length ? rows.map(r=>{
+          const mod = moduleById(r.moduleId);
+          return `<div class="attempt-row"><span>${mod?mod.title:r.moduleId} &middot; ${r.type==='quiz'?'Quiz':'Self-Assessment'}</span><span class="pill ${r.type==='quiz'?(r.score>=80?'good':'bad'):'warn'}">${r.type==='quiz'?r.score+'%':(r.score/20).toFixed(1)+'/5'}</span></div>`;
+        }).join('') : '<p style="color:var(--muted);">No attempts yet.</p>'}
+      </div>
+    </div>`;
+}
+function wireMyResultsHandlers(){
+  document.getElementById('tResultsBack').addEventListener('click', tGoHome);
+  const tier = tCurrentProfile.tier;
+  const modules = tierModules(tier);
+  const labels = modules.map(m=>m.title.split(' ').slice(0,2).join(' '));
+  const data = modules.map(m=>{
+    const best = bestQuizScore(m.id);
+    return best===null ? 0 : best;
+  });
+  new Chart(document.getElementById('tResultsChart'), {
+    type:'radar',
+    data:{ labels, datasets:[{ label:'Quiz Score %', data, backgroundColor:'rgba(201,162,39,0.20)', borderColor:'#c9a227', pointBackgroundColor:'#c9a227' }] },
+    options:{ scales:{ r:{ min:0, max:100, ticks:{ color:'#667085', backdropColor:'transparent' }, grid:{ color:'rgba(15,23,42,0.08)' }, pointLabels:{ color:'#e8d9a0', font:{ size:10.5 } } } }, plugins:{ legend:{ display:false } } }
+  });
+}
+
+// ---- Manager rollup (mgmt-gated) ----
+async function renderTrainingRollup(){
+  const el = document.getElementById('trainingRollupTab');
+  el.innerHTML = '<div class="panel" style="text-align:center;color:var(--muted);">Loading team training data…</div>';
+  if(!db){ el.innerHTML = '<div class="panel">Cloud sync is not configured, so team-wide training data is not available.</div>'; return; }
+  try{
+    const [profilesSnap, attemptsSnap] = await Promise.all([
+      db.collection('training_profiles').get(),
+      db.collection('training_attempts').get()
+    ]);
+    const profiles = profilesSnap.docs.map(d=>({ uid:d.id, ...d.data() }));
+    const attempts = attemptsSnap.docs.map(d=>d.data());
+    const rows = profiles.map(p=>{
+      const mine = attempts.filter(a=>a.uid===p.uid);
+      const quizCount = tierModules(p.tier).filter(m=> mine.some(a=>a.moduleId===m.id && a.type==='quiz')).length;
+      const assessCount = tierModules(p.tier).filter(m=> mine.some(a=>a.moduleId===m.id && a.type==='assessment')).length;
+      const totalModules = tierModules(p.tier).length;
+      return { ...p, quizCount, assessCount, totalModules };
+    }).sort((a,b)=> (a.displayName||'').localeCompare(b.displayName||''));
+    el.innerHTML = `
+      <div class="panel">
+        <h2>Leadership Training — Team Rollup<small>Completion across all enrolled staff, by tier.</small></h2>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead><tr style="text-align:left;color:var(--muted);"><th style="padding:8px 0;">Name</th><th>Tier</th><th>Outlet</th><th>Quizzes Completed</th><th>Self-Assessments Completed</th></tr></thead>
+          <tbody>
+            ${rows.length ? rows.map(r=>`
+              <tr style="border-top:1px solid var(--line);">
+                <td style="padding:10px 0;"><b>${r.displayName}</b><br><span style="color:var(--muted);font-size:11.5px;">${r.role||''}</span></td>
+                <td>${TIER_LABEL[r.tier]||r.tier}</td>
+                <td>${r.outlet||'—'}</td>
+                <td><span class="pill ${r.quizCount===r.totalModules?'good':'warn'}">${r.quizCount}/${r.totalModules}</span></td>
+                <td><span class="pill ${r.assessCount===r.totalModules?'good':'warn'}">${r.assessCount}/${r.totalModules}</span></td>
+              </tr>`).join('') : '<tr><td colspan="5" style="padding:16px 0;color:var(--muted);">No one has set up a training profile yet.</td></tr>'}
+          </tbody>
+        </table>
+      </div>`;
+  }catch(err){
+    el.innerHTML = `<div class="panel">Error loading team training data: ${err.message}</div>`;
+  }
+}
+window.renderTrainingRollup = renderTrainingRollup;
 </script>
 </body>
 </html>
