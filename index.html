@@ -2182,7 +2182,7 @@ Your task is to analyze this specific mix and generate a 3-part personalized sum
 2. Superpowers: Detail 2-3 specific strengths this unique combination brings to a restaurant environment.
 3. Blind Spots: Identify 1-2 potential risks of this mix (e.g., a "Coach/Host" blend might struggle with strict cost controls; a perfectly balanced manager might suffer from decision paralysis trying to please everyone).
 
-Format the output strictly as a JSON object with keys for 'title', 'identity_summary', 'superpowers' (array), and 'blind_spots' (array). Do not include any conversational text.`;
+Format the output strictly as a JSON object with keys for 'title', 'identity_summary', 'superpowers' (array), and 'blind_spots' (array). Do not include any conversational text, and do not wrap the JSON in markdown code fences.`;
 
 // Fill in your own Google Gemini API key here before publishing this app.
 // Get one for free (no credit card needed) at https://aistudio.google.com/apikey
@@ -2190,7 +2190,7 @@ Format the output strictly as a JSON object with keys for 'title', 'identity_sum
 // who views this page's source (it's a public static site), the worst case
 // if it leaks is someone else eating your free-tier rate limit — not a bill.
 const GEMINI_API_KEY = 'REPLACE_WITH_YOUR_GEMINI_API_KEY';
-const ARCHETYPE_MODEL = 'gemini-2.0-flash';
+const ARCHETYPE_MODEL = 'gemini-3.6-flash';
 
 const QUIZ_BANK = {
   eq: [
@@ -2936,25 +2936,12 @@ async function generateArchetypeSummary(percentages){
   }
   const userMessage = `The Operator: ${percentages.Operator}%\nThe Coach: ${percentages.Coach}%\nThe Host: ${percentages.Host}%\nThe Firefighter: ${percentages.Firefighter}%`;
   try{
-    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${ARCHETYPE_MODEL}:generateContent?key=${GEMINI_API_KEY}`, {
+    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${ARCHETYPE_MODEL}:generateContent`, {
       method:'POST',
-      headers:{ 'Content-Type':'application/json' },
+      headers:{ 'Content-Type':'application/json', 'x-goog-api-key': GEMINI_API_KEY },
       body: JSON.stringify({
         system_instruction: { parts:[{ text: ARCHETYPE_SYSTEM_PROMPT }] },
-        contents:[{ role:'user', parts:[{ text: userMessage }] }],
-        generationConfig:{
-          responseMimeType:'application/json',
-          responseSchema:{
-            type:'OBJECT',
-            properties:{
-              title:{ type:'STRING' },
-              identity_summary:{ type:'STRING' },
-              superpowers:{ type:'ARRAY', items:{ type:'STRING' } },
-              blind_spots:{ type:'ARRAY', items:{ type:'STRING' } }
-            },
-            required:['title','identity_summary','superpowers','blind_spots']
-          }
-        }
+        contents:[{ role:'user', parts:[{ text: userMessage }] }]
       })
     });
     if(!resp.ok){
@@ -2963,7 +2950,8 @@ async function generateArchetypeSummary(percentages){
     }
     const data = await resp.json();
     const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    const parsed = JSON.parse(rawText);
+    const cleanedText = rawText.trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '');
+    const parsed = JSON.parse(cleanedText);
     const result = {
       percentages, title: parsed.title, identity_summary: parsed.identity_summary,
       superpowers: parsed.superpowers || [], blind_spots: parsed.blind_spots || [],
