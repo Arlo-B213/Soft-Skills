@@ -2064,6 +2064,12 @@ document.getElementById('submitEntryBtn').addEventListener('click', async ()=>{
 // ================= Leadership Training Module =================
 const trainingAuth = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth() : null;
 
+// Single hardcoded admin identity, mirrors the isTrainingAdmin() Firestore rule.
+// Can edit any employee's profile (name/role/tier/outlet). Password/login resets
+// are NOT handled here — done directly in the Firebase Console by the project owner.
+const TRAINING_ADMIN_EMAIL = 'arlo.bedolla@gmail.com';
+function isTrainingAdmin(){ return !!(tCurrentUser && tCurrentUser.email === TRAINING_ADMIN_EMAIL); }
+
 const ROLE_TIER_MAP = {
   'Lead': 'entry', 'Asst. Chef': 'entry',
   'Asst. Manager': 'mid', 'Sous Chef': 'mid'
@@ -2263,6 +2269,7 @@ function latestAssessment(moduleId){
 if(trainingAuth){
   trainingAuth.onAuthStateChanged(async (user)=>{
     tCurrentUser = user;
+    tAdminProfiles = null;
     if(!user){
       tCurrentProfile = null; tAttempts = [];
       tView = 'auth';
@@ -2333,6 +2340,10 @@ function renderTraining(){
   if(tView==='assessment'){ el.innerHTML = renderAssessmentHtml(); wireAssessmentHandlers(); return; }
   if(tView==='result'){ el.innerHTML = renderResultHtml(); wireResultHandlers(); return; }
   if(tView==='my-results'){ el.innerHTML = renderMyResultsHtml(); wireMyResultsHandlers(); return; }
+  if(tView==='admin-users'){
+    if(!isTrainingAdmin()){ tView='home'; el.innerHTML = renderTrainingHomeHtml(); wireTrainingHomeHandlers(); return; }
+    el.innerHTML = renderAdminUsersHtml(); wireAdminUsersHandlers(); return;
+  }
 }
 window.renderTraining = renderTraining;
 
@@ -2414,6 +2425,7 @@ function renderTrainingHomeHtml(){
         <h2 style="margin-bottom:4px;">Welcome, ${tCurrentProfile.displayName}<small>${TIER_LABEL[tier]} &middot; ${tCurrentProfile.role} &middot; ${tCurrentProfile.outlet}</small></h2>
       </div>
       <div style="display:flex;gap:8px;">
+        ${isTrainingAdmin() ? '<button class="btn-secondary" id="tAdminUsersBtn">Manage Users</button>' : ''}
         <button class="btn-secondary" id="tMyResultsBtn">My Results</button>
         <button class="btn-secondary" id="tSignOutBtn">Sign Out</button>
       </div>
@@ -2445,6 +2457,75 @@ function wireTrainingHomeHandlers(){
   document.getElementById('tSignOutBtn').addEventListener('click', handleTrainingSignOut);
   document.querySelectorAll('[data-quiz]').forEach(b=>b.addEventListener('click', ()=>startQuiz(b.dataset.quiz)));
   document.querySelectorAll('[data-assess]').forEach(b=>b.addEventListener('click', ()=>startAssessment(b.dataset.assess)));
+  const adminBtn = document.getElementById('tAdminUsersBtn');
+  if(adminBtn) adminBtn.addEventListener('click', ()=>{ tView='admin-users'; renderTraining(); });
+}
+
+// ---- Admin: manage users (edit any employee's profile) ----
+let tAdminProfiles = null;
+let tAdminError = '';
+async function loadAllTrainingProfiles(){
+  const snap = await db.collection('training_profiles').get();
+  return snap.docs.map(d=>({ uid:d.id, ...d.data() })).sort((a,b)=>(a.displayName||'').localeCompare(b.displayName||''));
+}
+function renderAdminUsersHtml(){
+  if(tAdminProfiles===null){
+    loadAllTrainingProfiles().then(list=>{ tAdminProfiles = list; renderTraining(); });
+    return '<div class="panel" style="text-align:center;color:var(--muted);">Loading users…</div>';
+  }
+  return `
+    <div class="panel" style="max-width:720px;margin:0 auto;">
+      <a class="breadcrumb-link" id="tAdminBack">&larr; Back to modules</a>
+      <h2 style="margin-top:14px;">Manage Users<small>Edit name, role, tier, or outlet for any employee. Password/login resets are done in the Firebase Console.</small></h2>
+      <div class="auth-error">${tAdminError||''}</div>
+      ${tAdminProfiles.length ? tAdminProfiles.map(p=>`
+        <div class="panel" style="margin-bottom:12px;">
+          <div class="field-row">
+            <div class="field"><label>Name</label><input type="text" data-field="displayName" data-uid="${p.uid}" value="${(p.displayName||'').replace(/"/g,'&quot;')}"></div>
+            <div class="field"><label>Outlet</label>
+              <select data-field="outlet" data-uid="${p.uid}">
+                ${['Pronto','Agave','American Classics','Pechanga Fried Chicken','Other'].map(o=>`<option value="${o}" ${p.outlet===o?'selected':''}>${o}</option>`).join('')}
+              </select>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Role</label>
+              <select data-field="role" data-uid="${p.uid}">
+                ${TRAINING_ROLES.map(r=>`<option value="${r}" ${p.role===r?'selected':''}>${r}</option>`).join('')}
+              </select>
+            </div>
+            <div class="field"><label>Tier</label>
+              <select data-field="tier" data-uid="${p.uid}">
+                <option value="entry" ${p.tier==='entry'?'selected':''}>Entry-Level Leadership</option>
+                <option value="mid" ${p.tier==='mid'?'selected':''}>Mid-Level Leadership</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn-primary" data-save="${p.uid}">Save</button>
+          <span class="pill good" data-saved="${p.uid}" style="display:none;margin-left:8px;">Saved</span>
+        </div>`).join('') : '<p style="color:var(--muted);">No employees have set up a training profile yet.</p>'}
+    </div>`;
+}
+function wireAdminUsersHandlers(){
+  const backBtn = document.getElementById('tAdminBack');
+  if(backBtn) backBtn.addEventListener('click', ()=>{ tAdminProfiles=null; tGoHome(); });
+  document.querySelectorAll('[data-save]').forEach(btn=>btn.addEventListener('click', async ()=>{
+    const uid = btn.dataset.save;
+    const updates = {};
+    document.querySelectorAll(`[data-uid="${uid}"]`).forEach(input=>{ updates[input.dataset.field] = input.value; });
+    tAdminError = '';
+    try{
+      await db.collection('training_profiles').doc(uid).update(updates);
+      const p = tAdminProfiles.find(x=>x.uid===uid);
+      Object.assign(p, updates);
+      const savedBadge = document.querySelector(`[data-saved="${uid}"]`);
+      savedBadge.style.display = 'inline-block';
+      setTimeout(()=>{ savedBadge.style.display = 'none'; }, 2000);
+    }catch(err){
+      tAdminError = 'Save failed: ' + err.message;
+      renderTraining();
+    }
+  }));
 }
 
 // ---- Quiz runner ----
