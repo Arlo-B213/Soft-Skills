@@ -317,6 +317,24 @@
   .breadcrumb-link{color:var(--gold-light);cursor:pointer;font-size:12.5px;font-weight:600;text-decoration:none;}
   .breadcrumb-link:hover{text-decoration:underline;}
 
+  .archetype-banner{
+    background:linear-gradient(135deg, rgba(201,162,39,0.12), rgba(201,162,39,0.02));
+    border:1px solid var(--line); border-radius:var(--radius-md); padding:20px 22px;
+    margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;
+  }
+  .archetype-banner h3{font-family:"Fraunces",Georgia,serif;font-size:16px;margin:0 0 4px;color:var(--cream);}
+  .archetype-banner p{margin:0;color:var(--muted);font-size:13px;}
+  .archetype-title{font-family:"Fraunces",Georgia,serif;font-size:26px;color:var(--gold-light);font-weight:600;text-align:center;margin-bottom:6px;}
+  .archetype-scores{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:18px 0;}
+  .archetype-score-card{background:var(--navy-3);border-radius:var(--radius-sm);padding:12px;text-align:center;}
+  .archetype-score-card .pct{font-family:"Fraunces",Georgia,serif;font-size:22px;color:var(--gold-light);font-weight:600;}
+  .archetype-score-card .label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:2px;}
+  .archetype-list{list-style:none;margin:0 0 18px;padding:0;}
+  .archetype-list li{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13.5px;color:var(--cream);}
+  .archetype-list li:last-child{border-bottom:none;}
+  .archetype-list.superpowers li::before{content:'\2726';color:#1f7a4d;flex-shrink:0;}
+  .archetype-list.blindspots li::before{content:'\26A0';color:#a1402f;flex-shrink:0;}
+
   select{
     background:var(--navy-3);color:var(--cream);border:1px solid var(--line);
     padding:9px 14px;border-radius:999px;font-size:13.5px;cursor:pointer;
@@ -2091,6 +2109,89 @@ const TRAINING_MODULES = [
   { id:'crisis', tier:'senior', title:'Crisis & Incident Management', icon:'&#128680;' }
 ];
 
+// ================= Leadership Archetype Assessment =================
+// Available to every tier. 8 forced-choice scenarios, each option scores one
+// of 4 archetypes (Operator / Coach / Host / Firefighter). Tallies always sum
+// to 100% since each question allocates exactly one point across 4 options.
+const ARCHETYPE_QUESTIONS = [
+  { q:"It's the busiest hour of the night and two things break at once: the POS freezes and a table sends back a dish. What's your instinct?",
+    options:[
+      { text:"Get the POS working first — nothing runs without the system.", archetype:'Operator' },
+      { text:"Delegate the POS to whoever's closest and personally walk to the table to make it right.", archetype:'Coach' },
+      { text:"Go straight to the table myself — the guest experience can't wait.", archetype:'Host' },
+      { text:"Handle whichever one is escalating fastest, then sprint to the next.", archetype:'Firefighter' }
+    ]},
+  { q:"A new hire is struggling in their second week. What's your first move?",
+    options:[
+      { text:"Check if the training checklist was actually completed step by step.", archetype:'Operator' },
+      { text:"Sit down with them one-on-one to understand what's hard and build a plan.", archetype:'Coach' },
+      { text:"Pair them with your most welcoming team member so they feel supported.", archetype:'Host' },
+      { text:"Keep an eye on them and step in personally the moment something goes wrong.", archetype:'Firefighter' }
+    ]},
+  { q:"You have an extra hour this week with no fires to put out. How do you spend it?",
+    options:[
+      { text:"Auditing a process — inventory counts, prep lists, whatever's been sloppy.", archetype:'Operator' },
+      { text:"One-on-ones or skip-levels with the team.", archetype:'Coach' },
+      { text:"Walking the floor, talking to regulars, reading the room.", archetype:'Host' },
+      { text:"Honestly, something usually comes up before the hour's over.", archetype:'Firefighter' }
+    ]},
+  { q:"A regular guest complains that service felt rushed tonight. How do you respond?",
+    options:[
+      { text:"Check the shift's labor-to-cover ratio — were we understaffed?", archetype:'Operator' },
+      { text:"Ask the server what happened and coach them through pacing next time.", archetype:'Coach' },
+      { text:"Go thank the guest personally and make sure their next visit is memorable.", archetype:'Host' },
+      { text:"Smooth it over in the moment, note it, move to the next thing.", archetype:'Firefighter' }
+    ]},
+  { q:"How do you feel about strict adherence to standard operating procedures?",
+    options:[
+      { text:"Essential — consistency is what makes a shift predictable and scalable.", archetype:'Operator' },
+      { text:"Useful as a baseline, but I care more about whether people understand the why.", archetype:'Coach' },
+      { text:"Procedures matter less to me than whether the guest felt cared for.", archetype:'Host' },
+      { text:"I follow them until something forces me off-script, which is often.", archetype:'Firefighter' }
+    ]},
+  { q:"What's most satisfying about a great shift?",
+    options:[
+      { text:"Everything ran on time, on cost, exactly to plan.", archetype:'Operator' },
+      { text:"Watching someone on the team level up in real time.", archetype:'Coach' },
+      { text:"A guest telling me it was the best part of their trip.", archetype:'Host' },
+      { text:"Handling three crises and still closing clean.", archetype:'Firefighter' }
+    ]},
+  { q:"A team member you've coached for months still isn't hitting the bar. What now?",
+    options:[
+      { text:"Reassess whether the role/process fits them — maybe it's a fit issue.", archetype:'Operator' },
+      { text:"Keep investing — most people just need more time and a different approach.", archetype:'Coach' },
+      { text:"Check whether they're happy and feel valued; that usually shows up in performance.", archetype:'Host' },
+      { text:"Handle the immediate gaps as they come up and revisit the bigger picture later.", archetype:'Firefighter' }
+    ]},
+  { q:"Corporate rolls out a new system/process with little warning. Your reaction?",
+    options:[
+      { text:"Dig into the documentation and get the team's workflow adjusted correctly.", archetype:'Operator' },
+      { text:"Focus on how to explain the change so the team buys in rather than resists.", archetype:'Coach' },
+      { text:"Make sure the transition doesn't disrupt what guests experience.", archetype:'Host' },
+      { text:"Deal with it as issues come up during service rather than over-preparing.", archetype:'Firefighter' }
+    ]}
+];
+
+const ARCHETYPE_SYSTEM_PROMPT = `You are an executive coach for restaurant leaders.
+
+You will be given the percentage breakdown of a manager's behavioral profiling assessment based on 4 archetypes: The Operator, The Coach, The Host, and The Firefighter.
+
+Your task is to analyze this specific mix and generate a 3-part personalized summary:
+
+1. Leadership Identity: Give their specific blend a unique title (e.g., if they are high Coach and high Operator, call them "The System-Driven Mentor"). Explain how their top styles complement each other. If their scores are almost perfectly balanced across all four (e.g., 25% each), title them "The Universal General Manager" and explain how they seamlessly adapt to any situation.
+2. Superpowers: Detail 2-3 specific strengths this unique combination brings to a restaurant environment.
+3. Blind Spots: Identify 1-2 potential risks of this mix (e.g., a "Coach/Host" blend might struggle with strict cost controls; a perfectly balanced manager might suffer from decision paralysis trying to please everyone).
+
+Format the output strictly as a JSON object with keys for 'title', 'identity_summary', 'superpowers' (array), and 'blind_spots' (array). Do not include any conversational text.`;
+
+// Fill in your own Anthropic API key here before publishing this app.
+// Get one at https://console.anthropic.com/settings/keys — create a
+// DEDICATED key with the lowest spending cap your plan allows, never your
+// main account key, since this key is visible to anyone who views this
+// page's source (it's a public static site).
+const ANTHROPIC_API_KEY = 'REPLACE_WITH_YOUR_ANTHROPIC_API_KEY';
+const ARCHETYPE_MODEL = 'claude-haiku-4-5-20251001';
+
 const QUIZ_BANK = {
   eq: [
     { q:"A teammate snaps at you during a busy rush. What's the most emotionally intelligent first response?", options:["Snap back so they know it's not okay","Stay calm, finish the immediate task, and check in with them after the rush","Report them to a manager immediately","Ignore them for the rest of the shift"], correct:1, explain:"Staying regulated in the moment and following up later shows self-regulation and empathy — the core of EQ under pressure." },
@@ -2306,6 +2407,10 @@ let tActiveModuleId = null;
 let tQuizState = null;
 let tAssessState = null;
 let tLastResult = null;
+let tArchetypeResult = null;
+let tArchetypeState = null;
+let tArchetypeLoading = false;
+let tArchetypeError = '';
 
 function moduleById(id){ return TRAINING_MODULES.find(m=>m.id===id); }
 function tierModules(tier){ return TRAINING_MODULES.filter(m=>m.tier===tier); }
@@ -2329,7 +2434,7 @@ if(trainingAuth){
     tCurrentUser = user;
     tAdminProfiles = null;
     if(!user){
-      tCurrentProfile = null; tAttempts = [];
+      tCurrentProfile = null; tAttempts = []; tArchetypeResult = null;
       tView = 'auth';
       if(activeTabKey()==='training') renderTraining();
       return;
@@ -2338,6 +2443,7 @@ if(trainingAuth){
     if(activeTabKey()==='training') renderTraining();
     await loadTrainingProfile();
     await loadTrainingAttempts();
+    await loadArchetypeResult();
     tView = tCurrentProfile ? 'home' : 'profile-setup';
     if(activeTabKey()==='training') renderTraining();
   });
@@ -2356,6 +2462,13 @@ async function loadTrainingAttempts(){
     const q = await db.collection('training_attempts').where('uid','==',tCurrentUser.uid).get();
     tAttempts = q.docs.map(d=>({ id:d.id, ...d.data() }));
   }catch(err){ console.error('loadTrainingAttempts', err); tAttempts = []; }
+}
+async function loadArchetypeResult(){
+  if(!db || !tCurrentUser) return;
+  try{
+    const snap = await db.collection('archetype_results').doc(tCurrentUser.uid).get();
+    tArchetypeResult = snap.exists ? snap.data() : null;
+  }catch(err){ console.error('loadArchetypeResult', err); tArchetypeResult = null; }
 }
 async function saveTrainingProfile(profile){
   tCurrentProfile = profile;
@@ -2398,6 +2511,8 @@ function renderTraining(){
   if(tView==='assessment'){ el.innerHTML = renderAssessmentHtml(); wireAssessmentHandlers(); return; }
   if(tView==='result'){ el.innerHTML = renderResultHtml(); wireResultHandlers(); return; }
   if(tView==='my-results'){ el.innerHTML = renderMyResultsHtml(); wireMyResultsHandlers(); return; }
+  if(tView==='archetype-quiz'){ el.innerHTML = renderArchetypeQuizHtml(); wireArchetypeQuizHandlers(); return; }
+  if(tView==='archetype-result'){ el.innerHTML = renderArchetypeResultHtml(); wireArchetypeResultHandlers(); return; }
   if(tView==='admin-users'){
     if(!isTrainingAdmin()){ tView='home'; el.innerHTML = renderTrainingHomeHtml(); wireTrainingHomeHandlers(); return; }
     el.innerHTML = renderAdminUsersHtml(); wireAdminUsersHandlers(); return;
@@ -2491,6 +2606,13 @@ function renderTrainingHomeHtml(){
         <button class="btn-secondary" id="tSignOutBtn">Sign Out</button>
       </div>
     </div>
+    <div class="archetype-banner">
+      <div>
+        <h3>&#127775; Leadership Archetype Assessment</h3>
+        <p>${tArchetypeResult ? 'You\'ve already got a result — retake it any time your style evolves.' : '8 quick scenarios. Get a personalized AI coaching profile of your leadership style.'}</p>
+      </div>
+      <button class="btn-primary" id="tArchetypeStartBtn">${tArchetypeResult ? 'View / Retake' : 'Take Assessment'}</button>
+    </div>
     <div class="module-grid">
       ${modules.map(m=>{
         const best = bestQuizScore(m.id);
@@ -2520,6 +2642,10 @@ function wireTrainingHomeHandlers(){
   document.querySelectorAll('[data-assess]').forEach(b=>b.addEventListener('click', ()=>startAssessment(b.dataset.assess)));
   const adminBtn = document.getElementById('tAdminUsersBtn');
   if(adminBtn) adminBtn.addEventListener('click', ()=>{ tView='admin-users'; renderTraining(); });
+  document.getElementById('tArchetypeStartBtn').addEventListener('click', ()=>{
+    if(tArchetypeResult){ tView='archetype-result'; renderTraining(); }
+    else { startArchetypeQuiz(); }
+  });
 }
 
 // ---- Admin: manage users (edit any employee's profile) ----
@@ -2756,6 +2882,139 @@ function wireMyResultsHandlers(){
     data:{ labels, datasets:[{ label:'Quiz Score %', data, backgroundColor:'rgba(201,162,39,0.20)', borderColor:'#c9a227', pointBackgroundColor:'#c9a227' }] },
     options:{ scales:{ r:{ min:0, max:100, ticks:{ color:'#667085', backdropColor:'transparent' }, grid:{ color:'rgba(15,23,42,0.08)' }, pointLabels:{ color:'#e8d9a0', font:{ size:10.5 } } } }, plugins:{ legend:{ display:false } } }
   });
+}
+
+// ---- Leadership Archetype quiz runner ----
+function startArchetypeQuiz(){
+  tArchetypeState = { qIndex:0, tally:{ Operator:0, Coach:0, Host:0, Firefighter:0 } };
+  tArchetypeError = '';
+  tView = 'archetype-quiz';
+  renderTraining();
+}
+function renderArchetypeQuizHtml(){
+  const q = ARCHETYPE_QUESTIONS[tArchetypeState.qIndex];
+  return `
+    <div class="panel" style="max-width:640px;margin:0 auto;">
+      <a class="breadcrumb-link" id="tArchetypeBack">&larr; Back to modules</a>
+      <div class="quiz-progress" style="margin-top:14px;">Leadership Archetype &middot; Question ${tArchetypeState.qIndex+1} of ${ARCHETYPE_QUESTIONS.length}</div>
+      <div class="quiz-question">${q.q}</div>
+      <div class="quiz-options">
+        ${q.options.map((opt,i)=>`<button class="quiz-option" data-opt="${i}">${opt.text}</button>`).join('')}
+      </div>
+    </div>`;
+}
+function wireArchetypeQuizHandlers(){
+  document.getElementById('tArchetypeBack').addEventListener('click', ()=>{ tArchetypeState=null; tGoHome(); });
+  const q = ARCHETYPE_QUESTIONS[tArchetypeState.qIndex];
+  document.querySelectorAll('[data-opt]').forEach(b=>b.addEventListener('click', async ()=>{
+    const chosen = q.options[parseInt(b.dataset.opt,10)];
+    tArchetypeState.tally[chosen.archetype]++;
+    if(tArchetypeState.qIndex+1 < ARCHETYPE_QUESTIONS.length){
+      tArchetypeState.qIndex++;
+      renderTraining();
+    } else {
+      const total = ARCHETYPE_QUESTIONS.length;
+      const percentages = {};
+      Object.keys(tArchetypeState.tally).forEach(k=>{ percentages[k] = Math.round((tArchetypeState.tally[k]/total)*100); });
+      tView = 'archetype-result';
+      tArchetypeResult = null; // force the loading/generating state
+      renderTraining();
+      await generateArchetypeSummary(percentages);
+    }
+  }));
+}
+
+async function generateArchetypeSummary(percentages){
+  tArchetypeLoading = true;
+  tArchetypeError = '';
+  renderTraining();
+  if(!ANTHROPIC_API_KEY || ANTHROPIC_API_KEY === 'REPLACE_WITH_YOUR_ANTHROPIC_API_KEY'){
+    tArchetypeLoading = false;
+    tArchetypeError = 'This app is not yet configured with an Anthropic API key. Set ANTHROPIC_API_KEY in index.html before this feature can generate a summary.';
+    renderTraining();
+    return;
+  }
+  const userMessage = `The Operator: ${percentages.Operator}%\nThe Coach: ${percentages.Coach}%\nThe Host: ${percentages.Host}%\nThe Firefighter: ${percentages.Firefighter}%`;
+  try{
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body: JSON.stringify({
+        model: ARCHETYPE_MODEL,
+        max_tokens: 1024,
+        system: ARCHETYPE_SYSTEM_PROMPT,
+        messages:[
+          { role:'user', content: userMessage },
+          { role:'assistant', content:'{' }
+        ]
+      })
+    });
+    if(!resp.ok){
+      const errBody = await resp.text().catch(()=>resp.statusText);
+      throw new Error(`API error ${resp.status}: ${errBody.slice(0,200)}`);
+    }
+    const data = await resp.json();
+    const rawText = (data.content && data.content[0] && data.content[0].text) || '';
+    const parsed = JSON.parse('{' + rawText);
+    const result = {
+      percentages, title: parsed.title, identity_summary: parsed.identity_summary,
+      superpowers: parsed.superpowers || [], blind_spots: parsed.blind_spots || [],
+      createdAt: Date.now()
+    };
+    await db.collection('archetype_results').doc(tCurrentUser.uid).set(result);
+    tArchetypeResult = result;
+  }catch(err){
+    tArchetypeError = 'Could not generate your summary: ' + err.message;
+  }
+  tArchetypeLoading = false;
+  renderTraining();
+}
+
+function renderArchetypeResultHtml(){
+  if(tArchetypeLoading){
+    return '<div class="panel" style="text-align:center;color:var(--muted);max-width:480px;margin:40px auto;">Generating your personalized coaching summary…</div>';
+  }
+  if(tArchetypeError){
+    return `
+      <div class="panel" style="max-width:480px;margin:40px auto;text-align:center;">
+        <p class="auth-error" style="min-height:auto;">${tArchetypeError}</p>
+        <button class="btn-primary" id="tArchetypeRetryBtn" style="margin-top:10px;">Try Again</button>
+        <button class="btn-secondary" id="tArchetypeErrHome" style="margin-top:10px;">Back to Modules</button>
+      </div>`;
+  }
+  if(!tArchetypeResult){
+    return '<div class="panel" style="text-align:center;color:var(--muted);">No result yet.</div>';
+  }
+  const r = tArchetypeResult;
+  return `
+    <div class="panel" style="max-width:600px;margin:0 auto;">
+      <a class="breadcrumb-link" id="tArchetypeResultBack">&larr; Back to modules</a>
+      <div class="archetype-title" style="margin-top:18px;">${r.title||''}</div>
+      <p style="color:var(--muted);text-align:center;margin-top:0;">${r.identity_summary||''}</p>
+      <div class="archetype-scores">
+        ${Object.entries(r.percentages).map(([k,v])=>`<div class="archetype-score-card"><div class="pct">${v}%</div><div class="label">${k}</div></div>`).join('')}
+      </div>
+      <h3 style="font-family:'Fraunces',Georgia,serif;font-size:15px;color:var(--cream);">Superpowers</h3>
+      <ul class="archetype-list superpowers">${(r.superpowers||[]).map(s=>`<li>${s}</li>`).join('')}</ul>
+      <h3 style="font-family:'Fraunces',Georgia,serif;font-size:15px;color:var(--cream);">Blind Spots</h3>
+      <ul class="archetype-list blindspots">${(r.blind_spots||[]).map(s=>`<li>${s}</li>`).join('')}</ul>
+      <button class="btn-secondary" id="tArchetypeRetakeBtn">Retake Assessment</button>
+    </div>`;
+}
+function wireArchetypeResultHandlers(){
+  const backBtn = document.getElementById('tArchetypeResultBack');
+  if(backBtn) backBtn.addEventListener('click', tGoHome);
+  const errHomeBtn = document.getElementById('tArchetypeErrHome');
+  if(errHomeBtn) errHomeBtn.addEventListener('click', tGoHome);
+  const retryBtn = document.getElementById('tArchetypeRetryBtn');
+  if(retryBtn) retryBtn.addEventListener('click', startArchetypeQuiz);
+  const retakeBtn = document.getElementById('tArchetypeRetakeBtn');
+  if(retakeBtn) retakeBtn.addEventListener('click', startArchetypeQuiz);
 }
 
 // ---- Manager rollup (mgmt-gated) ----

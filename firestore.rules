@@ -36,6 +36,15 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // Leadership Archetype assessment result: personal AI-generated coaching
+    // feedback. Only the owning user or the admin can read or write it — this
+    // is more sensitive than a quiz score, so it's not readable by every
+    // signed-in user the way training_profiles is.
+    match /archetype_results/{uid} {
+      allow read, create, update: if request.auth != null && (request.auth.uid == uid || isTrainingAdmin());
+      allow delete: if false;
+    }
+
     // Default deny — anything not explicitly allowed above is blocked.
     match /{document=**} {
       allow read, write: if false;
