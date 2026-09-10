@@ -2184,13 +2184,13 @@ Your task is to analyze this specific mix and generate a 3-part personalized sum
 
 Format the output strictly as a JSON object with keys for 'title', 'identity_summary', 'superpowers' (array), and 'blind_spots' (array). Do not include any conversational text, and do not wrap the JSON in markdown code fences.`;
 
-// Fill in your own Google Gemini API key here before publishing this app.
-// Get one for free (no credit card needed) at https://aistudio.google.com/apikey
-// This uses Gemini's free tier, so even though the key is visible to anyone
+// Fill in your own Groq API key here before publishing this app.
+// Get one for free (no credit card needed) at https://console.groq.com/keys
+// This uses Groq's free tier, so even though the key is visible to anyone
 // who views this page's source (it's a public static site), the worst case
 // if it leaks is someone else eating your free-tier rate limit — not a bill.
-const GEMINI_API_KEY = 'REPLACE_WITH_YOUR_GEMINI_API_KEY';
-const ARCHETYPE_MODEL = 'gemini-3.6-flash';
+const GROQ_API_KEY = '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';
+const ARCHETYPE_MODEL = 'openai/gpt-oss-120b';
 
 const QUIZ_BANK = {
   eq: [
@@ -2928,20 +2928,24 @@ async function generateArchetypeSummary(percentages){
   tArchetypeLoading = true;
   tArchetypeError = '';
   renderTraining();
-  if(!GEMINI_API_KEY || GEMINI_API_KEY === 'REPLACE_WITH_YOUR_GEMINI_API_KEY'){
+  if(!GROQ_API_KEY || GROQ_API_KEY === 'REPLACE_WITH_YOUR_GROQ_API_KEY'){
     tArchetypeLoading = false;
-    tArchetypeError = 'This app is not yet configured with a Gemini API key. Set GEMINI_API_KEY in index.html before this feature can generate a summary.';
+    tArchetypeError = 'This app is not yet configured with a Groq API key. Set GROQ_API_KEY in index.html before this feature can generate a summary.';
     renderTraining();
     return;
   }
   const userMessage = `The Operator: ${percentages.Operator}%\nThe Coach: ${percentages.Coach}%\nThe Host: ${percentages.Host}%\nThe Firefighter: ${percentages.Firefighter}%`;
   try{
-    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${ARCHETYPE_MODEL}:generateContent`, {
+    const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method:'POST',
-      headers:{ 'Content-Type':'application/json', 'x-goog-api-key': GEMINI_API_KEY },
+      headers:{ 'Content-Type':'application/json', 'Authorization': 'Bearer ' + GROQ_API_KEY },
       body: JSON.stringify({
-        system_instruction: { parts:[{ text: ARCHETYPE_SYSTEM_PROMPT }] },
-        contents:[{ role:'user', parts:[{ text: userMessage }] }]
+        model: ARCHETYPE_MODEL,
+        messages:[
+          { role:'system', content: ARCHETYPE_SYSTEM_PROMPT },
+          { role:'user', content: userMessage }
+        ],
+        response_format:{ type:'json_object' }
       })
     });
     if(!resp.ok){
@@ -2949,7 +2953,7 @@ async function generateArchetypeSummary(percentages){
       throw new Error(`API error ${resp.status}: ${errBody.slice(0,200)}`);
     }
     const data = await resp.json();
-    const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const rawText = data.choices?.[0]?.message?.content || '';
     const cleanedText = rawText.trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '');
     const parsed = JSON.parse(cleanedText);
     const result = {
