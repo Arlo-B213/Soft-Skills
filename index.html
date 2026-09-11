@@ -233,6 +233,17 @@
   .card:hover::before{ opacity:1; }
   .card .label{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:10px;font-weight:600;}
   .card .value{font-family:"Fraunces",Georgia,serif;font-size:31px;color:var(--gold-light);font-weight:600;letter-spacing:-.01em;}
+  /* Bento hero: the first stat card in every dashboard grid is the headline
+     metric (Total Spot-Checks / Total Entries) -- feature it, span two
+     columns, and give it a permanent gold accent instead of hover-only. */
+  .grid-cards .card:first-child{
+    grid-column:span 2;display:flex;flex-direction:column;justify-content:center;
+    background:var(--gradient-mesh), var(--navy-2);
+    border-color:rgba(var(--gold-rgb),.22);
+  }
+  .grid-cards .card:first-child::before{ opacity:1; }
+  .grid-cards .card:first-child .value{ font-size:clamp(32px, 2.6vw + 20px, 46px); }
+  @media(max-width:520px){ .grid-cards .card:first-child{ grid-column:span 2; } }
   .card .value small{font-size:14px;color:var(--muted);font-weight:400;font-family:inherit;}
 
   .panel{
