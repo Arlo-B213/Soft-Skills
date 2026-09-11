@@ -16,167 +16,192 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --navy: #f5f6fa;
+    --navy: #f6f7fb;
     --navy-2: #ffffff;
-    --navy-3: #eef0f5;
+    --navy-3: #eef1f7;
     --gold: #c9a227;
     --gold-light: #8a6d14;
-    --cream: #1f2430;
-    --ink: #17203a;
-    --muted: #5b6472;
+    --cream: #181f35;
+    --ink: #15203a;
+    --muted: #667085;
     --good: #1f7a4d;
     --warn: #8a6d14;
     --bad: #a1402f;
-    --line: rgba(15,23,42,0.10);
+    --line: rgba(15,23,42,0.08);
+    --radius-sm: 8px;
+    --radius-md: 14px;
+    --radius-lg: 18px;
+    --shadow-sm: 0 1px 2px rgba(15,23,42,.05);
+    --shadow-md: 0 8px 24px rgba(15,23,42,.07), 0 2px 6px rgba(15,23,42,.04);
+    --shadow-lg: 0 24px 64px rgba(15,23,42,.18);
+    --ease: cubic-bezier(.4,0,.2,1);
   }
   *{box-sizing:border-box;}
   body{
     margin:0;
     background: var(--navy);
     color: var(--cream);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-feature-settings: "cv02","cv03","cv04","cv11";
     min-height:100vh;
+    -webkit-font-smoothing:antialiased;
   }
-  .wrap{max-width:1180px;margin:0 auto;padding:28px 24px 60px;}
+  .wrap{max-width:1180px;margin:0 auto;padding:32px 24px 64px;}
 
   header.top{
     display:flex;justify-content:space-between;align-items:flex-end;
     gap:20px;flex-wrap:wrap;
     border-bottom:1px solid var(--line);
-    padding-bottom:20px;margin-bottom:26px;
+    padding-bottom:24px;margin-bottom:30px;
   }
   .brand-eyebrow{
-    letter-spacing:.22em;text-transform:uppercase;font-size:11px;color:var(--gold);
-    margin-bottom:6px;font-weight:600;
+    letter-spacing:.24em;text-transform:uppercase;font-size:11px;color:var(--gold);
+    margin-bottom:8px;font-weight:700;
   }
   h1{
-    font-family: Georgia, "Times New Roman", serif;
-    font-weight:600;font-size:30px;margin:0;color:var(--cream);letter-spacing:.01em;
+    font-family: "Fraunces", Georgia, "Times New Roman", serif;
+    font-weight:600;font-size:32px;margin:0;color:var(--cream);letter-spacing:-.01em;
   }
   h1 span{color:var(--gold-light);font-style:italic;}
-  .sub{color:var(--muted);font-size:13.5px;margin-top:6px;}
+  .sub{color:var(--muted);font-size:13.5px;margin-top:8px;}
 
   .upload-box{
-    background: var(--navy-2); border:1px solid var(--line); border-radius:10px;
-    padding:14px 18px; min-width:280px;
+    background: var(--navy-2); border:1px solid var(--line); border-radius:var(--radius-md);
+    padding:16px 18px; min-width:280px; box-shadow:var(--shadow-sm);
   }
   .upload-box label{
     display:inline-block;background:var(--gold);color:var(--ink);
-    font-weight:700;font-size:13px;padding:9px 16px;border-radius:7px;cursor:pointer;
-    transition:filter .15s;
+    font-weight:700;font-size:13px;padding:10px 18px;border-radius:999px;cursor:pointer;
+    transition:filter .15s var(--ease), transform .15s var(--ease);
   }
-  .upload-box label:hover{filter:brightness(1.08);}
+  .upload-box label:hover{filter:brightness(1.08);transform:translateY(-1px);}
   .upload-box input[type=file]{display:none;}
   .btn-secondary{
-    background:transparent;border:1px solid var(--gold);color:var(--gold-light);
-    font-weight:700;font-size:13px;padding:9px 16px;border-radius:7px;cursor:pointer;
-    transition:background .15s;
+    background:transparent;border:1px solid var(--line);color:var(--gold-light);
+    font-weight:700;font-size:13px;padding:10px 18px;border-radius:999px;cursor:pointer;
+    transition:background .15s var(--ease), border-color .15s var(--ease);
   }
-  .btn-secondary:hover{background:rgba(201,162,39,0.12);}
+  .btn-secondary:hover{background:rgba(201,162,39,0.10);border-color:var(--gold);}
   .btn-primary{
     background:var(--gold);color:var(--ink);border:none;font-weight:700;font-size:13.5px;
-    padding:10px 20px;border-radius:7px;cursor:pointer;transition:filter .15s;
+    padding:11px 22px;border-radius:999px;cursor:pointer;transition:filter .15s var(--ease), transform .15s var(--ease);
   }
-  .btn-primary:hover{filter:brightness(1.08);}
-  .btn-primary:disabled{opacity:.5;cursor:not-allowed;}
+  .btn-primary:hover{filter:brightness(1.08);transform:translateY(-1px);}
+  .btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none;}
 
-  @keyframes fadeUp{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
-  .panel, .card{ animation: fadeUp .35s ease-out; }
+  @keyframes fadeUp{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+  .panel, .card{ animation: fadeUp .4s var(--ease) both; }
 
   .modal-overlay{
-    display:none; position:fixed; inset:0; background:rgba(5,9,20,0.72);
+    display:none; position:fixed; inset:0; background:rgba(8,12,24,0.6);
     z-index:100; align-items:center; justify-content:center; padding:20px;
-    backdrop-filter:blur(2px);
+    backdrop-filter:blur(4px);
   }
   .modal-overlay.open{display:flex;}
   .modal{
-    background:var(--navy-2); border:1px solid var(--line); border-radius:14px;
+    background:var(--navy-2); border:1px solid var(--line); border-radius:var(--radius-lg);
     width:100%; max-width:640px; max-height:88vh; overflow-y:auto;
-    box-shadow:0 20px 60px rgba(15,23,42,0.22); animation: fadeUp .25s ease-out;
+    box-shadow:var(--shadow-lg); animation: fadeUp .3s var(--ease);
   }
-  .modal-header{ display:flex; justify-content:space-between; align-items:center; padding:18px 22px; border-bottom:1px solid var(--line); }
-  .modal-header h3{ font-family:Georgia,serif; margin:0; color:var(--cream); font-size:18px; }
-  .modal-header button{ background:none; border:none; color:var(--muted); font-size:22px; cursor:pointer; line-height:1; }
-  .modal-tabs{ display:flex; gap:4px; padding:14px 22px 0; flex-wrap:wrap; }
+  .modal-header{ display:flex; justify-content:space-between; align-items:center; padding:20px 24px; border-bottom:1px solid var(--line); }
+  .modal-header h3{ font-family:"Fraunces",Georgia,serif; margin:0; color:var(--cream); font-size:19px; font-weight:600; }
+  .modal-header button{ background:none; border:none; color:var(--muted); font-size:22px; cursor:pointer; line-height:1; transition:color .15s var(--ease); }
+  .modal-header button:hover{ color:var(--cream); }
+  .modal-tabs{ display:flex; gap:6px; padding:16px 24px 0; flex-wrap:wrap; }
   .modal-tabs button{
-    background:transparent; border:1px solid var(--line); color:var(--muted);
-    padding:7px 13px; border-radius:7px; font-size:12.5px; cursor:pointer; font-weight:600;
+    background:var(--navy-3); border:1px solid transparent; color:var(--muted);
+    padding:8px 14px; border-radius:999px; font-size:12.5px; cursor:pointer; font-weight:600;
+    transition:all .15s var(--ease);
   }
-  .modal-tabs button.active{ background:var(--gold); color:var(--ink); border-color:var(--gold); }
-  .modal-body{ padding:18px 22px; }
-  .modal-actions{ padding:16px 22px 22px; display:flex; justify-content:flex-end; gap:10px; }
+  .modal-tabs button.active{ background:var(--gold); color:var(--ink); }
+  .modal-body{ padding:20px 24px; }
+  .modal-actions{ padding:16px 24px 24px; display:flex; justify-content:flex-end; gap:10px; }
   .field-row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
   .field-row.full{ grid-template-columns:1fr; }
   .field{ display:flex; flex-direction:column; gap:5px; }
-  .field label{ font-size:11.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
+  .field label{ font-size:11.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; font-weight:600; }
   .field input, .field select, .field textarea{
     background:var(--navy-3); border:1px solid var(--line); color:var(--cream);
-    padding:8px 10px; border-radius:6px; font-size:13.5px; font-family:inherit;
+    padding:9px 11px; border-radius:var(--radius-sm); font-size:13.5px; font-family:inherit;
+    transition:border-color .15s var(--ease);
   }
+  .field input:focus, .field select:focus, .field textarea:focus{ outline:none; border-color:var(--gold); }
   .field textarea{ resize:vertical; min-height:56px; }
   .score-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:10px; margin-bottom:14px; }
   .score-grid .field label{ font-size:11px; white-space:normal; }
   .toast{
     position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
-    background:var(--navy-3); border:1px solid var(--gold); color:var(--gold-light);
-    padding:11px 20px; border-radius:8px; font-size:13.5px; z-index:200;
-    box-shadow:0 8px 24px rgba(15,23,42,0.16); animation: fadeUp .25s ease-out;
+    background:var(--cream); border:1px solid var(--cream); color:#f7f3e8;
+    padding:12px 22px; border-radius:999px; font-size:13.5px; z-index:200;
+    box-shadow:var(--shadow-lg); animation: fadeUp .25s var(--ease);
   }
 
   .alert-row{
-    display:flex; align-items:flex-start; gap:12px; padding:12px 14px; border-radius:9px;
-    margin-bottom:8px; font-size:13.5px;
+    display:flex; align-items:flex-start; gap:12px; padding:13px 15px; border-radius:var(--radius-sm);
+    margin-bottom:8px; font-size:13.5px; transition:transform .15s var(--ease);
   }
-  .alert-row.up{ background:rgba(63,166,111,0.12); border:1px solid rgba(63,166,111,0.35); }
-  .alert-row.down{ background:rgba(196,84,63,0.12); border:1px solid rgba(196,84,63,0.35); }
+  .alert-row.up{ background:rgba(63,166,111,0.10); border:1px solid rgba(63,166,111,0.28); }
+  .alert-row.down{ background:rgba(196,84,63,0.10); border:1px solid rgba(196,84,63,0.28); }
   .alert-icon{ font-size:17px; line-height:1.4; }
   .alert-row .name{ font-weight:700; color:var(--cream); }
   .alert-row .reason{ color:var(--muted); font-size:12.5px; }
   .alert-row button{
-    margin-left:auto; background:transparent; border:1px solid var(--line); color:var(--muted);
-    font-size:11.5px; padding:4px 10px; border-radius:6px; cursor:pointer; white-space:nowrap;
+    margin-left:auto; background:var(--navy-2); border:1px solid var(--line); color:var(--muted);
+    font-size:11.5px; padding:5px 12px; border-radius:999px; cursor:pointer; white-space:nowrap;
+    transition:all .15s var(--ease);
   }
   .alert-row button:hover{ border-color:var(--gold); color:var(--gold-light); }
-  .upload-status{font-size:12px;color:var(--muted);margin-top:9px;}
+  .upload-status{font-size:12px;color:var(--muted);margin-top:10px;}
   .upload-status.ok{color:var(--gold-light);}
 
-  nav.tabs{display:flex;gap:6px;margin-bottom:24px;}
+  nav.tabs{display:flex;gap:4px;margin-bottom:26px;background:var(--navy-3);padding:5px;border-radius:999px;width:fit-content;max-width:100%;overflow-x:auto;}
   nav.tabs button{
-    background:transparent;border:1px solid var(--line);color:var(--muted);
-    padding:10px 20px;border-radius:8px 8px 0 0;font-size:14px;cursor:pointer;
-    font-weight:600;letter-spacing:.02em;
+    background:transparent;border:none;color:var(--muted);
+    padding:10px 20px;border-radius:999px;font-size:13.5px;cursor:pointer;
+    font-weight:600;letter-spacing:.01em;white-space:nowrap;transition:all .18s var(--ease);
   }
+  nav.tabs button:hover{ color:var(--cream); }
   nav.tabs button.active{
-    background:var(--navy-3);color:var(--gold-light);border-color:var(--gold);
-    border-bottom-color:var(--navy-3);
+    background:var(--navy-2);color:var(--gold-light);box-shadow:var(--shadow-sm);
   }
+  nav.tabs .mgmt-tab{ display:none; }
+  nav.tabs.mgmt-unlocked .mgmt-tab{ display:inline-block; }
+  nav.tabs button.mgmt-lock{
+    margin-left:2px; padding:10px 14px; font-size:13px; color:var(--muted); opacity:.55;
+  }
+  nav.tabs button.mgmt-lock:hover{ opacity:1; color:var(--gold-light); }
 
   .empty{
-    text-align:center;padding:80px 20px;color:var(--muted);
+    text-align:center;padding:90px 20px;color:var(--muted);
   }
   .empty .icon{font-size:40px;margin-bottom:14px;color:var(--gold);}
   .empty b{color:var(--cream);}
 
-  .grid-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:26px;}
+  .grid-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:28px;}
   .card{
-    background:linear-gradient(155deg, var(--navy-2), var(--navy-3));border:1px solid var(--line);border-radius:12px;padding:18px 20px;
-    box-shadow:0 2px 10px rgba(15,23,42,0.07);
+    background:var(--navy-2);border:1px solid var(--line);border-radius:var(--radius-md);padding:20px 22px;
+    box-shadow:var(--shadow-sm);transition:box-shadow .2s var(--ease), transform .2s var(--ease);
   }
-  .card .label{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:8px;}
-  .card .value{font-family:Georgia,serif;font-size:30px;color:var(--gold-light);font-weight:600;}
-  .card .value small{font-size:14px;color:var(--muted);font-weight:400;}
+  .card:hover{ box-shadow:var(--shadow-md); transform:translateY(-2px); }
+  .card .label{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:10px;font-weight:600;}
+  .card .value{font-family:"Fraunces",Georgia,serif;font-size:31px;color:var(--gold-light);font-weight:600;letter-spacing:-.01em;}
+  .card .value small{font-size:14px;color:var(--muted);font-weight:400;font-family:inherit;}
 
   .panel{
-    background:var(--navy-2);border:1px solid var(--line);border-radius:12px;
-    padding:22px 24px;margin-bottom:22px;
-    box-shadow:0 2px 12px rgba(15,23,42,0.06);
+    background:var(--navy-2);border:1px solid var(--line);border-radius:var(--radius-md);
+    padding:24px 26px;margin-bottom:24px;
+    box-shadow:var(--shadow-sm);
   }
   .panel h2{
-    font-family:Georgia,serif;font-size:17px;margin:0 0 16px;color:var(--cream);font-weight:600;
+    font-family:"Fraunces",Georgia,serif;font-size:18px;margin:0 0 18px;color:var(--cream);font-weight:600;letter-spacing:-.005em;
   }
-  .panel h2 small{display:block;font-family:inherit;font-size:12px;color:var(--muted);font-weight:400;margin-top:4px;letter-spacing:0;}
+  .panel h2 small{display:block;font-family:"Inter",sans-serif;font-size:12px;color:var(--muted);font-weight:400;margin-top:5px;letter-spacing:0;}
   .two-col{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
   @media(max-width:820px){.two-col{grid-template-columns:1fr;} .upload-box{width:100%;}}
 
@@ -185,18 +210,19 @@
     display:none; position:fixed; right:18px; bottom:18px; z-index:90;
     width:58px; height:58px; border-radius:50%; background:var(--gold); color:var(--ink);
     border:none; font-size:28px; font-weight:700; align-items:center; justify-content:center;
-    box-shadow:0 6px 18px rgba(15,23,42,0.25); cursor:pointer;
+    box-shadow:var(--shadow-lg); cursor:pointer;
   }
   @media(max-width:680px){
     body{ font-size:15px; }
     .wrap{ padding:16px 14px 90px; }
     header.top{ flex-direction:column; align-items:stretch; gap:14px; }
-    h1{ font-size:24px; }
+    h1{ font-size:25px; }
     .upload-box{ padding:12px 14px; }
     .upload-box > div:first-child{ display:flex; gap:8px; }
     .upload-box label, .btn-secondary{ flex:1; text-align:center; padding:12px 10px; font-size:13px; }
-    nav.tabs{ position:sticky; top:0; z-index:20; background:var(--navy); padding-top:4px; margin:-4px -14px 20px; padding-left:14px; padding-right:14px; }
-    nav.tabs button{ flex:1; padding:12px 8px; font-size:13.5px; border-radius:8px 8px 0 0; }
+    nav.tabs{ position:sticky; top:0; z-index:20; background:var(--navy); padding-top:4px; margin:-4px -14px 20px; padding-left:14px; padding-right:14px; width:auto; border-radius:0; }
+    nav.tabs button{ flex:1; padding:12px 8px; font-size:13.5px; border-radius:999px; }
+    nav.tabs button.mgmt-lock{ flex:0 0 auto; padding:12px 12px; }
     .grid-cards{ grid-template-columns:repeat(2,1fr); gap:10px; }
     .card{ padding:14px 14px; }
     .card .value{ font-size:24px; }
@@ -209,7 +235,7 @@
     .fab{ display:flex; }
     .upload-box #openEntryModalBtn{ display:none; } /* FAB replaces header button on mobile */
     .modal-overlay{ padding:0; align-items:flex-end; }
-    .modal{ max-width:100%; width:100%; max-height:92vh; border-radius:16px 16px 0 0; }
+    .modal{ max-width:100%; width:100%; max-height:92vh; border-radius:20px 20px 0 0; }
     .field-row{ grid-template-columns:1fr; }
     .score-grid{ grid-template-columns:1fr 1fr; }
     .modal-actions{ position:sticky; bottom:0; background:var(--navy-2); border-top:1px solid var(--line); }
@@ -220,28 +246,107 @@
 
   table{width:100%;border-collapse:collapse;font-size:13.5px;}
   th{
-    text-align:left;color:var(--gold-light);font-size:11px;text-transform:uppercase;
-    letter-spacing:.08em;padding:8px 10px;border-bottom:1px solid var(--line);
+    text-align:left;color:var(--gold-light);font-size:10.5px;text-transform:uppercase;
+    letter-spacing:.09em;padding:9px 10px;border-bottom:1px solid var(--line);font-weight:700;
   }
-  td{padding:9px 10px;border-bottom:1px solid rgba(15,23,42,0.08);}
-  tr:hover td{background:rgba(15,23,42,0.03);}
-  .pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:12px;font-weight:700;}
+  td{padding:10px 10px;border-bottom:1px solid var(--line);}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:var(--navy-3);}
+  .pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11.5px;font-weight:700;}
   .pill.good{background:rgba(31,122,77,.14);color:#1f7a4d;}
   .pill.warn{background:rgba(184,135,31,.16);color:var(--gold-light);}
   .pill.bad{background:rgba(161,64,47,.14);color:#a1402f;}
 
+  /* ---- Leadership Training ---- */
+  .auth-box{max-width:400px;margin:60px auto;text-align:center;}
+  .auth-box h2{font-family:"Fraunces",Georgia,serif;font-size:22px;margin:0 0 6px;color:var(--cream);}
+  .auth-box .sub{margin-bottom:22px;}
+  .auth-box form{display:flex;flex-direction:column;gap:12px;text-align:left;}
+  .auth-box .field label{margin-bottom:2px;}
+  .auth-switch{margin-top:16px;font-size:12.5px;color:var(--muted);}
+  .auth-switch a{color:var(--gold-light);cursor:pointer;font-weight:600;text-decoration:none;}
+  .auth-error{color:#a1402f;font-size:12.5px;margin-top:4px;min-height:16px;}
+
+  .module-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;}
+  .module-card{
+    background:var(--navy-2);border:1px solid var(--line);border-radius:var(--radius-md);
+    padding:18px 20px;box-shadow:var(--shadow-sm);transition:box-shadow .2s var(--ease), transform .2s var(--ease);
+  }
+  .module-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px);}
+  .module-card .icon{font-size:22px;margin-bottom:8px;}
+  .module-card h3{font-family:"Fraunces",Georgia,serif;font-size:15.5px;margin:0 0 10px;color:var(--cream);font-weight:600;line-height:1.3;}
+  .module-card .progress-row{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:11.5px;color:var(--muted);}
+  .progress-track{flex:1;height:6px;border-radius:999px;background:var(--navy-3);overflow:hidden;}
+  .progress-fill{height:100%;background:var(--gold);border-radius:999px;transition:width .3s var(--ease);}
+  .module-card .actions{display:flex;gap:8px;}
+  .module-card .actions button{flex:1;}
+
+  .quiz-progress{font-size:12px;color:var(--muted);margin-bottom:6px;}
+  .quiz-question{font-family:"Fraunces",Georgia,serif;font-size:17px;color:var(--cream);margin:0 0 16px;line-height:1.4;}
+  .quiz-options{display:flex;flex-direction:column;gap:9px;margin-bottom:16px;}
+  .quiz-option{
+    display:flex;align-items:center;gap:10px;text-align:left;
+    background:var(--navy-3);border:1px solid var(--line);color:var(--cream);
+    padding:12px 15px;border-radius:var(--radius-sm);font-size:13.5px;cursor:pointer;
+    transition:all .15s var(--ease);
+  }
+  .quiz-option:hover{border-color:var(--gold);}
+  .quiz-option.selected{border-color:var(--gold);background:rgba(201,162,39,0.10);}
+  .quiz-option.correct{border-color:#1f7a4d;background:rgba(31,122,77,.12);}
+  .quiz-option.incorrect{border-color:#a1402f;background:rgba(161,64,47,.12);}
+  .quiz-option:disabled, .quiz-option[disabled]{cursor:default;}
+  .quiz-explain{font-size:13px;color:var(--muted);background:var(--navy-3);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:16px;}
+
+  .likert-row{padding:14px 0;border-bottom:1px solid var(--line);}
+  .likert-row:last-child{border-bottom:none;}
+  .likert-statement{font-size:13.5px;color:var(--cream);margin-bottom:10px;}
+  .likert-scale{display:flex;gap:8px;flex-wrap:wrap;}
+  .likert-scale button{
+    flex:1;min-width:64px;background:var(--navy-3);border:1px solid var(--line);color:var(--muted);
+    padding:9px 6px;border-radius:var(--radius-sm);font-size:11.5px;font-weight:600;cursor:pointer;
+    transition:all .15s var(--ease);
+  }
+  .likert-scale button.selected{background:var(--gold);color:var(--ink);border-color:var(--gold);}
+
+  .result-hero{text-align:center;padding:28px 20px;}
+  .result-hero .score-big{font-family:"Fraunces",Georgia,serif;font-size:46px;color:var(--gold-light);font-weight:600;}
+  .result-hero .score-label{color:var(--muted);font-size:13px;margin-top:4px;}
+
+  .attempt-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--line);font-size:13px;}
+  .attempt-row:last-child{border-bottom:none;}
+  .breadcrumb-link{color:var(--gold-light);cursor:pointer;font-size:12.5px;font-weight:600;text-decoration:none;}
+  .breadcrumb-link:hover{text-decoration:underline;}
+
+  .archetype-banner{
+    background:linear-gradient(135deg, rgba(201,162,39,0.12), rgba(201,162,39,0.02));
+    border:1px solid var(--line); border-radius:var(--radius-md); padding:20px 22px;
+    margin-bottom:20px; display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;
+  }
+  .archetype-banner h3{font-family:"Fraunces",Georgia,serif;font-size:16px;margin:0 0 4px;color:var(--cream);}
+  .archetype-banner p{margin:0;color:var(--muted);font-size:13px;}
+  .archetype-title{font-family:"Fraunces",Georgia,serif;font-size:26px;color:var(--gold-light);font-weight:600;text-align:center;margin-bottom:6px;}
+  .archetype-scores{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:18px 0;}
+  .archetype-score-card{background:var(--navy-3);border-radius:var(--radius-sm);padding:12px;text-align:center;}
+  .archetype-score-card .pct{font-family:"Fraunces",Georgia,serif;font-size:22px;color:var(--gold-light);font-weight:600;}
+  .archetype-score-card .label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:2px;}
+  .archetype-list{list-style:none;margin:0 0 18px;padding:0;}
+  .archetype-list li{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13.5px;color:var(--cream);}
+  .archetype-list li:last-child{border-bottom:none;}
+  .archetype-list.superpowers li::before{content:'\2726';color:#1f7a4d;flex-shrink:0;}
+  .archetype-list.blindspots li::before{content:'\26A0';color:#a1402f;flex-shrink:0;}
+
   select{
     background:var(--navy-3);color:var(--cream);border:1px solid var(--line);
-    padding:8px 12px;border-radius:7px;font-size:13.5px;
+    padding:9px 14px;border-radius:999px;font-size:13.5px;cursor:pointer;
   }
 
-  .heat-table td.score{text-align:center;font-weight:700;border-radius:4px;}
-  .legend-row{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:10px;}
-  .legend-swatch{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:middle;}
+  .heat-table td.score{text-align:center;font-weight:700;border-radius:6px;}
+  .legend-row{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:12px;}
+  .legend-swatch{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:middle;}
 
-  .notes-list{margin-top:14px;}
+  .notes-list{margin-top:16px;}
   .note-item{
-    border-left:2px solid var(--gold);padding:8px 0 8px 14px;margin-bottom:10px;font-size:13.5px;
+    border-left:3px solid var(--gold);padding:9px 0 9px 16px;margin-bottom:10px;font-size:13.5px;
   }
   .note-item.negative{border-left-color:var(--bad);}
   .note-item .meta{color:var(--gold-light);font-weight:600;font-size:12px;margin-bottom:3px;}
@@ -257,7 +362,7 @@
 
   canvas{max-height:280px;}
   #chartFocusAreas, #chartEngagement{ max-height:340px; }
-  footer{text-align:center;color:var(--muted);font-size:11.5px;margin-top:30px;}
+  footer{text-align:center;color:var(--muted);font-size:11.5px;margin-top:34px;}
 </style>
 </head>
 <body>
@@ -282,9 +387,12 @@
 
   <nav class="tabs">
     <button class="active" data-tab="cashiers">FOH Team</button>
-    <button data-tab="management">FOH Management</button>
+    <button class="mgmt-tab" data-tab="management">FOH Management</button>
     <button data-tab="bohTeam">BOH Team</button>
-    <button data-tab="bohManagement">BOH Management</button>
+    <button class="mgmt-tab" data-tab="bohManagement">BOH Management</button>
+    <button data-tab="training">Leadership Training</button>
+    <button class="mgmt-tab" data-tab="trainingRollup">Training Rollup</button>
+    <button id="mgmtLockBtn" class="mgmt-lock" title="Show management tabs">&#128274;</button>
   </nav>
 
   <div id="emptyState" class="empty">
@@ -296,6 +404,8 @@
   <div id="managementTab" style="display:none;"></div>
   <div id="bohTeamTab" style="display:none;"></div>
   <div id="bohManagementTab" style="display:none;"></div>
+  <div id="trainingTab" style="display:none;"></div>
+  <div id="trainingRollupTab" style="display:none;"></div>
 
   <button class="fab" id="fabEntryBtn" aria-label="Log entry">+</button>
 
@@ -1286,7 +1396,7 @@ function renderManagerDetail(name){
     </div>`).join('') : '<div style="color:var(--muted);font-size:13px;">No notes recorded yet.</div>';
 }
 
-const TAB_IDS = { cashiers:'cashiersTab', management:'managementTab', bohTeam:'bohTeamTab', bohManagement:'bohManagementTab' };
+const TAB_IDS = { cashiers:'cashiersTab', management:'managementTab', bohTeam:'bohTeamTab', bohManagement:'bohManagementTab', training:'trainingTab', trainingRollup:'trainingRollupTab' };
 function activeTabKey(){
   const btn = document.querySelector('nav.tabs button.active');
   return btn ? btn.dataset.tab : 'cashiers';
@@ -1296,10 +1406,41 @@ function showTab(key){
   Object.entries(TAB_IDS).forEach(([k, id])=>{
     document.getElementById(id).style.display = (k===key) ? 'block' : 'none';
   });
+  if(key==='training' && window.renderTraining) renderTraining();
+  if(key==='trainingRollup' && window.renderTrainingRollup) renderTrainingRollup();
 }
-document.querySelectorAll('nav.tabs button').forEach(btn=>{
+document.querySelectorAll('nav.tabs button[data-tab]').forEach(btn=>{
   btn.addEventListener('click', ()=>showTab(btn.dataset.tab));
 });
+
+// ---------- Management tab lock (PIN-gated, this browser only) ----------
+const MGMT_PIN_HASH = 'ddc10a5906f8c0ea77bac646567f9680f2b6f989f35485f0cc65b7b5a223d32c';
+const MGMT_UNLOCK_KEY = 'kpi_mgmt_unlocked';
+async function sha256Hex(str){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function setMgmtUnlocked(on){
+  const nav = document.querySelector('nav.tabs');
+  const btn = document.getElementById('mgmtLockBtn');
+  nav.classList.toggle('mgmt-unlocked', on);
+  btn.innerHTML = on ? '&#128275;' : '&#128274;';
+  btn.title = on ? 'Hide management tabs' : 'Show management tabs';
+  if(on) localStorage.setItem(MGMT_UNLOCK_KEY, '1'); else localStorage.removeItem(MGMT_UNLOCK_KEY);
+  if(!on && (activeTabKey()==='management' || activeTabKey()==='bohManagement')) showTab('cashiers');
+}
+document.getElementById('mgmtLockBtn').addEventListener('click', async ()=>{
+  if(document.querySelector('nav.tabs').classList.contains('mgmt-unlocked')){
+    setMgmtUnlocked(false);
+    return;
+  }
+  const pin = prompt('Enter PIN to view Management tabs:');
+  if(pin===null) return;
+  const hash = await sha256Hex(pin);
+  if(hash === MGMT_PIN_HASH) setMgmtUnlocked(true);
+  else alert('Incorrect PIN.');
+});
+if(localStorage.getItem(MGMT_UNLOCK_KEY)==='1') setMgmtUnlocked(true);
 
 // ---------- Quick Entry modal ----------
 let modalDept = 'foh';
@@ -2076,6 +2217,1001 @@ document.getElementById('submitEntryBtn').addEventListener('click', async ()=>{
   toast('Entry saved.');
   if(cloudEnabled){ await saveToCloud(); }
 });
+
+// ================= Leadership Training Module =================
+const trainingAuth = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth() : null;
+
+// Single hardcoded admin identity, mirrors the isTrainingAdmin() Firestore rule.
+// Can edit any employee's profile (name/role/tier). Password/login resets
+// are NOT handled here — done directly in the Firebase Console by the project owner.
+const TRAINING_ADMIN_EMAIL = 'arlo.bedolla@gmail.com';
+function isTrainingAdmin(){ return !!(tCurrentUser && tCurrentUser.email === TRAINING_ADMIN_EMAIL); }
+
+const ROLE_TIER_MAP = {
+  'Lead': 'entry', 'Asst. Chef': 'entry',
+  'Asst. Manager': 'mid', 'Sous Chef': 'mid',
+  'Restaurant Manager': 'senior'
+};
+const TIER_LABEL = { entry: 'Entry-Level Leadership', mid: 'Mid-Level Leadership', senior: 'Senior Leadership (Restaurant Manager)' };
+
+const TRAINING_MODULES = [
+  { id:'eq', tier:'entry', title:'Emotional Intelligence & Interpersonal Soft Skills', icon:'&#129504;' },
+  { id:'guest', tier:'entry', title:'Guest Service & AAA Four Diamond Standards', icon:'&#11088;' },
+  { id:'foodsafety', tier:'entry', title:'Food Safety & Shift Procedures', icon:'&#129537;' },
+  { id:'comm', tier:'entry', title:'Team Communication & De-escalation', icon:'&#128172;' },
+  { id:'compliance', tier:'entry', title:'Time, Attendance & Compliance Basics', icon:'&#9201;' },
+  { id:'throughput', tier:'entry', title:'High-Volume Operations & Line Management', icon:'&#9889;' },
+  { id:'coaching', tier:'mid', title:'Coaching & Progressive Discipline', icon:'&#127919;' },
+  { id:'escalation', tier:'mid', title:'Guest Escalation & Service Recovery', icon:'&#128276;' },
+  { id:'hiring', tier:'mid', title:'Hiring & Team Development', icon:'&#129309;' },
+  { id:'pnl', tier:'senior', title:'P&L & Cost Management', icon:'&#128200;' },
+  { id:'culture', tier:'senior', title:'Leading Leaders & Team Culture', icon:'&#127963;&#65039;' },
+  { id:'crisis', tier:'senior', title:'Crisis & Incident Management', icon:'&#128680;' }
+];
+
+// ================= Leadership Archetype Assessment =================
+// Available to every tier. 8 forced-choice scenarios, each option scores one
+// of 4 archetypes (Operator / Coach / Host / Firefighter). Tallies always sum
+// to 100% since each question allocates exactly one point across 4 options.
+const ARCHETYPE_QUESTIONS = [
+  { q:"It's the busiest hour of the night and two things break at once: the POS freezes and a table sends back a dish. What's your instinct?",
+    options:[
+      { text:"Get the POS working first — nothing runs without the system.", archetype:'Operator' },
+      { text:"Delegate the POS to whoever's closest and personally walk to the table to make it right.", archetype:'Coach' },
+      { text:"Go straight to the table myself — the guest experience can't wait.", archetype:'Host' },
+      { text:"Handle whichever one is escalating fastest, then sprint to the next.", archetype:'Firefighter' }
+    ]},
+  { q:"A new hire is struggling in their second week. What's your first move?",
+    options:[
+      { text:"Check if the training checklist was actually completed step by step.", archetype:'Operator' },
+      { text:"Sit down with them one-on-one to understand what's hard and build a plan.", archetype:'Coach' },
+      { text:"Pair them with your most welcoming team member so they feel supported.", archetype:'Host' },
+      { text:"Keep an eye on them and step in personally the moment something goes wrong.", archetype:'Firefighter' }
+    ]},
+  { q:"You have an extra hour this week with no fires to put out. How do you spend it?",
+    options:[
+      { text:"Auditing a process — inventory counts, prep lists, whatever's been sloppy.", archetype:'Operator' },
+      { text:"One-on-ones or skip-levels with the team.", archetype:'Coach' },
+      { text:"Walking the floor, talking to regulars, reading the room.", archetype:'Host' },
+      { text:"Honestly, something usually comes up before the hour's over.", archetype:'Firefighter' }
+    ]},
+  { q:"A regular guest complains that service felt rushed tonight. How do you respond?",
+    options:[
+      { text:"Check the shift's labor-to-cover ratio — were we understaffed?", archetype:'Operator' },
+      { text:"Ask the server what happened and coach them through pacing next time.", archetype:'Coach' },
+      { text:"Go thank the guest personally and make sure their next visit is memorable.", archetype:'Host' },
+      { text:"Smooth it over in the moment, note it, move to the next thing.", archetype:'Firefighter' }
+    ]},
+  { q:"How do you feel about strict adherence to standard operating procedures?",
+    options:[
+      { text:"Essential — consistency is what makes a shift predictable and scalable.", archetype:'Operator' },
+      { text:"Useful as a baseline, but I care more about whether people understand the why.", archetype:'Coach' },
+      { text:"Procedures matter less to me than whether the guest felt cared for.", archetype:'Host' },
+      { text:"I follow them until something forces me off-script, which is often.", archetype:'Firefighter' }
+    ]},
+  { q:"What's most satisfying about a great shift?",
+    options:[
+      { text:"Everything ran on time, on cost, exactly to plan.", archetype:'Operator' },
+      { text:"Watching someone on the team level up in real time.", archetype:'Coach' },
+      { text:"A guest telling me it was the best part of their trip.", archetype:'Host' },
+      { text:"Handling three crises and still closing clean.", archetype:'Firefighter' }
+    ]},
+  { q:"A team member you've coached for months still isn't hitting the bar. What now?",
+    options:[
+      { text:"Reassess whether the role/process fits them — maybe it's a fit issue.", archetype:'Operator' },
+      { text:"Keep investing — most people just need more time and a different approach.", archetype:'Coach' },
+      { text:"Check whether they're happy and feel valued; that usually shows up in performance.", archetype:'Host' },
+      { text:"Handle the immediate gaps as they come up and revisit the bigger picture later.", archetype:'Firefighter' }
+    ]},
+  { q:"Corporate rolls out a new system/process with little warning. Your reaction?",
+    options:[
+      { text:"Dig into the documentation and get the team's workflow adjusted correctly.", archetype:'Operator' },
+      { text:"Focus on how to explain the change so the team buys in rather than resists.", archetype:'Coach' },
+      { text:"Make sure the transition doesn't disrupt what guests experience.", archetype:'Host' },
+      { text:"Deal with it as issues come up during service rather than over-preparing.", archetype:'Firefighter' }
+    ]}
+];
+
+const ARCHETYPE_SYSTEM_PROMPT = `You are an executive coach for restaurant leaders.
+
+You will be given the percentage breakdown of a manager's behavioral profiling assessment based on 4 archetypes: The Operator, The Coach, The Host, and The Firefighter.
+
+Your task is to analyze this specific mix and generate a 3-part personalized summary:
+
+1. Leadership Identity: Give their specific blend a unique title (e.g., if they are high Coach and high Operator, call them "The System-Driven Mentor"). Explain how their top styles complement each other. If their scores are almost perfectly balanced across all four (e.g., 25% each), title them "The Universal General Manager" and explain how they seamlessly adapt to any situation.
+2. Superpowers: Detail 2-3 specific strengths this unique combination brings to a restaurant environment.
+3. Blind Spots: Identify 1-2 potential risks of this mix (e.g., a "Coach/Host" blend might struggle with strict cost controls; a perfectly balanced manager might suffer from decision paralysis trying to please everyone).
+
+Format the output strictly as a JSON object with keys for 'title', 'identity_summary', 'superpowers' (array), and 'blind_spots' (array). Do not include any conversational text, and do not wrap the JSON in markdown code fences.`;
+
+// Fill in your own Groq API key here before publishing this app.
+// Get one for free (no credit card needed) at https://console.groq.com/keys
+// This uses Groq's free tier, so even though the key is visible to anyone
+// who views this page's source (it's a public static site), the worst case
+// if it leaks is someone else eating your free-tier rate limit — not a bill.
+const GROQ_API_KEY = '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';
+const ARCHETYPE_MODEL = 'openai/gpt-oss-120b';
+
+const QUIZ_BANK = {
+  eq: [
+    { q:"A teammate snaps at you during a busy rush. What's the most emotionally intelligent first response?", options:["Snap back so they know it's not okay","Stay calm, finish the immediate task, and check in with them after the rush","Report them to a manager immediately","Ignore them for the rest of the shift"], correct:1, explain:"Staying regulated in the moment and following up later shows self-regulation and empathy — the core of EQ under pressure." },
+    { q:'Which of these is the best example of "self-awareness" on the job?', options:["Knowing your store's sales numbers","Recognizing when your own stress is starting to affect how you talk to your team","Memorizing the menu","Following the schedule exactly"], correct:1, explain:"Self-awareness means noticing your own internal state and how it's affecting your behavior in real time." },
+    { q:"A guest is visibly frustrated but hasn't said anything rude yet. What does high empathy look like here?", options:["Waiting for them to complain first","Proactively acknowledging their wait or frustration before they have to ask","Ignoring it since they haven't said anything","Calling a manager right away"], correct:1, explain:"Empathy means noticing another person's state without needing them to spell it out." },
+    { q:"You made a mistake on an order during a rush. What's the emotionally intelligent next step?", options:["Blame the ticket system","Own it briefly, fix it fast, move on without dwelling","Get defensive if a teammate points it out","Avoid that station for the rest of the shift"], correct:1, explain:"Owning mistakes quickly and moving forward keeps the shift running and models accountability for the team." },
+    { q:"Which best describes \"social skill\" in Goleman's EQ model as it applies to a shift lead?", options:["Being the loudest person on shift","Building trust and communicating clearly enough that the team wants to follow your lead","Never talking to guests","Working alone as much as possible"], correct:1, explain:"Social skill is about building relationships and influence, not volume." },
+    { q:"A team member seems withdrawn today. What's the EQ-forward move?", options:["Assume they're being lazy and assign them more tasks","Quietly check in one-on-one when there's a natural break","Call them out in front of the team to \"motivate\" them","Say nothing — it's not your job"], correct:1, explain:"A private, low-key check-in respects the person and often surfaces what's really going on." },
+    { q:"What's a healthy way to manage your own frustration mid-shift?", options:["Vent to a guest about it","A quick reset — a breath, a short walk to the back, then re-engage","Let it build until you snap","Take it out on the next order that's slow"], correct:1, explain:"Short resets prevent frustration from leaking into guest and team interactions." },
+    { q:"Why does emotional intelligence matter for a Lead more than for a line-level team member?", options:["It doesn't — it's the same for everyone","Leads set the emotional tone for the whole shift; the team mirrors how the Lead handles pressure","Leads don't interact with guests","It only matters for corporate roles"], correct:1, explain:"A Lead's emotional state is contagious across the shift — regulated Leads create regulated teams." }
+  ],
+  guest: [
+    { q:"What generally distinguishes AAA Four Diamond service from a standard quick-service experience?", options:["Lower prices","Consistently anticipatory, polished, and personalized service","Self-service kiosks only","No table service ever"], correct:1, explain:"Four Diamond standards are about consistent polish and anticipating guest needs, even in a quick-service format." },
+    { q:"A guest at the resort asks a question you don't know the answer to. Four Diamond standard response?", options:["Say \"I don't know\" and walk away","Find the answer or a colleague who has it, rather than leaving the guest guessing","Guess at an answer","Tell them to look it up themselves"], correct:1, explain:"Following through until the guest has a real answer is core to premium service." },
+    { q:"Why does eye contact and a genuine greeting matter even in a fast-paced food court?", options:["It's required by law","It signals the guest is seen and valued, which is core to premium service even in quick formats","It slows down service unnecessarily","It doesn't matter in QSR settings"], correct:1, explain:"Being seen and acknowledged is often what guests remember most, regardless of format." },
+    { q:"A regular guest mentions they're celebrating an anniversary while in line. Four Diamond-minded response?", options:["Nothing — just take the order","Acknowledge it warmly, maybe a small gesture within your ability","Ask them to keep it down","Offer a discount without asking a manager"], correct:1, explain:"A warm acknowledgment costs nothing and creates a memorable, personalized moment." },
+    { q:'What\'s the best definition of "anticipatory service"?', options:["Waiting for the guest to ask for everything","Noticing and meeting a need before the guest has to voice it","Guessing guest orders to speed up the line","Skipping steps to move faster"], correct:1, explain:"Anticipatory service means meeting needs before they're voiced — the hallmark of premium hospitality." },
+    { q:"A guest's order is taking longer than expected. Four Diamond standard?", options:["Say nothing until they ask","Proactively update them on the wait and thank them for patience","Let another guest tell them","Rush the food and risk quality"], correct:1, explain:"Proactive communication keeps guests informed and shows respect for their time." },
+    { q:"Why does cleanliness of the dining area matter as much as food quality in a Four Diamond property?", options:["It doesn't — only food matters","The overall environment is part of the guest's total experience and reflects on the whole resort","Cleanliness is housekeeping's job only","Guests don't notice the dining area"], correct:1, explain:"Guests experience the whole environment, and every outlet reflects on the resort's overall standard." },
+    { q:"What should a Lead do if they notice a teammate giving a guest short, curt answers?", options:["Nothing, it's not urgent","Coach them in the moment or right after with a specific, calm example","Publicly correct them in front of the guest","Wait until the annual review"], correct:1, explain:"Timely, specific, private coaching corrects the behavior without embarrassing the teammate." }
+  ],
+  foodsafety: [
+    { q:'What is "the danger zone" in food safety?', options:["32°F–40°F","41°F–135°F, the temperature range where bacteria grow fastest","Above 165°F","There is no such range"], correct:1, explain:"The danger zone (41°F–135°F) is where bacteria multiply fastest, which is why time-in-zone is tracked closely." },
+    { q:"How often should hot-held food temperatures typically be logged during a shift?", options:["Once at the start of the day only","At regular intervals per your food safety plan (commonly every 2–4 hours)","Never, unless a guest complains","Only during health inspections"], correct:1, explain:"Regular logging catches problems early, long before they'd ever reach a guest." },
+    { q:"A cutting board was just used for raw chicken. Before using it for produce, you should:", options:["Wipe it with a dry towel","Wash, rinse, and sanitize it (or use a separate board) to prevent cross-contamination","Just rinse with water","It's fine to use as-is"], correct:1, explain:"Proper wash-rinse-sanitize (or dedicated boards) prevents cross-contamination between raw protein and ready-to-eat food." },
+    { q:"What's the first thing a Lead should do when opening a station for the shift?", options:["Start taking orders immediately","Run through the opening checklist — temps, cleanliness, equipment checks","Skip checks if the previous shift said everything's fine","Wait for a manager to arrive"], correct:1, explain:"The opening checklist exists precisely so nothing is assumed to be fine without verifying it." },
+    { q:"An employee shows up to shift with a fever. Correct food safety action?", options:["Let them work as normal","Send them home / have them not handle food, per illness policy","Just have them wash hands more","Ignore it unless a guest asks"], correct:1, explain:"Illness policies exist to prevent foodborne illness transmission — this isn't optional." },
+    { q:"Why is a documented closing checklist important?", options:["It's just paperwork","It ensures food safety and equipment steps aren't skipped when people are tired and rushing to leave","It's only for corporate audits","It's optional if the shift went smoothly"], correct:1, explain:"Checklists exist because tired, rushed closers are exactly when steps get skipped." },
+    { q:"What should you do if you find food held outside safe temperature for longer than allowed?", options:["Serve it anyway to avoid waste","Discard it — guest safety comes before food cost","Reheat it and hope for the best","Ask a guest if they mind"], correct:1, explain:"Guest safety always outweighs food cost concerns — when in doubt, throw it out." },
+    { q:"Why does a Lead need to know food safety rules even if they're not cooking that shift?", options:["They don't need to know them","They're responsible for catching and correcting violations across the whole team","Only BOH staff need this knowledge","It's the health inspector's job"], correct:1, explain:"Leads are accountable for the whole shift's compliance, not just their own station." }
+  ],
+  comm: [
+    { q:"Two teammates are bickering during a rush. Best immediate Lead move?", options:["Let them work it out themselves mid-rush","Calmly separate the immediate issue, keep the line moving, address it fully after","Take one teammate's side immediately","Send both of them home"], correct:1, explain:"Stabilize the shift first, then have the real conversation when there's time to do it right." },
+    { q:"What's the most effective way to give a teammate quick feedback during a shift?", options:["Yell across the kitchen so everyone hears","Brief, specific, and calm — pull them aside for a moment if possible","Wait until the next scheduled review","Say nothing and just redo it yourself"], correct:1, explain:"In-the-moment, private, specific feedback is heard best and corrects behavior fastest." },
+    { q:"A guest raises their voice at a team member. First communication move for the Lead?", options:["Ignore it and hope it resolves","Step in calmly, acknowledge the guest's frustration, and give the team member a moment","Match their energy to show authority","Ask the guest to leave immediately"], correct:1, explain:"Calm de-escalation protects both the guest relationship and the team member." },
+    { q:"What's a sign of de-escalation working?", options:["The other person's volume and tension decreasing","The other person getting louder","The conversation ending abruptly","Nothing changes"], correct:0, explain:"Decreasing volume and tension is the clearest signal a de-escalation approach is working." },
+    { q:"Which phrase best de-escalates a frustrated guest?", options:["\"That's not our policy, sorry.\"","\"I hear you — let's see what we can do.\"","\"You'll have to calm down.\"","\"That's not my problem.\""], correct:1, explain:"Acknowledging and offering to help shifts the guest from adversary to partner in solving it." },
+    { q:"Why is tone often more important than the actual words during a tense moment?", options:["It isn't — words are all that matter","People respond to tone and body language before they process the words","Tone only matters with guests, not teammates","Tone doesn't affect de-escalation"], correct:1, explain:"Tone and body language register before word content does, especially under stress." },
+    { q:"A team member misunderstood an instruction and it caused an error. Best next step?", options:["Assume they weren't listening and give up explaining","Clarify calmly, check understanding, and confirm the fix","Redo the instruction the exact same way","Write them up immediately"], correct:1, explain:"Checking for understanding (not just repeating) closes the communication gap that caused the error." },
+    { q:"What should a Lead do before communicating a stressful policy change to the team?", options:["Just post a note with no context","Understand it themselves first, then explain the \"why,\" not just the \"what\"","Let corporate explain it directly with no Lead involvement","Avoid mentioning it"], correct:1, explain:"Understanding the reasoning first lets the Lead answer questions and reduce anxiety on the team." }
+  ],
+  compliance: [
+    { q:"Why does accurate clock-in/clock-out matter?", options:["It doesn't affect anything real","It ensures correct pay and accurate labor records for compliance","Only managers' time matters","It's just a formality"], correct:1, explain:"Accurate time records protect employee pay and the business's legal compliance." },
+    { q:"An employee forgot to clock in for a break. Correct Lead action?", options:["Ignore it","Follow the documented correction process to fix the record accurately","Just estimate and move on","Tell them not to worry about it"], correct:1, explain:"Accurate correction (not guessing) keeps the record legally defensible." },
+    { q:"Why are meal/rest break laws taken seriously in hospitality operations?", options:["They're optional guidelines","They're legal requirements, and missed breaks can create real liability for the business","They only apply to corporate offices","They don't apply to leads"], correct:1, explain:"Break laws are legal requirements with real financial and legal consequences when missed." },
+    { q:"What's a Lead's responsibility around punctuality standards?", options:["Only worry about their own punctuality","Model punctuality themselves and address patterns of tardiness on the team","Ignore lateness if the shift still gets covered","Punctuality isn't a Lead's concern"], correct:1, explain:"Leads set the standard by modeling it and hold the team accountable to the same bar." },
+    { q:"If a teammate repeatedly clocks in late, what's the appropriate first step?", options:["Immediate termination","A direct, private conversation to understand and address the pattern","Public call-out in a team meeting","Say nothing and hope it improves"], correct:1, explain:"A direct private conversation is the appropriate first step in any progressive approach." },
+    { q:"Why should schedule changes be documented rather than just verbally agreed?", options:["Documentation isn't necessary","It protects both the employee and the business and avoids confusion/disputes","It's extra unnecessary paperwork","Verbal agreements are always sufficient"], correct:1, explain:"Documentation prevents disputes and protects everyone when memories differ later." },
+    { q:"What's a basic compliance responsibility around minors on staff (where applicable)?", options:["No special rules apply","Following applicable minor-labor scheduling/hour restrictions","Minors can work any hours like adults","Only HR needs to know this"], correct:1, explain:"Minor-labor laws restrict scheduling and hours, and Leads scheduling shifts need to know them." },
+    { q:"Why does consistent enforcement of attendance policy matter across the whole team?", options:["It doesn't — enforce case by case with no pattern","Inconsistent enforcement damages trust and can create fairness/legal issues","Favorites should get more flexibility","Policies are just suggestions"], correct:1, explain:"Consistency is what makes a policy fair and legally defensible." }
+  ],
+  throughput: [
+    { q:"During a lunch rush, the fryer station is falling behind and creating a bottleneck. What's the best immediate move?", options:["Ignore it, it'll catch up on its own","Quickly reassign an extra team member to help clear the bottleneck and keep the line moving","Shut down that menu item for the rest of the rush","Take over the register yourself and forget the fryer"], correct:1, explain:"Spotting and reassigning help to a bottleneck the moment it forms is what keeps ticket times under control." },
+    { q:"Ticket times are creeping toward 3+ minutes and the pressure is on to go faster. What's the risk of pushing speed above everything else?", options:["There's no risk, faster is always better","Order accuracy and presentation can slip if speed becomes the only focus","Guests never notice small mistakes","It only matters during slow periods"], correct:1, explain:"Speed without a floor on accuracy and presentation just trades one problem for another." },
+    { q:"Why is cross-training your team on multiple stations valuable during a high-volume shift?", options:["It isn't valuable, specialization is always better","It lets you shift people instantly (cash to prep) when one area suddenly gets slammed","Cross-training slows everyone down","Only managers should know multiple stations"], correct:1, explain:"Cross-trained staff let you redistribute load in real time instead of watching one station drown." },
+    { q:"During a sudden rush, what should a Lead generally do instead of jumping straight into the assembly line?", options:["Always jump in and work the line personally","Step back first to read the floor and direct where help is actually needed","Ignore the rush and continue other tasks","Send everyone on break to reset"], correct:1, explain:"Directing the floor multiplies your impact; disappearing into one station leaves no one managing the whole picture." },
+    { q:"Why track portion control and ingredient waste closely at the end of a shift?", options:["It doesn't matter as long as sales are good","Small consistent variances compound into real margin loss over time","Waste tracking is corporate's job only","Portion sizes never actually vary"], correct:1, explain:"Small daily variances in portioning or waste add up to significant margin loss over weeks and months." },
+    { q:"Foot traffic is trending higher than usual today. What's the right move on prep levels?", options:["Keep prep exactly the same as a normal day","Adjust prep upward proactively based on the trend to avoid running short","Wait until you actually run out before prepping more","Cut prep to save on food cost"], correct:1, explain:"Reading the trend and adjusting prep proactively avoids both shortages and last-minute scrambling." },
+    { q:"The floor is slammed and a temperature log is due. What's the correct move?", options:["Skip it, no one will notice","Still complete it — food safety checks don't pause for volume","Have a guest do it","Backdate it later from memory"], correct:1, explain:"Food safety checks are non-negotiable regardless of how busy the shift is." },
+    { q:"Why do deep-cleaning and equipment maintenance tasks matter even when the team is rushed to close?", options:["They can always wait until tomorrow","Skipped maintenance and cleaning create real safety and equipment-failure risk that catches up with you","They're optional if the shift \"looks\" clean","Only overnight staff need to worry about this"], correct:1, explain:"Deferred maintenance and cleaning debt eventually shows up as equipment failure or a safety issue." }
+  ],
+  coaching: [
+    { q:'What does the "SBI" feedback model stand for?', options:["Speed, Balance, Impact","Situation, Behavior, Impact","Simple, Brief, Immediate","Skill, Belief, Intention"], correct:1, explain:"SBI (Situation-Behavior-Impact) keeps feedback specific and grounded in observed fact." },
+    { q:"What is the purpose of progressive discipline?", options:["To punish employees as harshly as possible","To give employees a fair, documented chance to correct behavior before more serious action","To skip straight to termination","To avoid ever addressing performance issues"], correct:1, explain:"Progressive discipline is about a fair path to improvement, documented at each step." },
+    { q:"A typical progressive discipline sequence often looks like:", options:["Termination first, discussion later","Verbal coaching → written warning → final warning → termination (org-dependent)","Only written warnings, no conversations","Random order depending on mood"], correct:1, explain:"A staged, escalating sequence gives the employee real opportunities to correct course." },
+    { q:"Why should coaching conversations happen privately?", options:["It doesn't matter where","Public correction damages trust and morale; private conversations preserve dignity and are more effective","Privacy isn't necessary for adults","Public correction is more efficient"], correct:1, explain:"Privacy preserves dignity and makes the employee far more likely to actually hear the feedback." },
+    { q:"What makes coaching feedback most actionable?", options:["Vague general statements like \"do better\"","Specific, observed behavior tied to a clear expectation and next step","Comparing them to another employee","Focusing only on personality traits"], correct:1, explain:"Specific, behavior-based feedback with a clear next step is what people can actually act on." },
+    { q:"Why is documentation important in progressive discipline?", options:["It's just bureaucracy","It protects the employee, the business, and creates a clear record if further action is needed","Documentation isn't needed if you remember the conversation","Only HR should document anything"], correct:1, explain:"Documentation protects everyone and ensures fairness and consistency over time." },
+    { q:"An employee reacts defensively during a coaching conversation. Best next move?", options:["Escalate the tone to match them","Stay calm, acknowledge their perspective, and refocus on the specific behavior and expectation","End the conversation immediately","Back down and drop the issue entirely"], correct:1, explain:"Staying calm and refocusing on facts keeps the conversation productive instead of adversarial." },
+    { q:"What's the goal of a coaching conversation, ultimately?", options:["To make the employee feel bad","To help the employee succeed by closing the gap between current and expected performance","To build a paper trail for termination","To assert authority"], correct:1, explain:"Coaching is fundamentally about helping someone succeed, not about punishment." }
+  ],
+  escalation: [
+    { q:"What's the first step in most service recovery models when a guest is upset?", options:["Offer a discount immediately","Listen fully and acknowledge their concern without interrupting","Explain company policy first","Ask them to write a formal complaint"], correct:1, explain:"Listening fully before responding is the foundation of every effective service recovery model." },
+    { q:"Why is a sincere apology important in service recovery, even if the mistake wasn't your fault personally?", options:["It admits legal liability","It shows the guest they're heard and the team owns the experience, which rebuilds trust","Apologies should be avoided to protect the business","It's not necessary if the food was eventually correct"], correct:1, explain:"A sincere apology signals ownership of the guest's experience, which is what rebuilds trust." },
+    { q:"A guest's complaint requires a decision above your authority (e.g., a large refund). Correct move?", options:["Deny the request outright","Acknowledge, then quickly involve a manager rather than leaving the guest waiting indefinitely","Make the guest wait until the manager happens to walk by","Tell the guest it's not your department"], correct:1, explain:"Acknowledging and promptly looping in the right authority keeps the guest from feeling stuck." },
+    { q:'What does "service recovery paradox" refer to?', options:["Recovery always makes things worse","A guest whose problem is handled exceptionally well can end up more loyal than if nothing had gone wrong","It means recovery never works","It only applies to online complaints"], correct:1, explain:"Excellent recovery can actually increase loyalty beyond what a flawless-from-the-start visit would." },
+    { q:"A guest is escalating in a crowded area. Best move for a mid-level leader?", options:["Continue the conversation loudly where it started","Calmly invite them to a quieter spot to continue the conversation","Ignore the crowd and hope it de-escalates","Ask other guests to leave"], correct:1, explain:"Moving to a quieter space lowers the guest's stress and protects everyone's experience." },
+    { q:"What should happen after a service recovery gesture is given (comp, replacement, etc.)?", options:["Nothing further is needed","Follow up to confirm the guest is satisfied and log the incident for pattern-tracking","Avoid mentioning it again","Tell other guests about it"], correct:1, explain:"Following up and logging the incident closes the loop and helps catch systemic issues." },
+    { q:"Why track recurring complaint patterns rather than just resolving each one individually?", options:["Tracking isn't useful","Patterns reveal root causes (a broken process, a training gap) that one-off fixes won't solve","Every complaint is unrelated to the others","Only corporate needs to see patterns"], correct:1, explain:"Patterns point to the real, fixable root cause behind repeated one-off complaints." },
+    { q:"At a AAA Four Diamond property, what's the standard for service recovery compared to a typical QSR?", options:["The same minimal response is fine","The bar is higher — recovery should feel personalized and match the property's premium standard","Four Diamond guests don't expect recovery","Recovery only applies to hotel rooms, not food outlets"], correct:1, explain:"Recovery at a Four Diamond property should feel as premium and personalized as the rest of the experience." }
+  ],
+  hiring: [
+    { q:'What is a "behavioral interview question" designed to do?', options:["Test general knowledge","Ask about a real past situation to predict future behavior (\"Tell me about a time...\")","Trick the candidate","Test typing speed"], correct:1, explain:"Past behavior in a real situation is one of the best predictors of future behavior." },
+    { q:"Why is a structured interview (same core questions for every candidate) better than a freeform chat?", options:["It's not — freeform is always better","It allows fairer, more consistent comparison between candidates and reduces bias","Structure isn't important in hiring","It only matters for corporate roles"], correct:1, explain:"Structure enables fair, apples-to-apples comparison and reduces the influence of bias." },
+    { q:"What's a red flag during onboarding that a new hire may need extra support?", options:["They ask clarifying questions","They seem lost on basic expectations days after their first shift with no improvement","They're friendly with the team","They finish training early"], correct:1, explain:"No improvement over several shifts on basics is the signal worth acting on, not asking questions." },
+    { q:'Why is identifying "high-potential" team members valuable for a mid-level leader?', options:["It isn't valuable","It helps build a pipeline for future Leads/Asst. Managers and improves retention","Only HR should think about this","High performers don't need development"], correct:1, explain:"A visible growth pipeline is one of the strongest levers for retaining good people." },
+    { q:"What's a good first step when a new hire seems to be struggling in week two?", options:["Assume they won't work out and disengage","Have a direct check-in to understand what's hard and offer specific support","Wait for them to quit","Move them to a harder station to \"toughen up\""], correct:1, explain:"A direct, supportive check-in is far more effective than assuming the worst." },
+    { q:'Why should hiring decisions avoid relying purely on "gut feeling"?', options:["Gut feeling is always accurate","It's more prone to bias; pairing it with structured criteria leads to better hires","Structured criteria don't matter","Gut feeling is the only reliable method"], correct:1, explain:"Gut feeling alone is prone to bias — pairing it with structured criteria produces better outcomes." },
+    { q:"What's an effective way to develop a promising Lead toward an Asst. Manager role?", options:["Give them the title with no preparation","Gradually stretch their responsibility (scheduling input, coaching reps) with feedback along the way","Wait until a position opens with zero prior development","Development isn't necessary — good people figure it out"], correct:1, explain:"Gradual, supported stretch assignments are how real readiness for the next level gets built." },
+    { q:"Why does team development matter for retention in a QSR environment?", options:["It doesn't affect retention","People are more likely to stay when they see a real growth path","Retention is only about pay","Development only matters for management-track employees"], correct:1, explain:"A visible growth path is one of the strongest retention levers available, alongside pay." }
+  ],
+  pnl: [
+    { q:"What's the primary purpose of a weekly P&L review at the Restaurant Manager level?", options:["To assign blame for bad days","To catch cost and revenue trends early enough to act on them","To satisfy corporate paperwork requirements","To decide who gets promoted"], correct:1, explain:"Regular review exists to catch and act on trends early, not to assign blame after the fact." },
+    { q:"If food cost percentage is trending above target, what's the first thing a Restaurant Manager should investigate?", options:["Immediately raise menu prices","Portion consistency, waste, and invoicing accuracy before assuming theft","Fire the kitchen staff","Ignore it if sales are still up"], correct:1, explain:"Most food cost drift comes from portioning, waste, or invoicing — not theft. Rule those out first." },
+    { q:"Why does labor scheduling need to flex with forecasted volume rather than staying fixed?", options:["Fixed schedules are always more efficient","Over-scheduling wastes labor dollars and under-scheduling hurts service and burns out the team","Volume never really changes","Corporate sets the schedule regardless"], correct:1, explain:"Flexing labor to forecasted volume is how you protect both cost and service quality." },
+    { q:'What does "controllable cost" mean in a restaurant P&L?', options:["Any cost at all","Costs the on-site manager can directly influence (labor, food, supplies) versus fixed costs set above the store level","Only rent and insurance","Costs that never change"], correct:1, explain:"Knowing what you can actually influence is what makes a P&L review useful rather than just informational." },
+    { q:"A Restaurant Manager notices a vendor's invoice pricing has crept up over several months. Correct move?", options:["Keep paying it, it's not a big deal","Flag it and renegotiate or escalate to purchasing — small creeps compound significantly over a year","Switch vendors without any documentation","Absorb it silently into the budget"], correct:1, explain:"Small, unnoticed price creep compounds into real money over a year — it's worth catching early." },
+    { q:"Why is forecasting accuracy important at a resort/casino property specifically?", options:["It isn't, volume is always steady","Casino/resort traffic can swing heavily with events, promotions, and seasonality, so static forecasts miss badly","Forecasting is corporate's job only","Forecasts are just guesses regardless"], correct:1, explain:"Resort/casino volume swings hard with events and seasonality, so forecasts need active attention." },
+    { q:"What's a healthy way to respond to a missed monthly budget target?", options:["Hide the variance in the next report","Understand the root cause, correct what's controllable, and communicate clearly to leadership","Blame the team publicly","Ignore it and hope next month is better"], correct:1, explain:"Understanding root cause and communicating clearly is what turns a miss into a fixable problem." },
+    { q:"Why should a Restaurant Manager understand the P&L in detail, not just the bottom-line number?", options:["The bottom line is the only thing that matters","Understanding the line items is what lets you actually diagnose and fix problems, not just report them","Detail slows down decision-making","Corporate handles all the detail"], correct:1, explain:"Line-item understanding is what turns a P&L from a report into a management tool." }
+  ],
+  culture: [
+    { q:"What's different about coaching an Asst. Manager compared to coaching a line-level Lead?", options:["Nothing, coaching is identical at every level","You're developing their ability to coach others, not just their individual performance","Asst. Managers don't need coaching","You should coach them less"], correct:1, explain:"At this level you're building their coaching capability, not just their individual output." },
+    { q:"What's a strong sign of a healthy leadership bench at a property?", options:["The Restaurant Manager does everything personally","Multiple people below the top could step up if someone left tomorrow","One person holds all the institutional knowledge","Turnover among leaders is high but line staff stays"], correct:1, explain:"Bench strength means the operation doesn't depend entirely on any one person." },
+    { q:"Why does culture-setting matter more at the Restaurant Manager level than at the shift-lead level?", options:["It doesn't matter more, it's identical","The RM's behavior and priorities set the tone that cascades through every manager and shift below them","Culture is HR's job entirely","Only new hires are affected by culture"], correct:1, explain:"Culture cascades from the top — the RM's own behavior sets what the whole team treats as normal." },
+    { q:"An Asst. Manager under you is struggling to hold their own team accountable. Best RM move?", options:["Take over disciplining their team directly and permanently","Coach the Asst. Manager on HOW to hold their team accountable, building their skill","Ignore it, it will resolve itself","Demote them immediately"], correct:1, explain:"Building the Asst. Manager's own accountability skill scales further than doing it for them." },
+    { q:"Why is retention of good Asst. Managers/Sous Chefs a Restaurant Manager priority?", options:["It isn't a priority, they're replaceable","Losing developed leaders is expensive and disruptive; retention protects the whole operation's stability","Retention is only about pay","Only line-level retention matters"], correct:1, explain:"Developed leaders are expensive to replace and losing them destabilizes the whole operation." },
+    { q:'What does "leading leaders" require that "leading a shift" doesn\'t?', options:["The exact same skill set","Influencing through others rather than doing everything yourself","Less communication","No delegation at all"], correct:1, explain:"Leading leaders means multiplying your impact through others, not doing it all yourself." },
+    { q:"How should a Restaurant Manager handle a disagreement between two Asst. Managers?", options:["Ignore it and let them sort it out indefinitely","Facilitate a direct conversation between them, coaching both toward resolution","Always side with whoever has more tenure","Make both of them stop talking to each other"], correct:1, explain:"Facilitating a direct, coached conversation resolves it while building both managers' skills." },
+    { q:"Why is modeling composure under pressure especially important for a Restaurant Manager?", options:["It isn't important at this level","Every manager below is watching and will mirror how the RM handles high-stress situations","Only line staff need composure","Composure only matters during reviews"], correct:1, explain:"Every manager below is watching and will mirror how the RM handles pressure." }
+  ],
+  crisis: [
+    { q:"What's the first priority in any on-property crisis or safety incident?", options:["Protecting the outlet's reputation","Immediate safety of guests and team members","Documenting it for insurance","Notifying corporate first"], correct:1, explain:"Safety always comes before reputation, documentation, or notification." },
+    { q:"Why does a Restaurant Manager need a clear escalation path to resort/casino security?", options:["Security isn't relevant to food & beverage outlets","Fast, correct escalation is critical when an incident goes beyond what the outlet can handle alone","Only the front desk needs this","Escalation paths are unnecessary at Four Diamond properties"], correct:1, explain:"Knowing exactly who to call and when is critical the moment an incident exceeds the outlet's own capability." },
+    { q:"A guest has a medical emergency in your outlet. Correct immediate action?", options:["Wait for them to ask for help","Call for property medical/security response immediately and clear the area appropriately","Continue service as normal","Ask another guest to handle it"], correct:1, explain:"Immediate professional response and clearing the area is the correct first move, every time." },
+    { q:"Why is a documented incident report important after any significant event?", options:["It's just paperwork","It creates an accurate record for follow-up, liability, and pattern-tracking across incidents","Reports are only needed if a guest complains","Verbal notes are always sufficient"], correct:1, explain:"A written record protects everyone and reveals patterns that a verbal memory won't." },
+    { q:"What's the risk of a Restaurant Manager improvising a media/PR response to a serious incident?", options:["There's no risk, managers should always speak publicly","Off-message statements can create legal and reputational damage — that's why comms should route through proper channels","PR never matters for a single outlet","Guests don't share incidents online"], correct:1, explain:"Off-message statements on a serious incident can create real legal and reputational damage." },
+    { q:"Why should a Restaurant Manager run through emergency procedures with the team periodically, not just once at onboarding?", options:["Repetition wastes time","Under real stress, people default to what's practiced, not what's remembered from one training session","One-time training is always sufficient","Emergency procedures never change"], correct:1, explain:"Under real stress people fall back on what's practiced, not what they heard once months ago." },
+    { q:"A team member is hurt on the job. Correct sequence?", options:["Finish the shift, deal with it later","Ensure immediate care, follow incident-reporting procedure, and support the employee through next steps","Send them home without documentation","Only act if they ask for help"], correct:1, explain:"Immediate care, proper documentation, and follow-through support is the correct sequence, always." },
+    { q:"Why does a AAA Four Diamond property hold crisis response to a higher standard than a typical QSR?", options:["It doesn't, response is the same everywhere","Guest expectations and brand exposure are higher, so calm, professional handling matters even more","Crisis response doesn't relate to service standards","Only security staff are held to that standard"], correct:1, explain:"Higher guest expectations and brand exposure mean crisis response needs the same premium standard as everyday service." }
+  ]
+};
+
+const ASSESSMENT_BANK = {
+  eq: [
+    "I stay calm and think clearly when the shift gets stressful or chaotic.",
+    "I notice when my own mood is affecting how I talk to my team, and I adjust.",
+    "I pick up on when a teammate or guest is frustrated, even before they say anything.",
+    "I can give feedback to a teammate without it turning into a conflict.",
+    "I recover quickly after a mistake instead of dwelling on it.",
+    "My team would say I set a steady, positive tone during busy periods."
+  ],
+  guest: [
+    "I greet every guest in a way that makes them feel genuinely welcomed.",
+    "I look for ways to exceed what the guest expects, not just meet the order.",
+    "I proactively update guests when something is taking longer than usual.",
+    "I hold myself to a premium service standard even during the busiest rushes.",
+    "I notice and correct small things (spills, messy counters) without being told.",
+    "I coach teammates in the moment when I see a guest interaction that could be better."
+  ],
+  foodsafety: [
+    "I consistently follow temperature-check procedures without needing reminders.",
+    "I catch and correct cross-contamination risks before they become a problem.",
+    "I complete opening/closing checklists fully, even when we're short-staffed.",
+    "I speak up immediately when I see a food safety issue, regardless of who caused it.",
+    "I hold my team accountable to food safety standards, not just myself.",
+    "I stay current on our food safety procedures and ask when I'm unsure."
+  ],
+  comm: [
+    "I stay composed when a conversation with a teammate or guest gets tense.",
+    "I give clear, specific instructions that my team rarely has to ask me to repeat.",
+    "I address conflict between teammates directly instead of letting it linger.",
+    "I explain the \"why\" behind changes, not just the \"what.\"",
+    "I listen fully before responding when someone is upset.",
+    "My team feels comfortable coming to me when something's wrong."
+  ],
+  compliance: [
+    "I am consistently on time and ready to work at the start of my shift.",
+    "I follow clock-in/clock-out and break procedures accurately every shift.",
+    "I address attendance issues with my team promptly and fairly.",
+    "I document schedule changes and exceptions instead of relying on verbal agreements.",
+    "I apply policy consistently across the team, without playing favorites.",
+    "I understand the compliance basics well enough to explain them to a new hire."
+  ],
+  throughput: [
+    "I quickly identify and clear operational bottlenecks (a slow register, a backed-up fryer) during peak rushes.",
+    "I maintain order accuracy and presentation standards even when ticket times are under 2-3 minutes.",
+    "I cross-train my team so anyone can instantly swap positions (cash to prep) when lines swell.",
+    "During a rush, I step back to direct the overall flow rather than jumping into the line myself.",
+    "I closely monitor portion control, ingredient waste, and cash drawer variances at the end of each shift.",
+    "I adjust prep levels dynamically based on foot traffic trends to avoid waste or shortages.",
+    "I stay disciplined about food safety protocols (holding temps, expiration labels) even when the floor is slammed.",
+    "I keep up with deep-cleaning and equipment maintenance tasks even when the team is rushed to close."
+  ],
+  coaching: [
+    "I give feedback using specific examples, not vague generalities.",
+    "I have coaching conversations privately, not in front of the team.",
+    "I document performance conversations so there's a clear record.",
+    "I follow through on progressive discipline steps consistently and fairly.",
+    "I stay calm when an employee reacts defensively to feedback.",
+    "I check in after a coaching conversation to see if things have improved."
+  ],
+  escalation: [
+    "I listen fully to a guest's complaint before responding or explaining.",
+    "I involve a manager quickly when a situation is beyond my authority, rather than stalling.",
+    "I move tense conversations to a quieter, more private space when possible.",
+    "I follow up after a service recovery gesture to confirm the guest is satisfied.",
+    "I log recurring complaint patterns instead of treating each one as unrelated.",
+    "I hold recovery efforts to the property's premium service standard, not the bare minimum."
+  ],
+  hiring: [
+    "I ask consistent, structured questions when I'm involved in interviewing.",
+    "I check in proactively with new hires during their first two weeks.",
+    "I actively look for team members with leadership potential.",
+    "I give stretch opportunities to develop promising team members.",
+    "I balance gut feeling with objective criteria when evaluating candidates.",
+    "I see team development as part of my job, not extra work."
+  ],
+  pnl: [
+    "I review my P&L regularly enough to catch cost trends before they become a real problem.",
+    "I understand which costs I can actually control versus which are fixed above my level.",
+    "I adjust labor scheduling proactively based on forecasted volume, not just habit.",
+    "I dig into root causes of cost variances instead of just reporting the number.",
+    "I plan for the volume swings that come with resort/casino events and seasonality.",
+    "I can clearly explain my P&L performance to my own leadership, not just react to it."
+  ],
+  culture: [
+    "I actively develop my Asst. Managers'/Sous Chefs' ability to coach and lead their own teams.",
+    "I have at least one person ready to step up if a key leader left tomorrow.",
+    "My own behavior and priorities set a tone I'd want cascading through the whole team.",
+    "I coach my managers on how to solve problems rather than solving everything myself.",
+    "I make retention of strong leaders a deliberate priority, not an afterthought.",
+    "I stay composed under pressure in a way I'd want my managers to model."
+  ],
+  crisis: [
+    "I know exactly who to call and what to do in a medical or safety emergency in my outlet.",
+    "I document incidents thoroughly and promptly, not just when something goes seriously wrong.",
+    "I route anything media/PR-sensitive through the proper channels rather than improvising.",
+    "I run emergency procedures with my team periodically, not just once.",
+    "I stay calm and decisive in the moment during a real incident.",
+    "I hold my outlet's crisis response to the same premium standard as our everyday service."
+  ]
+};
+
+// ---- State ----
+let tCurrentUser = null;
+let tCurrentProfile = null;
+let tAttempts = [];
+let tView = 'loading'; // loading | auth | profile-setup | home | quiz | assessment | result | my-results
+let tAuthMode = 'signin';
+let tAuthError = '';
+let tActiveModuleId = null;
+let tQuizState = null;
+let tAssessState = null;
+let tLastResult = null;
+let tArchetypeResult = null;
+let tArchetypeState = null;
+let tArchetypeLoading = false;
+let tArchetypeError = '';
+
+function moduleById(id){ return TRAINING_MODULES.find(m=>m.id===id); }
+function tierModules(tier){ return TRAINING_MODULES.filter(m=>m.tier===tier); }
+
+function trainingModuleAttempts(moduleId, type){
+  return tAttempts.filter(a=>a.moduleId===moduleId && a.type===type).sort((a,b)=> (b.completedAt||0)-(a.completedAt||0));
+}
+function bestQuizScore(moduleId){
+  const list = trainingModuleAttempts(moduleId,'quiz');
+  if(!list.length) return null;
+  return Math.max(...list.map(a=>a.score));
+}
+function latestAssessment(moduleId){
+  const list = trainingModuleAttempts(moduleId,'assessment');
+  return list.length ? list[0] : null;
+}
+
+// ---- Auth ----
+if(trainingAuth){
+  trainingAuth.onAuthStateChanged(async (user)=>{
+    tCurrentUser = user;
+    tAdminProfiles = null;
+    if(!user){
+      tCurrentProfile = null; tAttempts = []; tArchetypeResult = null;
+      tView = 'auth';
+      if(activeTabKey()==='training') renderTraining();
+      return;
+    }
+    tView = 'loading';
+    if(activeTabKey()==='training') renderTraining();
+    await loadTrainingProfile();
+    await loadTrainingAttempts();
+    await loadArchetypeResult();
+    tView = tCurrentProfile ? 'home' : 'profile-setup';
+    if(activeTabKey()==='training') renderTraining();
+  });
+}
+
+async function loadTrainingProfile(){
+  if(!db || !tCurrentUser) return;
+  try{
+    const snap = await db.collection('training_profiles').doc(tCurrentUser.uid).get();
+    tCurrentProfile = snap.exists ? snap.data() : null;
+  }catch(err){ console.error('loadTrainingProfile', err); tCurrentProfile = null; }
+}
+async function loadTrainingAttempts(){
+  if(!db || !tCurrentUser) return;
+  try{
+    const q = await db.collection('training_attempts').where('uid','==',tCurrentUser.uid).get();
+    tAttempts = q.docs.map(d=>({ id:d.id, ...d.data() }));
+  }catch(err){ console.error('loadTrainingAttempts', err); tAttempts = []; }
+}
+async function loadArchetypeResult(){
+  if(!db || !tCurrentUser) return;
+  try{
+    const snap = await db.collection('archetype_results').doc(tCurrentUser.uid).get();
+    tArchetypeResult = snap.exists ? snap.data() : null;
+  }catch(err){ console.error('loadArchetypeResult', err); tArchetypeResult = null; }
+}
+async function saveTrainingProfile(profile){
+  tCurrentProfile = profile;
+  if(!db || !tCurrentUser) return;
+  await db.collection('training_profiles').doc(tCurrentUser.uid).set(profile);
+}
+async function saveTrainingAttempt(record){
+  const withMeta = { ...record, uid: tCurrentUser.uid, completedAt: Date.now() };
+  tAttempts.unshift(withMeta);
+  if(!db) return;
+  try{
+    const ref = await db.collection('training_attempts').add(withMeta);
+    withMeta.id = ref.id;
+  }catch(err){ console.error('saveTrainingAttempt', err); }
+}
+
+async function handleTrainingSignUp(email, password, pin){
+  tAuthError = '';
+  try{
+    await trainingAuth.createUserWithEmailAndPassword(email, password);
+  }catch(err){ tAuthError = err.message; renderTraining(); }
+}
+async function handleTrainingSignIn(email, password){
+  tAuthError = '';
+  try{
+    await trainingAuth.signInWithEmailAndPassword(email, password);
+  }catch(err){ tAuthError = err.message; renderTraining(); }
+}
+function handleTrainingSignOut(){ trainingAuth.signOut(); }
+
+// ---- Render dispatcher ----
+function renderTraining(){
+  const el = document.getElementById('trainingTab');
+  if(!trainingAuth){ el.innerHTML = '<div class="panel"><p>Training sign-in is not available (Firebase Authentication is not configured for this app).</p></div>'; return; }
+  if(tView==='loading'){ el.innerHTML = '<div class="panel" style="text-align:center;color:var(--muted);">Loading…</div>'; return; }
+  if(tView==='auth'){ el.innerHTML = renderAuthHtml(); wireAuthHandlers(); return; }
+  if(tView==='profile-setup'){ el.innerHTML = renderProfileSetupHtml(); wireProfileSetupHandlers(); return; }
+  if(tView==='home'){ el.innerHTML = renderTrainingHomeHtml(); wireTrainingHomeHandlers(); return; }
+  if(tView==='quiz'){ el.innerHTML = renderQuizHtml(); wireQuizHandlers(); return; }
+  if(tView==='assessment'){ el.innerHTML = renderAssessmentHtml(); wireAssessmentHandlers(); return; }
+  if(tView==='result'){ el.innerHTML = renderResultHtml(); wireResultHandlers(); return; }
+  if(tView==='my-results'){ el.innerHTML = renderMyResultsHtml(); wireMyResultsHandlers(); return; }
+  if(tView==='archetype-quiz'){ el.innerHTML = renderArchetypeQuizHtml(); wireArchetypeQuizHandlers(); return; }
+  if(tView==='archetype-result'){ el.innerHTML = renderArchetypeResultHtml(); wireArchetypeResultHandlers(); return; }
+  if(tView==='admin-users'){
+    if(!isTrainingAdmin()){ tView='home'; el.innerHTML = renderTrainingHomeHtml(); wireTrainingHomeHandlers(); return; }
+    el.innerHTML = renderAdminUsersHtml(); wireAdminUsersHandlers(); return;
+  }
+}
+window.renderTraining = renderTraining;
+
+function tGoHome(){ tView='home'; renderTraining(); }
+
+// ---- Auth view ----
+function renderAuthHtml(){
+  const isSignUp = tAuthMode==='signup';
+  return `
+    <div class="auth-box">
+      <h2>Leadership Training</h2>
+      <div class="sub" style="color:var(--muted);font-size:13px;">Sign in with your work email to take quizzes and self-assessments and track your progress.</div>
+      <form id="tAuthForm">
+        <div class="field"><label>Email</label><input type="email" id="tAuthEmail" required placeholder="you@example.com"></div>
+        <div class="field"><label>Password</label><input type="password" id="tAuthPassword" required minlength="6" placeholder="At least 6 characters"></div>
+        <button type="submit" class="btn-primary">${isSignUp ? 'Create Account' : 'Sign In'}</button>
+        <div class="auth-error">${tAuthError||''}</div>
+      </form>
+      <div class="auth-switch">
+        ${isSignUp ? "Already have an account? <a id='tAuthSwitch'>Sign in</a>" : "New here? <a id='tAuthSwitch'>Create an account</a>"}
+      </div>
+    </div>`;
+}
+function wireAuthHandlers(){
+  document.getElementById('tAuthForm').addEventListener('submit', (e)=>{
+    e.preventDefault();
+    const email = document.getElementById('tAuthEmail').value.trim();
+    const password = document.getElementById('tAuthPassword').value;
+    if(tAuthMode==='signup') handleTrainingSignUp(email, password);
+    else handleTrainingSignIn(email, password);
+  });
+  document.getElementById('tAuthSwitch').addEventListener('click', ()=>{
+    tAuthMode = tAuthMode==='signup' ? 'signin' : 'signup';
+    tAuthError = '';
+    renderTraining();
+  });
+}
+
+// ---- Profile setup view ----
+const TRAINING_ROLES = ['Lead','Asst. Chef','Asst. Manager','Sous Chef','Restaurant Manager','Other (entry-level)','Other (mid-level)','Other (senior-level)'];
+function renderProfileSetupHtml(){
+  return `
+    <div class="panel" style="max-width:460px;margin:40px auto;">
+      <h2>Set up your training profile<small>One-time — used to show you the right modules and track your progress.</small></h2>
+      <form id="tProfileForm">
+        <div class="field" style="margin-bottom:12px;"><label>Your name</label><input type="text" id="tProfileName" required placeholder="Full name"></div>
+        <div class="field" style="margin-bottom:16px;"><label>Your role</label>
+          <select id="tProfileRole">${TRAINING_ROLES.map(r=>`<option value="${r}">${r}</option>`).join('')}</select>
+        </div>
+        <button type="submit" class="btn-primary">Start Training</button>
+      </form>
+    </div>`;
+}
+function deriveTier(role){
+  if(ROLE_TIER_MAP[role]) return ROLE_TIER_MAP[role];
+  if(role.includes('senior-level')) return 'senior';
+  if(role.includes('mid-level')) return 'mid';
+  return 'entry';
+}
+function wireProfileSetupHandlers(){
+  document.getElementById('tProfileForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const role = document.getElementById('tProfileRole').value;
+    const tier = deriveTier(role);
+    await saveTrainingProfile({
+      displayName: document.getElementById('tProfileName').value.trim(),
+      role, tier,
+      createdAt: Date.now()
+    });
+    tView = 'home';
+    renderTraining();
+  });
+}
+
+// ---- Home view (module grid) ----
+function renderTrainingHomeHtml(){
+  const tier = tCurrentProfile.tier;
+  const modules = tierModules(tier);
+  return `
+    <div class="panel" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+      <div>
+        <h2 style="margin-bottom:4px;">Welcome, ${tCurrentProfile.displayName}<small>${TIER_LABEL[tier]} &middot; ${tCurrentProfile.role}</small></h2>
+      </div>
+      <div style="display:flex;gap:8px;">
+        ${isTrainingAdmin() ? '<button class="btn-secondary" id="tAdminUsersBtn">Manage Users</button>' : ''}
+        <button class="btn-secondary" id="tMyResultsBtn">My Results</button>
+        <button class="btn-secondary" id="tSignOutBtn">Sign Out</button>
+      </div>
+    </div>
+    <div class="archetype-banner">
+      <div>
+        <h3>&#127775; Leadership Archetype Assessment</h3>
+        <p>${tArchetypeResult ? 'You\'ve already got a result — retake it any time your style evolves.' : '8 quick scenarios. Get a personalized AI coaching profile of your leadership style.'}</p>
+      </div>
+      <button class="btn-primary" id="tArchetypeStartBtn">${tArchetypeResult ? 'View / Retake' : 'Take Assessment'}</button>
+    </div>
+    <div class="module-grid">
+      ${modules.map(m=>{
+        const best = bestQuizScore(m.id);
+        const assess = latestAssessment(m.id);
+        const pct = best===null ? 0 : best;
+        return `
+        <div class="module-card">
+          <div class="icon">${m.icon}</div>
+          <h3>${m.title}</h3>
+          <div class="progress-row">
+            <span>Quiz ${best===null ? 'not taken' : best+'%'}</span>
+            <div class="progress-track"><div class="progress-fill" style="width:${pct}%;"></div></div>
+          </div>
+          <div class="progress-row"><span>Self-assessment ${assess ? 'completed' : 'not started'}</span></div>
+          <div class="actions">
+            <button class="btn-secondary" data-quiz="${m.id}">${best===null?'Take Quiz':'Retake Quiz'}</button>
+            <button class="btn-secondary" data-assess="${m.id}">${assess?'Redo Self-Assess':'Self-Assess'}</button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+function wireTrainingHomeHandlers(){
+  document.getElementById('tMyResultsBtn').addEventListener('click', ()=>{ tView='my-results'; renderTraining(); });
+  document.getElementById('tSignOutBtn').addEventListener('click', handleTrainingSignOut);
+  document.querySelectorAll('[data-quiz]').forEach(b=>b.addEventListener('click', ()=>startQuiz(b.dataset.quiz)));
+  document.querySelectorAll('[data-assess]').forEach(b=>b.addEventListener('click', ()=>startAssessment(b.dataset.assess)));
+  const adminBtn = document.getElementById('tAdminUsersBtn');
+  if(adminBtn) adminBtn.addEventListener('click', ()=>{ tView='admin-users'; renderTraining(); });
+  document.getElementById('tArchetypeStartBtn').addEventListener('click', ()=>{
+    if(tArchetypeResult){ tView='archetype-result'; renderTraining(); }
+    else { startArchetypeQuiz(); }
+  });
+}
+
+// ---- Admin: manage users (edit any employee's profile) ----
+let tAdminProfiles = null;
+let tAdminError = '';
+async function loadAllTrainingProfiles(){
+  const snap = await db.collection('training_profiles').get();
+  return snap.docs.map(d=>({ uid:d.id, ...d.data() })).sort((a,b)=>(a.displayName||'').localeCompare(b.displayName||''));
+}
+function renderAdminUsersHtml(){
+  if(tAdminProfiles===null){
+    loadAllTrainingProfiles().then(list=>{ tAdminProfiles = list; renderTraining(); });
+    return '<div class="panel" style="text-align:center;color:var(--muted);">Loading users…</div>';
+  }
+  return `
+    <div class="panel" style="max-width:720px;margin:0 auto;">
+      <a class="breadcrumb-link" id="tAdminBack">&larr; Back to modules</a>
+      <h2 style="margin-top:14px;">Manage Users<small>Edit name, role, or tier for any employee. Password/login resets are done in the Firebase Console.</small></h2>
+      <div class="auth-error">${tAdminError||''}</div>
+      ${tAdminProfiles.length ? tAdminProfiles.map(p=>`
+        <div class="panel" style="margin-bottom:12px;">
+          <div class="field-row full">
+            <div class="field"><label>Name</label><input type="text" data-field="displayName" data-uid="${p.uid}" value="${(p.displayName||'').replace(/"/g,'&quot;')}"></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Role</label>
+              <select data-field="role" data-uid="${p.uid}">
+                ${TRAINING_ROLES.map(r=>`<option value="${r}" ${p.role===r?'selected':''}>${r}</option>`).join('')}
+              </select>
+            </div>
+            <div class="field"><label>Tier</label>
+              <select data-field="tier" data-uid="${p.uid}">
+                <option value="entry" ${p.tier==='entry'?'selected':''}>Entry-Level Leadership</option>
+                <option value="mid" ${p.tier==='mid'?'selected':''}>Mid-Level Leadership</option>
+                <option value="senior" ${p.tier==='senior'?'selected':''}>Senior Leadership (Restaurant Manager)</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn-primary" data-save="${p.uid}">Save</button>
+          <span class="pill good" data-saved="${p.uid}" style="display:none;margin-left:8px;">Saved</span>
+        </div>`).join('') : '<p style="color:var(--muted);">No employees have set up a training profile yet.</p>'}
+    </div>`;
+}
+function wireAdminUsersHandlers(){
+  const backBtn = document.getElementById('tAdminBack');
+  if(backBtn) backBtn.addEventListener('click', ()=>{ tAdminProfiles=null; tGoHome(); });
+  document.querySelectorAll('[data-save]').forEach(btn=>btn.addEventListener('click', async ()=>{
+    const uid = btn.dataset.save;
+    const updates = {};
+    document.querySelectorAll(`[data-uid="${uid}"]`).forEach(input=>{ updates[input.dataset.field] = input.value; });
+    tAdminError = '';
+    try{
+      await db.collection('training_profiles').doc(uid).update(updates);
+      const p = tAdminProfiles.find(x=>x.uid===uid);
+      Object.assign(p, updates);
+      const savedBadge = document.querySelector(`[data-saved="${uid}"]`);
+      savedBadge.style.display = 'inline-block';
+      setTimeout(()=>{ savedBadge.style.display = 'none'; }, 2000);
+    }catch(err){
+      tAdminError = 'Save failed: ' + err.message;
+      renderTraining();
+    }
+  }));
+}
+
+// ---- Quiz runner ----
+function startQuiz(moduleId){
+  tActiveModuleId = moduleId;
+  tQuizState = { qIndex:0, answers:[], selected:null, answered:false, finalizing:false };
+  tView = 'quiz';
+  renderTraining();
+}
+function renderQuizHtml(){
+  const bank = QUIZ_BANK[tActiveModuleId];
+  const q = bank[tQuizState.qIndex];
+  const mod = moduleById(tActiveModuleId);
+  return `
+    <div class="panel" style="max-width:640px;margin:0 auto;">
+      <a class="breadcrumb-link" id="tQuizBack">&larr; Back to modules</a>
+      <div class="quiz-progress" style="margin-top:14px;">${mod.title} &middot; Question ${tQuizState.qIndex+1} of ${bank.length}</div>
+      <div class="quiz-question">${q.q}</div>
+      <div class="quiz-options">
+        ${q.options.map((opt,i)=>{
+          let cls = 'quiz-option';
+          if(tQuizState.answered){
+            if(i===q.correct) cls += ' correct';
+            else if(i===tQuizState.selected) cls += ' incorrect';
+          } else if(i===tQuizState.selected) cls += ' selected';
+          return `<button class="${cls}" data-opt="${i}" ${tQuizState.answered?'disabled':''}>${opt}</button>`;
+        }).join('')}
+      </div>
+      ${tQuizState.answered ? `<div class="quiz-explain">${q.explain}</div>` : ''}
+      <button class="btn-primary" id="tQuizNext" ${tQuizState.answered?'':'disabled'}>${tQuizState.qIndex+1===bank.length ? 'See Results' : 'Next Question'}</button>
+    </div>`;
+}
+function wireQuizHandlers(){
+  document.getElementById('tQuizBack').addEventListener('click', tGoHome);
+  const bank = QUIZ_BANK[tActiveModuleId];
+  const q = bank[tQuizState.qIndex];
+  document.querySelectorAll('[data-opt]').forEach(b=>b.addEventListener('click', ()=>{
+    if(tQuizState.answered) return;
+    tQuizState.selected = parseInt(b.dataset.opt,10);
+    tQuizState.answered = true;
+    tQuizState.answers.push({ qIndex: tQuizState.qIndex, selected: tQuizState.selected, correct: tQuizState.selected===q.correct });
+    renderTraining();
+  }));
+  const nextBtn = document.getElementById('tQuizNext');
+  if(!tQuizState.answered) return;
+  nextBtn.addEventListener('click', async ()=>{
+    if(tQuizState.finalizing) return;
+    if(tQuizState.qIndex+1 < bank.length){
+      tQuizState.qIndex++; tQuizState.selected=null; tQuizState.answered=false;
+      renderTraining();
+    } else {
+      tQuizState.finalizing = true;
+      nextBtn.disabled = true;
+      const correctCount = tQuizState.answers.filter(a=>a.correct).length;
+      const score = Math.round((correctCount/bank.length)*100);
+      await saveTrainingAttempt({ moduleId: tActiveModuleId, type:'quiz', score, answers: tQuizState.answers });
+      tLastResult = { type:'quiz', moduleId: tActiveModuleId, score, passed: score>=80 };
+      tView = 'result';
+      renderTraining();
+    }
+  });
+}
+
+// ---- Self-assessment runner ----
+function startAssessment(moduleId){
+  tActiveModuleId = moduleId;
+  tAssessState = { ratings:{}, finalizing:false };
+  tView = 'assessment';
+  renderTraining();
+}
+function renderAssessmentHtml(){
+  const statements = ASSESSMENT_BANK[tActiveModuleId];
+  const mod = moduleById(tActiveModuleId);
+  const allAnswered = statements.every((_,i)=> tAssessState.ratings[i]!==undefined);
+  return `
+    <div class="panel" style="max-width:640px;margin:0 auto;">
+      <a class="breadcrumb-link" id="tAssessBack">&larr; Back to modules</a>
+      <h2 style="margin-top:14px;">${mod.title} — Self-Assessment<small>Rate yourself honestly: 1 = Rarely, 5 = Consistently. There's no wrong answer — this is for your own growth.</small></h2>
+      ${statements.map((s,i)=>`
+        <div class="likert-row">
+          <div class="likert-statement">${s}</div>
+          <div class="likert-scale">
+            ${[1,2,3,4,5].map(v=>`<button data-i="${i}" data-v="${v}" class="${tAssessState.ratings[i]===v?'selected':''}">${v}</button>`).join('')}
+          </div>
+        </div>`).join('')}
+      <button class="btn-primary" id="tAssessSubmit" style="margin-top:16px;" ${allAnswered?'':'disabled'}>See My Results</button>
+    </div>`;
+}
+function wireAssessmentHandlers(){
+  document.getElementById('tAssessBack').addEventListener('click', tGoHome);
+  document.querySelectorAll('.likert-scale button').forEach(b=>b.addEventListener('click', ()=>{
+    tAssessState.ratings[parseInt(b.dataset.i,10)] = parseInt(b.dataset.v,10);
+    renderTraining();
+  }));
+  const submitBtn = document.getElementById('tAssessSubmit');
+  if(submitBtn.disabled) return;
+  submitBtn.addEventListener('click', async ()=>{
+    if(tAssessState.finalizing) return;
+    tAssessState.finalizing = true;
+    submitBtn.disabled = true;
+    const statements = ASSESSMENT_BANK[tActiveModuleId];
+    const values = statements.map((_,i)=>tAssessState.ratings[i]);
+    const avg = values.reduce((a,b)=>a+b,0)/values.length;
+    await saveTrainingAttempt({ moduleId: tActiveModuleId, type:'assessment', score: Math.round(avg*20), ratings: tAssessState.ratings });
+    tLastResult = { type:'assessment', moduleId: tActiveModuleId, avg };
+    tView = 'result';
+    renderTraining();
+  });
+}
+
+// ---- Result view ----
+function renderResultHtml(){
+  const mod = moduleById(tLastResult.moduleId);
+  if(tLastResult.type==='quiz'){
+    const passed = tLastResult.passed;
+    return `
+      <div class="panel result-hero" style="max-width:480px;margin:0 auto;">
+        <div class="score-big">${tLastResult.score}%</div>
+        <div class="score-label">${mod.title} Quiz</div>
+        <div class="pill ${passed?'good':'bad'}" style="margin-top:14px;">${passed ? 'Passed (80%+)' : 'Below passing — retake anytime'}</div>
+        <div style="margin-top:22px;display:flex;gap:10px;justify-content:center;">
+          <button class="btn-secondary" id="tResultRetake">Retake Quiz</button>
+          <button class="btn-primary" id="tResultHome">Back to Modules</button>
+        </div>
+      </div>`;
+  }
+  return `
+    <div class="panel result-hero" style="max-width:480px;margin:0 auto;">
+      <div class="score-big">${tLastResult.avg.toFixed(1)}/5</div>
+      <div class="score-label">${mod.title} Self-Assessment</div>
+      <div style="margin-top:22px;display:flex;gap:10px;justify-content:center;">
+        <button class="btn-primary" id="tResultHome">Back to Modules</button>
+      </div>
+    </div>`;
+}
+function wireResultHandlers(){
+  document.getElementById('tResultHome').addEventListener('click', tGoHome);
+  const retake = document.getElementById('tResultRetake');
+  if(retake) retake.addEventListener('click', ()=>startQuiz(tLastResult.moduleId));
+}
+
+// ---- My Results view ----
+function renderMyResultsHtml(){
+  const tier = tCurrentProfile.tier;
+  const modules = tierModules(tier);
+  const rows = tAttempts.slice().sort((a,b)=>(b.completedAt||0)-(a.completedAt||0));
+  return `
+    <div class="panel" style="max-width:640px;margin:0 auto;">
+      <a class="breadcrumb-link" id="tResultsBack">&larr; Back to modules</a>
+      <h2 style="margin-top:14px;">My Results</h2>
+      <canvas id="tResultsChart" height="220"></canvas>
+      <div style="margin-top:20px;">
+        ${rows.length ? rows.map(r=>{
+          const mod = moduleById(r.moduleId);
+          return `<div class="attempt-row"><span>${mod?mod.title:r.moduleId} &middot; ${r.type==='quiz'?'Quiz':'Self-Assessment'}</span><span class="pill ${r.type==='quiz'?(r.score>=80?'good':'bad'):'warn'}">${r.type==='quiz'?r.score+'%':(r.score/20).toFixed(1)+'/5'}</span></div>`;
+        }).join('') : '<p style="color:var(--muted);">No attempts yet.</p>'}
+      </div>
+    </div>`;
+}
+function wireMyResultsHandlers(){
+  document.getElementById('tResultsBack').addEventListener('click', tGoHome);
+  const tier = tCurrentProfile.tier;
+  const modules = tierModules(tier);
+  const labels = modules.map(m=>m.title.split(' ').slice(0,2).join(' '));
+  const data = modules.map(m=>{
+    const best = bestQuizScore(m.id);
+    return best===null ? 0 : best;
+  });
+  new Chart(document.getElementById('tResultsChart'), {
+    type:'radar',
+    data:{ labels, datasets:[{ label:'Quiz Score %', data, backgroundColor:'rgba(201,162,39,0.20)', borderColor:'#c9a227', pointBackgroundColor:'#c9a227' }] },
+    options:{ scales:{ r:{ min:0, max:100, ticks:{ color:'#667085', backdropColor:'transparent' }, grid:{ color:'rgba(15,23,42,0.08)' }, pointLabels:{ color:'#e8d9a0', font:{ size:10.5 } } } }, plugins:{ legend:{ display:false } } }
+  });
+}
+
+// ---- Leadership Archetype quiz runner ----
+function startArchetypeQuiz(){
+  tArchetypeState = { qIndex:0, tally:{ Operator:0, Coach:0, Host:0, Firefighter:0 } };
+  tArchetypeError = '';
+  tView = 'archetype-quiz';
+  renderTraining();
+}
+function renderArchetypeQuizHtml(){
+  const q = ARCHETYPE_QUESTIONS[tArchetypeState.qIndex];
+  return `
+    <div class="panel" style="max-width:640px;margin:0 auto;">
+      <a class="breadcrumb-link" id="tArchetypeBack">&larr; Back to modules</a>
+      <div class="quiz-progress" style="margin-top:14px;">Leadership Archetype &middot; Question ${tArchetypeState.qIndex+1} of ${ARCHETYPE_QUESTIONS.length}</div>
+      <div class="quiz-question">${q.q}</div>
+      <div class="quiz-options">
+        ${q.options.map((opt,i)=>`<button class="quiz-option" data-opt="${i}">${opt.text}</button>`).join('')}
+      </div>
+    </div>`;
+}
+function wireArchetypeQuizHandlers(){
+  document.getElementById('tArchetypeBack').addEventListener('click', ()=>{ tArchetypeState=null; tGoHome(); });
+  const q = ARCHETYPE_QUESTIONS[tArchetypeState.qIndex];
+  document.querySelectorAll('[data-opt]').forEach(b=>b.addEventListener('click', async ()=>{
+    const chosen = q.options[parseInt(b.dataset.opt,10)];
+    tArchetypeState.tally[chosen.archetype]++;
+    if(tArchetypeState.qIndex+1 < ARCHETYPE_QUESTIONS.length){
+      tArchetypeState.qIndex++;
+      renderTraining();
+    } else {
+      const total = ARCHETYPE_QUESTIONS.length;
+      const percentages = {};
+      Object.keys(tArchetypeState.tally).forEach(k=>{ percentages[k] = Math.round((tArchetypeState.tally[k]/total)*100); });
+      tView = 'archetype-result';
+      tArchetypeResult = null; // force the loading/generating state
+      renderTraining();
+      await generateArchetypeSummary(percentages);
+    }
+  }));
+}
+
+async function generateArchetypeSummary(percentages){
+  tArchetypeLoading = true;
+  tArchetypeError = '';
+  renderTraining();
+  if(!GROQ_API_KEY || GROQ_API_KEY === 'REPLACE_WITH_YOUR_GROQ_API_KEY'){
+    tArchetypeLoading = false;
+    tArchetypeError = 'This app is not yet configured with a Groq API key. Set GROQ_API_KEY in index.html before this feature can generate a summary.';
+    renderTraining();
+    return;
+  }
+  const userMessage = `The Operator: ${percentages.Operator}%\nThe Coach: ${percentages.Coach}%\nThe Host: ${percentages.Host}%\nThe Firefighter: ${percentages.Firefighter}%`;
+  try{
+    const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Authorization': 'Bearer ' + GROQ_API_KEY },
+      body: JSON.stringify({
+        model: ARCHETYPE_MODEL,
+        messages:[
+          { role:'system', content: ARCHETYPE_SYSTEM_PROMPT },
+          { role:'user', content: userMessage }
+        ],
+        response_format:{ type:'json_object' }
+      })
+    });
+    if(!resp.ok){
+      const errBody = await resp.text().catch(()=>resp.statusText);
+      throw new Error(`API error ${resp.status}: ${errBody.slice(0,200)}`);
+    }
+    const data = await resp.json();
+    const rawText = data.choices?.[0]?.message?.content || '';
+    const cleanedText = rawText.trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '');
+    const parsed = JSON.parse(cleanedText);
+    const result = {
+      percentages, title: parsed.title, identity_summary: parsed.identity_summary,
+      superpowers: parsed.superpowers || [], blind_spots: parsed.blind_spots || [],
+      createdAt: Date.now()
+    };
+    await db.collection('archetype_results').doc(tCurrentUser.uid).set(result);
+    tArchetypeResult = result;
+  }catch(err){
+    tArchetypeError = 'Could not generate your summary: ' + err.message;
+  }
+  tArchetypeLoading = false;
+  renderTraining();
+}
+
+function renderArchetypeResultHtml(){
+  if(tArchetypeLoading){
+    return '<div class="panel" style="text-align:center;color:var(--muted);max-width:480px;margin:40px auto;">Generating your personalized coaching summary…</div>';
+  }
+  if(tArchetypeError){
+    return `
+      <div class="panel" style="max-width:480px;margin:40px auto;text-align:center;">
+        <p class="auth-error" style="min-height:auto;">${tArchetypeError}</p>
+        <button class="btn-primary" id="tArchetypeRetryBtn" style="margin-top:10px;">Try Again</button>
+        <button class="btn-secondary" id="tArchetypeErrHome" style="margin-top:10px;">Back to Modules</button>
+      </div>`;
+  }
+  if(!tArchetypeResult){
+    return '<div class="panel" style="text-align:center;color:var(--muted);">No result yet.</div>';
+  }
+  const r = tArchetypeResult;
+  return `
+    <div class="panel" style="max-width:600px;margin:0 auto;">
+      <a class="breadcrumb-link" id="tArchetypeResultBack">&larr; Back to modules</a>
+      <div class="archetype-title" style="margin-top:18px;">${r.title||''}</div>
+      <p style="color:var(--muted);text-align:center;margin-top:0;">${r.identity_summary||''}</p>
+      <div class="archetype-scores">
+        ${Object.entries(r.percentages).map(([k,v])=>`<div class="archetype-score-card"><div class="pct">${v}%</div><div class="label">${k}</div></div>`).join('')}
+      </div>
+      <h3 style="font-family:'Fraunces',Georgia,serif;font-size:15px;color:var(--cream);">Superpowers</h3>
+      <ul class="archetype-list superpowers">${(r.superpowers||[]).map(s=>`<li>${s}</li>`).join('')}</ul>
+      <h3 style="font-family:'Fraunces',Georgia,serif;font-size:15px;color:var(--cream);">Blind Spots</h3>
+      <ul class="archetype-list blindspots">${(r.blind_spots||[]).map(s=>`<li>${s}</li>`).join('')}</ul>
+      <button class="btn-secondary" id="tArchetypeRetakeBtn">Retake Assessment</button>
+    </div>`;
+}
+function wireArchetypeResultHandlers(){
+  const backBtn = document.getElementById('tArchetypeResultBack');
+  if(backBtn) backBtn.addEventListener('click', tGoHome);
+  const errHomeBtn = document.getElementById('tArchetypeErrHome');
+  if(errHomeBtn) errHomeBtn.addEventListener('click', tGoHome);
+  const retryBtn = document.getElementById('tArchetypeRetryBtn');
+  if(retryBtn) retryBtn.addEventListener('click', startArchetypeQuiz);
+  const retakeBtn = document.getElementById('tArchetypeRetakeBtn');
+  if(retakeBtn) retakeBtn.addEventListener('click', startArchetypeQuiz);
+}
+
+// ---- Manager rollup (mgmt-gated) ----
+async function renderTrainingRollup(){
+  const el = document.getElementById('trainingRollupTab');
+  el.innerHTML = '<div class="panel" style="text-align:center;color:var(--muted);">Loading team training data…</div>';
+  if(!db){ el.innerHTML = '<div class="panel">Cloud sync is not configured, so team-wide training data is not available.</div>'; return; }
+  try{
+    const [profilesSnap, attemptsSnap] = await Promise.all([
+      db.collection('training_profiles').get(),
+      db.collection('training_attempts').get()
+    ]);
+    const profiles = profilesSnap.docs.map(d=>({ uid:d.id, ...d.data() }));
+    const attempts = attemptsSnap.docs.map(d=>d.data());
+    const rows = profiles.map(p=>{
+      const mine = attempts.filter(a=>a.uid===p.uid);
+      const quizCount = tierModules(p.tier).filter(m=> mine.some(a=>a.moduleId===m.id && a.type==='quiz')).length;
+      const assessCount = tierModules(p.tier).filter(m=> mine.some(a=>a.moduleId===m.id && a.type==='assessment')).length;
+      const totalModules = tierModules(p.tier).length;
+      return { ...p, quizCount, assessCount, totalModules };
+    }).sort((a,b)=> (a.displayName||'').localeCompare(b.displayName||''));
+    el.innerHTML = `
+      <div class="panel">
+        <h2>Leadership Training — Team Rollup<small>Completion across all enrolled staff, by tier.</small></h2>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead><tr style="text-align:left;color:var(--muted);"><th style="padding:8px 0;">Name</th><th>Tier</th><th>Quizzes Completed</th><th>Self-Assessments Completed</th></tr></thead>
+          <tbody>
+            ${rows.length ? rows.map(r=>`
+              <tr style="border-top:1px solid var(--line);">
+                <td style="padding:10px 0;"><b>${r.displayName}</b><br><span style="color:var(--muted);font-size:11.5px;">${r.role||''}</span></td>
+                <td>${TIER_LABEL[r.tier]||r.tier}</td>
+                <td><span class="pill ${r.quizCount===r.totalModules?'good':'warn'}">${r.quizCount}/${r.totalModules}</span></td>
+                <td><span class="pill ${r.assessCount===r.totalModules?'good':'warn'}">${r.assessCount}/${r.totalModules}</span></td>
+              </tr>`).join('') : '<tr><td colspan="4" style="padding:16px 0;color:var(--muted);">No one has set up a training profile yet.</td></tr>'}
+          </tbody>
+        </table>
+      </div>`;
+  }catch(err){
+    el.innerHTML = `<div class="panel">Error loading team training data: ${err.message}</div>`;
+  }
+}
+window.renderTrainingRollup = renderTrainingRollup;
 </script>
 </body>
 </html>

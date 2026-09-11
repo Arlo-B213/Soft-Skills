@@ -1,0 +1,53 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Single hardcoded admin identity for the Leadership Training module.
+    // Only this email can edit another employee's profile. Password/login
+    // resets are NOT handled here — those are done directly in the Firebase
+    // Console by the project owner.
+    function isTrainingAdmin() {
+      return request.auth != null && request.auth.token.email == 'arlo.bedolla@gmail.com';
+    }
+
+    // ---- KPI dashboard (existing feature) ----
+    // The whole app shares one Firebase Auth session, so signing in via
+    // Leadership Training also authenticates the KPI dashboard's sync calls.
+    match /kpi_dashboard/{docId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // ---- Leadership Training ----
+    // A user's own profile: they can create/update it themselves, or the
+    // admin can edit anyone's. Any signed-in user can read profiles (needed
+    // for the manager rollup table).
+    match /training_profiles/{uid} {
+      allow read: if request.auth != null;
+      allow create, update: if request.auth != null && (request.auth.uid == uid || isTrainingAdmin());
+      allow delete: if false;
+    }
+
+    // Quiz/self-assessment attempts are an append-only log: a user can only
+    // create an attempt tagged with their own uid, and nothing can be edited
+    // or deleted afterward — keeps results and the rollup trustworthy.
+    match /training_attempts/{attemptId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // Leadership Archetype assessment result: personal AI-generated coaching
+    // feedback. Only the owning user or the admin can read or write it — this
+    // is more sensitive than a quiz score, so it's not readable by every
+    // signed-in user the way training_profiles is.
+    match /archetype_results/{uid} {
+      allow read, create, update: if request.auth != null && (request.auth.uid == uid || isTrainingAdmin());
+      allow delete: if false;
+    }
+
+    // Default deny — anything not explicitly allowed above is blocked.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
