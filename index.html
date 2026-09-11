@@ -314,10 +314,10 @@
   td{padding:10px 10px;border-bottom:1px solid var(--line);}
   tr:last-child td{border-bottom:none;}
   tr:hover td{background:var(--navy-3);}
-  .pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11.5px;font-weight:700;}
-  .pill.good{background:rgba(31,122,77,.14);color:#1f7a4d;}
-  .pill.warn{background:rgba(184,135,31,.16);color:var(--gold-light);}
-  .pill.bad{background:rgba(161,64,47,.14);color:#a1402f;}
+  .pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11.5px;font-weight:700;border:1px solid transparent;transition:transform .15s var(--ease-spring);}
+  .pill.good{background:rgba(31,122,77,.14);color:#1f7a4d;border-color:rgba(31,122,77,.22);}
+  .pill.warn{background:rgba(184,135,31,.16);color:var(--gold-light);border-color:rgba(184,135,31,.24);}
+  .pill.bad{background:rgba(161,64,47,.14);color:#a1402f;border-color:rgba(161,64,47,.22);}
 
   /* ---- Leadership Training ---- */
   .auth-box{max-width:400px;margin:60px auto;text-align:center;}
