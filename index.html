@@ -71,9 +71,14 @@
 
   header.top{
     display:flex;justify-content:space-between;align-items:flex-end;
-    gap:20px;flex-wrap:wrap;
-    border-bottom:1px solid var(--line);
-    padding-bottom:24px;margin-bottom:30px;
+    gap:20px;flex-wrap:wrap;position:relative;
+    padding:34px 30px 40px;margin:-10px -10px 34px;border-radius:var(--radius-lg);
+    background-image:var(--gradient-mesh);
+    background-color:var(--navy-3);
+  }
+  header.top::after{
+    content:'';position:absolute;left:30px;right:30px;bottom:0;height:1px;
+    background:linear-gradient(90deg, transparent, var(--line) 15%, var(--line) 85%, transparent);
   }
   .brand-eyebrow{
     letter-spacing:.24em;text-transform:uppercase;font-size:11px;color:var(--gold);
@@ -87,8 +92,9 @@
   .sub{color:var(--muted);font-size:13.5px;margin-top:8px;}
 
   .upload-box{
-    background: var(--navy-2); border:1px solid var(--line); border-radius:var(--radius-md);
-    padding:16px 18px; min-width:280px; box-shadow:var(--shadow-sm);
+    background: var(--glass-bg); border:1px solid var(--glass-border); border-radius:var(--radius-md);
+    padding:16px 18px; min-width:280px; box-shadow:var(--shadow-lg);
+    backdrop-filter:blur(20px) saturate(160%); -webkit-backdrop-filter:blur(20px) saturate(160%);
   }
   .upload-box label{
     display:inline-block;background:var(--gradient-gold);color:var(--ink);
@@ -183,16 +189,22 @@
 
   nav.tabs{
     display:flex;gap:4px;margin-bottom:26px;background:var(--navy-3);padding:5px;border-radius:999px;
-    width:fit-content;max-width:100%;overflow-x:auto;border:1px solid var(--line);
+    width:fit-content;max-width:100%;overflow-x:auto;border:1px solid var(--line);position:relative;
+  }
+  .tab-indicator{
+    position:absolute;top:5px;bottom:5px;left:5px;width:0;border-radius:999px;
+    background:var(--navy-2);box-shadow:var(--shadow-md);
+    transition:transform .4s var(--ease-spring), width .4s var(--ease-spring);
+    z-index:0;pointer-events:none;
   }
   nav.tabs button{
-    background:transparent;border:none;color:var(--muted);position:relative;
+    background:transparent;border:none;color:var(--muted);position:relative;z-index:1;
     padding:10px 20px;border-radius:999px;font-size:13.5px;cursor:pointer;
-    font-weight:600;letter-spacing:.01em;white-space:nowrap;transition:color .2s var(--ease), background .2s var(--ease), box-shadow .2s var(--ease);
+    font-weight:600;letter-spacing:.01em;white-space:nowrap;transition:color .2s var(--ease);
   }
   nav.tabs button:hover{ color:var(--cream); }
   nav.tabs button.active{
-    background:var(--navy-2);color:var(--gold-light);box-shadow:var(--shadow-md);
+    color:var(--gold-light);
   }
   nav.tabs .mgmt-tab{ display:none; }
   nav.tabs.mgmt-unlocked .mgmt-tab{ display:inline-block; }
@@ -424,6 +436,7 @@
   </header>
 
   <nav class="tabs">
+    <span class="tab-indicator" id="tabIndicator" aria-hidden="true"></span>
     <button class="active" data-tab="cashiers">FOH Team</button>
     <button class="mgmt-tab" data-tab="management">FOH Management</button>
     <button data-tab="bohTeam">BOH Team</button>
@@ -1439,6 +1452,14 @@ function activeTabKey(){
   const btn = document.querySelector('nav.tabs button.active');
   return btn ? btn.dataset.tab : 'cashiers';
 }
+function updateTabIndicator(){
+  const nav = document.querySelector('nav.tabs');
+  const indicator = document.getElementById('tabIndicator');
+  const activeBtn = nav.querySelector('button.active');
+  if(!indicator || !activeBtn) return;
+  indicator.style.width = activeBtn.offsetWidth + 'px';
+  indicator.style.transform = 'translateX(' + (activeBtn.offsetLeft - 5) + 'px)';
+}
 function showTab(key){
   document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab===key));
   Object.entries(TAB_IDS).forEach(([k, id])=>{
@@ -1446,10 +1467,13 @@ function showTab(key){
   });
   if(key==='training' && window.renderTraining) renderTraining();
   if(key==='trainingRollup' && window.renderTrainingRollup) renderTrainingRollup();
+  requestAnimationFrame(updateTabIndicator);
 }
 document.querySelectorAll('nav.tabs button[data-tab]').forEach(btn=>{
   btn.addEventListener('click', ()=>showTab(btn.dataset.tab));
 });
+window.addEventListener('resize', ()=>requestAnimationFrame(updateTabIndicator));
+requestAnimationFrame(updateTabIndicator);
 
 // ---------- Management tab lock (PIN-gated, this browser only) ----------
 const MGMT_PIN_HASH = 'ddc10a5906f8c0ea77bac646567f9680f2b6f989f35485f0cc65b7b5a223d32c';
@@ -1466,6 +1490,7 @@ function setMgmtUnlocked(on){
   btn.title = on ? 'Hide management tabs' : 'Show management tabs';
   if(on) localStorage.setItem(MGMT_UNLOCK_KEY, '1'); else localStorage.removeItem(MGMT_UNLOCK_KEY);
   if(!on && (activeTabKey()==='management' || activeTabKey()==='bohManagement')) showTab('cashiers');
+  requestAnimationFrame(updateTabIndicator);
 }
 document.getElementById('mgmtLockBtn').addEventListener('click', async ()=>{
   if(document.querySelector('nav.tabs').classList.contains('mgmt-unlocked')){
