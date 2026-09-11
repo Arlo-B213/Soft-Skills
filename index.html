@@ -2101,6 +2101,7 @@ const TRAINING_MODULES = [
   { id:'foodsafety', tier:'entry', title:'Food Safety & Shift Procedures', icon:'&#129537;' },
   { id:'comm', tier:'entry', title:'Team Communication & De-escalation', icon:'&#128172;' },
   { id:'compliance', tier:'entry', title:'Time, Attendance & Compliance Basics', icon:'&#9201;' },
+  { id:'throughput', tier:'entry', title:'High-Volume Operations & Line Management', icon:'&#9889;' },
   { id:'coaching', tier:'mid', title:'Coaching & Progressive Discipline', icon:'&#127919;' },
   { id:'escalation', tier:'mid', title:'Guest Escalation & Service Recovery', icon:'&#128276;' },
   { id:'hiring', tier:'mid', title:'Hiring & Team Development', icon:'&#129309;' },
@@ -2243,6 +2244,16 @@ const QUIZ_BANK = {
     { q:"What's a basic compliance responsibility around minors on staff (where applicable)?", options:["No special rules apply","Following applicable minor-labor scheduling/hour restrictions","Minors can work any hours like adults","Only HR needs to know this"], correct:1, explain:"Minor-labor laws restrict scheduling and hours, and Leads scheduling shifts need to know them." },
     { q:"Why does consistent enforcement of attendance policy matter across the whole team?", options:["It doesn't — enforce case by case with no pattern","Inconsistent enforcement damages trust and can create fairness/legal issues","Favorites should get more flexibility","Policies are just suggestions"], correct:1, explain:"Consistency is what makes a policy fair and legally defensible." }
   ],
+  throughput: [
+    { q:"During a lunch rush, the fryer station is falling behind and creating a bottleneck. What's the best immediate move?", options:["Ignore it, it'll catch up on its own","Quickly reassign an extra team member to help clear the bottleneck and keep the line moving","Shut down that menu item for the rest of the rush","Take over the register yourself and forget the fryer"], correct:1, explain:"Spotting and reassigning help to a bottleneck the moment it forms is what keeps ticket times under control." },
+    { q:"Ticket times are creeping toward 3+ minutes and the pressure is on to go faster. What's the risk of pushing speed above everything else?", options:["There's no risk, faster is always better","Order accuracy and presentation can slip if speed becomes the only focus","Guests never notice small mistakes","It only matters during slow periods"], correct:1, explain:"Speed without a floor on accuracy and presentation just trades one problem for another." },
+    { q:"Why is cross-training your team on multiple stations valuable during a high-volume shift?", options:["It isn't valuable, specialization is always better","It lets you shift people instantly (cash to prep) when one area suddenly gets slammed","Cross-training slows everyone down","Only managers should know multiple stations"], correct:1, explain:"Cross-trained staff let you redistribute load in real time instead of watching one station drown." },
+    { q:"During a sudden rush, what should a Lead generally do instead of jumping straight into the assembly line?", options:["Always jump in and work the line personally","Step back first to read the floor and direct where help is actually needed","Ignore the rush and continue other tasks","Send everyone on break to reset"], correct:1, explain:"Directing the floor multiplies your impact; disappearing into one station leaves no one managing the whole picture." },
+    { q:"Why track portion control and ingredient waste closely at the end of a shift?", options:["It doesn't matter as long as sales are good","Small consistent variances compound into real margin loss over time","Waste tracking is corporate's job only","Portion sizes never actually vary"], correct:1, explain:"Small daily variances in portioning or waste add up to significant margin loss over weeks and months." },
+    { q:"Foot traffic is trending higher than usual today. What's the right move on prep levels?", options:["Keep prep exactly the same as a normal day","Adjust prep upward proactively based on the trend to avoid running short","Wait until you actually run out before prepping more","Cut prep to save on food cost"], correct:1, explain:"Reading the trend and adjusting prep proactively avoids both shortages and last-minute scrambling." },
+    { q:"The floor is slammed and a temperature log is due. What's the correct move?", options:["Skip it, no one will notice","Still complete it — food safety checks don't pause for volume","Have a guest do it","Backdate it later from memory"], correct:1, explain:"Food safety checks are non-negotiable regardless of how busy the shift is." },
+    { q:"Why do deep-cleaning and equipment maintenance tasks matter even when the team is rushed to close?", options:["They can always wait until tomorrow","Skipped maintenance and cleaning create real safety and equipment-failure risk that catches up with you","They're optional if the shift \"looks\" clean","Only overnight staff need to worry about this"], correct:1, explain:"Deferred maintenance and cleaning debt eventually shows up as equipment failure or a safety issue." }
+  ],
   coaching: [
     { q:'What does the "SBI" feedback model stand for?', options:["Speed, Balance, Impact","Situation, Behavior, Impact","Simple, Brief, Immediate","Skill, Belief, Intention"], correct:1, explain:"SBI (Situation-Behavior-Impact) keeps feedback specific and grounded in observed fact." },
     { q:"What is the purpose of progressive discipline?", options:["To punish employees as harshly as possible","To give employees a fair, documented chance to correct behavior before more serious action","To skip straight to termination","To avoid ever addressing performance issues"], correct:1, explain:"Progressive discipline is about a fair path to improvement, documented at each step." },
@@ -2345,6 +2356,16 @@ const ASSESSMENT_BANK = {
     "I document schedule changes and exceptions instead of relying on verbal agreements.",
     "I apply policy consistently across the team, without playing favorites.",
     "I understand the compliance basics well enough to explain them to a new hire."
+  ],
+  throughput: [
+    "I quickly identify and clear operational bottlenecks (a slow register, a backed-up fryer) during peak rushes.",
+    "I maintain order accuracy and presentation standards even when ticket times are under 2-3 minutes.",
+    "I cross-train my team so anyone can instantly swap positions (cash to prep) when lines swell.",
+    "During a rush, I step back to direct the overall flow rather than jumping into the line myself.",
+    "I closely monitor portion control, ingredient waste, and cash drawer variances at the end of each shift.",
+    "I adjust prep levels dynamically based on foot traffic trends to avoid waste or shortages.",
+    "I stay disciplined about food safety protocols (holding temps, expiration labels) even when the floor is slammed.",
+    "I keep up with deep-cleaning and equipment maintenance tasks even when the team is rushed to close."
   ],
   coaching: [
     "I give feedback using specific examples, not vague generalities.",
