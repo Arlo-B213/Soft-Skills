@@ -44,6 +44,8 @@
     --shadow-glow: 0 0 0 1px rgba(var(--gold-rgb),.14), 0 14px 40px -8px rgba(var(--gold-rgb),.28), 0 4px 14px rgba(15,23,42,.06);
     --gradient-gold: linear-gradient(135deg, #d9b545 0%, #c9a227 45%, #a9840f 100%);
     --gradient-mesh: radial-gradient(70% 60% at 12% 0%, rgba(var(--gold-rgb),.10), transparent 60%), radial-gradient(55% 50% at 100% 0%, rgba(24,31,53,.05), transparent 55%);
+    --gradient-mid: linear-gradient(135deg, #6a94a8 0%, #3d6b7a 100%);
+    --gradient-senior: linear-gradient(135deg, #a8637f 0%, #7a3d54 100%);
     --glass-bg: rgba(255,255,255,.62);
     --glass-border: rgba(255,255,255,.5);
     --ease: cubic-bezier(.4,0,.2,1);
@@ -341,22 +343,33 @@
   .progress-fill{height:100%;background:var(--gradient-gold);border-radius:999px;transition:width .4s var(--ease);}
   .module-card .actions{display:flex;gap:8px;}
   .module-card .actions button{flex:1;}
+  /* Tier-colored accents: entry stays gold (the default), mid gets a
+     muted teal, senior a deep wine tone -- lets you tell tiers apart
+     at a glance in the module grid without needing a text label. */
+  .module-card[data-tier="mid"]::before{ background:var(--gradient-mid); }
+  .module-card[data-tier="mid"] .icon{ color:#3d6b7a; }
+  .module-card[data-tier="mid"]:hover{ border-color:rgba(61,107,122,.3); }
+  .module-card[data-tier="senior"]::before{ background:var(--gradient-senior); }
+  .module-card[data-tier="senior"] .icon{ color:#7a3d54; }
+  .module-card[data-tier="senior"]:hover{ border-color:rgba(122,61,84,.3); }
 
   .quiz-progress{font-size:12px;color:var(--muted);margin-bottom:6px;}
-  .quiz-question{font-family:"Fraunces",Georgia,serif;font-size:17px;color:var(--cream);margin:0 0 16px;line-height:1.4;}
+  .quiz-question{font-family:"Fraunces",Georgia,serif;font-size:clamp(16px,1vw + 14px,19px);color:var(--cream);margin:0 0 16px;line-height:1.4;animation:fadeUp .35s var(--ease) both;}
   .quiz-options{display:flex;flex-direction:column;gap:9px;margin-bottom:16px;}
   .quiz-option{
     display:flex;align-items:center;gap:10px;text-align:left;
     background:var(--navy-3);border:1px solid var(--line);color:var(--cream);
     padding:12px 15px;border-radius:var(--radius-sm);font-size:13.5px;cursor:pointer;
-    transition:all .15s var(--ease);
+    transition:border-color .2s var(--ease), background .2s var(--ease), transform .15s var(--ease-spring), box-shadow .2s var(--ease);
   }
-  .quiz-option:hover{border-color:var(--gold);}
-  .quiz-option.selected{border-color:var(--gold);background:rgba(201,162,39,0.10);}
-  .quiz-option.correct{border-color:#1f7a4d;background:rgba(31,122,77,.12);}
-  .quiz-option.incorrect{border-color:#a1402f;background:rgba(161,64,47,.12);}
+  .quiz-option:hover{border-color:var(--gold);transform:translateX(2px);}
+  @keyframes optionPulse{ 0%{transform:scale(1);} 45%{transform:scale(1.015);} 100%{transform:scale(1);} }
+  .quiz-option.selected{border-color:var(--gold);background:rgba(var(--gold-rgb),0.10);box-shadow:0 0 0 3px rgba(var(--gold-rgb),.12);animation:optionPulse .3s var(--ease);}
+  .quiz-option.correct{border-color:#1f7a4d;background:rgba(31,122,77,.12);box-shadow:0 0 0 3px rgba(31,122,77,.12);}
+  .quiz-option.incorrect{border-color:#a1402f;background:rgba(161,64,47,.12);box-shadow:0 0 0 3px rgba(161,64,47,.1);}
   .quiz-option:disabled, .quiz-option[disabled]{cursor:default;}
-  .quiz-explain{font-size:13px;color:var(--muted);background:var(--navy-3);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:16px;}
+  .quiz-option:disabled:hover{transform:none;}
+  .quiz-explain{font-size:13px;color:var(--muted);background:var(--navy-3);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:16px;animation:fadeUp .3s var(--ease) both;}
 
   .likert-row{padding:14px 0;border-bottom:1px solid var(--line);}
   .likert-row:last-child{border-bottom:none;}
@@ -365,12 +378,13 @@
   .likert-scale button{
     flex:1;min-width:64px;background:var(--navy-3);border:1px solid var(--line);color:var(--muted);
     padding:9px 6px;border-radius:var(--radius-sm);font-size:11.5px;font-weight:600;cursor:pointer;
-    transition:all .15s var(--ease);
+    transition:background .2s var(--ease), color .2s var(--ease), border-color .2s var(--ease), transform .15s var(--ease-spring);
   }
-  .likert-scale button.selected{background:var(--gold);color:var(--ink);border-color:var(--gold);}
+  .likert-scale button:hover{transform:translateY(-1px);border-color:var(--gold);}
+  .likert-scale button.selected{background:var(--gradient-gold);color:var(--ink);border-color:var(--gold);box-shadow:0 2px 8px rgba(var(--gold-rgb),.3);}
 
-  .result-hero{text-align:center;padding:28px 20px;}
-  .result-hero .score-big{font-family:"Fraunces",Georgia,serif;font-size:46px;color:var(--gold-light);font-weight:600;}
+  .result-hero{text-align:center;padding:34px 20px;animation:fadeUp .4s var(--ease) both;}
+  .result-hero .score-big{font-family:"Fraunces",Georgia,serif;font-size:clamp(38px,3vw + 24px,54px);background:var(--gradient-gold);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:600;}
   .result-hero .score-label{color:var(--muted);font-size:13px;margin-top:4px;}
 
   .attempt-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--line);font-size:13px;}
@@ -385,9 +399,10 @@
   }
   .archetype-banner h3{font-family:"Fraunces",Georgia,serif;font-size:16px;margin:0 0 4px;color:var(--cream);}
   .archetype-banner p{margin:0;color:var(--muted);font-size:13px;}
-  .archetype-title{font-family:"Fraunces",Georgia,serif;font-size:26px;color:var(--gold-light);font-weight:600;text-align:center;margin-bottom:6px;}
+  .archetype-title{font-family:"Fraunces",Georgia,serif;font-size:clamp(22px,1.8vw + 16px,30px);background:var(--gradient-gold);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:600;text-align:center;margin-bottom:6px;animation:fadeUp .4s var(--ease) both;}
   .archetype-scores{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin:18px 0;}
-  .archetype-score-card{background:var(--navy-3);border-radius:var(--radius-sm);padding:12px;text-align:center;}
+  .archetype-score-card{background:var(--navy-3);border:1px solid var(--line);border-radius:var(--radius-sm);padding:12px;text-align:center;transition:transform .2s var(--ease-spring), border-color .2s var(--ease);}
+  .archetype-score-card:hover{transform:translateY(-2px);border-color:rgba(var(--gold-rgb),.3);}
   .archetype-score-card .pct{font-family:"Fraunces",Georgia,serif;font-size:22px;color:var(--gold-light);font-weight:600;}
   .archetype-score-card .label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:2px;}
   .archetype-list{list-style:none;margin:0 0 18px;padding:0;}
@@ -2309,18 +2324,18 @@ const ROLE_TIER_MAP = {
 const TIER_LABEL = { entry: 'Entry-Level Leadership', mid: 'Mid-Level Leadership', senior: 'Senior Leadership (Restaurant Manager)' };
 
 const TRAINING_MODULES = [
-  { id:'eq', tier:'entry', title:'Emotional Intelligence & Interpersonal Soft Skills', icon:'&#129504;' },
-  { id:'guest', tier:'entry', title:'Guest Service & AAA Four Diamond Standards', icon:'&#11088;' },
-  { id:'foodsafety', tier:'entry', title:'Food Safety & Shift Procedures', icon:'&#129537;' },
-  { id:'comm', tier:'entry', title:'Team Communication & De-escalation', icon:'&#128172;' },
-  { id:'compliance', tier:'entry', title:'Time, Attendance & Compliance Basics', icon:'&#9201;' },
-  { id:'throughput', tier:'entry', title:'High-Volume Operations & Line Management', icon:'&#9889;' },
-  { id:'coaching', tier:'mid', title:'Coaching & Progressive Discipline', icon:'&#127919;' },
-  { id:'escalation', tier:'mid', title:'Guest Escalation & Service Recovery', icon:'&#128276;' },
-  { id:'hiring', tier:'mid', title:'Hiring & Team Development', icon:'&#129309;' },
-  { id:'pnl', tier:'senior', title:'P&L & Cost Management', icon:'&#128200;' },
-  { id:'culture', tier:'senior', title:'Leading Leaders & Team Culture', icon:'&#127963;&#65039;' },
-  { id:'crisis', tier:'senior', title:'Crisis & Incident Management', icon:'&#128680;' }
+  { id:'eq', tier:'entry', title:'Emotional Intelligence & Interpersonal Soft Skills', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.2s-7.2-4.4-9.6-8.6C.7 8 2 4.4 5.6 3.9c2-.3 3.8.8 4.6 2.4.8-1.6 2.6-2.7 4.6-2.4 3.6.5 4.9 4.1 3.2 7.7-2.4 4.2-9.6 8.6-9.6 8.6z"/></svg>' },
+  { id:'guest', tier:'entry', title:'Guest Service & AAA Four Diamond Standards', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l2.5 5.6 6.1.6-4.6 4.1 1.3 6-5.3-3.1-5.3 3.1 1.3-6-4.6-4.1 6.1-.6z"/></svg>' },
+  { id:'foodsafety', tier:'entry', title:'Food Safety & Shift Procedures', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5.5c0 4.6-3 8.3-7 9.5-4-1.2-7-4.9-7-9.5V6z"/><path d="M9 12l2 2 4-4"/></svg>' },
+  { id:'comm', tier:'entry', title:'Team Communication & De-escalation', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v10H8l-4 4z"/></svg>' },
+  { id:'compliance', tier:'entry', title:'Time, Attendance & Compliance Basics', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3.2 2"/></svg>' },
+  { id:'throughput', tier:'entry', title:'High-Volume Operations & Line Management', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3L5 13.5h5.5L11 21l8-10.5h-5.5z"/></svg>' },
+  { id:'coaching', tier:'mid', title:'Coaching & Progressive Discipline', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg>' },
+  { id:'escalation', tier:'mid', title:'Guest Escalation & Service Recovery', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 10.5a6 6 0 0 1 12 0c0 4 1.5 5.5 1.5 5.5h-15S6 14.5 6 10.5z"/><path d="M10 19a2 2 0 0 0 4 0"/></svg>' },
+  { id:'hiring', tier:'mid', title:'Hiring & Team Development', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9.5" cy="8" r="3.2"/><path d="M3.5 20c0-3.5 2.7-6 6-6s6 2.5 6 6"/><path d="M18.5 8.5v5M16 11h5"/></svg>' },
+  { id:'pnl', tier:'senior', title:'P&L & Cost Management', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5.5-5.5 4 4L21 7"/><path d="M15 7h6v6"/></svg>' },
+  { id:'culture', tier:'senior', title:'Leading Leaders & Team Culture', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M4 21V10M20 21V10M2 10l10-6 10 6M7 10v7M12 10v7M17 10v7"/></svg>' },
+  { id:'crisis', tier:'senior', title:'Crisis & Incident Management', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l10 17.5H2z"/><path d="M12 10v4.5M12 17.5h.01"/></svg>' }
 ];
 
 // ================= Leadership Archetype Assessment =================
@@ -2853,7 +2868,7 @@ function renderTrainingHomeHtml(){
         const assess = latestAssessment(m.id);
         const pct = best===null ? 0 : best;
         return `
-        <div class="module-card">
+        <div class="module-card" data-tier="${m.tier}">
           <div class="icon">${m.icon}</div>
           <h3>${m.title}</h3>
           <div class="progress-row">
